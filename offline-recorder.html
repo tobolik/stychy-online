@@ -2042,6 +2042,82 @@
                 return;
             }
             
+            // Check for "všichni kromě" pattern in results mode
+            if (voiceMode === 'results' && !detailedMode) {
+                // Pattern: "uhráli/splnili všichni kromě X, Y, Z" or "neuhráli/nesplnili všichni kromě X, Y, Z"
+                const allExceptSuccess = textLower.match(/(?:uhrál|splnil|ano|jo).*(?:všichni|všechny).*kromě/i);
+                const allExceptFail = textLower.match(/(?:neuhrál|nesplnil|ne).*(?:všichni|všechny).*kromě/i);
+                // Also handle reverse: "kromě X, Y všichni uhráli"
+                const exceptAllSuccess = textLower.match(/kromě.*(?:všichni|všechny|ostatní).*(?:uhrál|splnil|ano)/i);
+                const exceptAllFail = textLower.match(/kromě.*(?:všichni|všechny|ostatní).*(?:neuhrál|nesplnil|ne\b)/i);
+                
+                if (allExceptSuccess || allExceptFail || exceptAllSuccess || exceptAllFail) {
+                    const defaultSuccess = !!(allExceptSuccess || exceptAllSuccess);
+                    
+                    // Find player names mentioned in the text (these are the exceptions)
+                    const exceptionPlayers = [];
+                    const sortedPlayers = [...currentGame.players].sort((a, b) => b.name.length - a.name.length);
+                    
+                    for (const player of sortedPlayers) {
+                        const nameLower = player.name.toLowerCase();
+                        if (textLower.includes(nameLower)) {
+                            exceptionPlayers.push(player);
+                        }
+                    }
+                    
+                    if (exceptionPlayers.length > 0) {
+                        let applied = 0;
+                        const exceptionPositions = exceptionPlayers.map(p => p.position);
+                        
+                        for (let idx = 0; idx < orderedResultsPlayers.length; idx++) {
+                            const player = orderedResultsPlayers[idx];
+                            const result = currentRound.results.find(r => r.position == player.position);
+                            const bid = result?.bid ?? 0;
+                            
+                            // Check if this player is an exception
+                            const isException = exceptionPositions.includes(player.position);
+                            const success = isException ? !defaultSuccess : defaultSuccess;
+                            
+                            setResult(player.position, success, bid, idx);
+                            applied++;
+                        }
+                        
+                        const exceptionNames = exceptionPlayers.map(p => p.name).join(', ');
+                        if (defaultSuccess) {
+                            showVoiceToast(`✓ Všichni splnili kromě: ${exceptionNames}`);
+                        } else {
+                            showVoiceToast(`✗ Všichni nesplnili kromě: ${exceptionNames}`);
+                        }
+                        return;
+                    }
+                }
+                
+                // Also handle "uhráli/neuhráli všichni" without exceptions
+                const allSuccess = textLower.match(/(?:uhrál|splnil).*(?:všichni|všechny)\b/i) && !textLower.includes('kromě');
+                const allFail = textLower.match(/(?:neuhrál|nesplnil).*(?:všichni|všechny)\b/i) && !textLower.includes('kromě');
+                // Reverse order
+                const allSuccess2 = textLower.match(/(?:všichni|všechny).*(?:uhrál|splnil)/i) && !textLower.includes('kromě');
+                const allFail2 = textLower.match(/(?:všichni|všechny).*(?:neuhrál|nesplnil)/i) && !textLower.includes('kromě');
+                
+                if (allSuccess || allFail || allSuccess2 || allFail2) {
+                    const success = !!(allSuccess || allSuccess2);
+                    
+                    for (let idx = 0; idx < orderedResultsPlayers.length; idx++) {
+                        const player = orderedResultsPlayers[idx];
+                        const result = currentRound.results.find(r => r.position == player.position);
+                        const bid = result?.bid ?? 0;
+                        setResult(player.position, success, bid, idx);
+                    }
+                    
+                    if (success) {
+                        showVoiceToast(`✓ Všichni splnili`);
+                    } else {
+                        showVoiceToast(`✗ Všichni nesplnili`);
+                    }
+                    return;
+                }
+            }
+            
             // Check for sequence of ano/ne OR 0/1 in results mode (e.g., "ano ano ne ano ne" or "1 1 0 1 0")
             if (voiceMode === 'results' && !detailedMode) {
                 // Find all ano/ne words in the text in order
