@@ -1186,7 +1186,7 @@
         
         <!-- Footer -->
         <div class="app-footer">
-            <span>Štychy Záznamník v1.3.0</span>
+            <span>Štychy Záznamník v1.3.1</span>
             <span>•</span>
             <span id="build-date">2026-01-25</span>
         </div>
@@ -1650,6 +1650,12 @@
             
             if (voiceAnnouncementsEnabled) {
                 speak('Hlasové povely zapnuty');
+            } else {
+                // Immediately stop any ongoing speech when turning off
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                    ignoringVoiceInput = false;
+                }
             }
         }
         
@@ -1829,6 +1835,11 @@
                 }
             } else {
                 stopVoiceRecognition();
+                // Also stop any ongoing speech
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                    ignoringVoiceInput = false;
+                }
             }
             updateAllVoiceButtons();
         }
@@ -4258,6 +4269,12 @@
 
         // Global keydown handler for Enter to open results/new round
         document.addEventListener('keydown', (e) => {
+            // Escape to stop any ongoing speech
+            if (e.key === 'Escape' && 'speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                ignoringVoiceInput = false;
+            }
+            
             // Enter to open results after bidding
             if (e.key === 'Enter' && awaitingResultsEntry) {
                 const anyModalOpen = document.querySelector('.modal.active');
