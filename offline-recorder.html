@@ -2607,14 +2607,13 @@
                     statusEl.style.background = 'rgba(255, 204, 0, 0.2)';
                     statusEl.style.color = 'var(--warning)';
                     // Voice announcement for přetlak
-                    speak(`Je přetlak o ${diff} ${diff === 1 ? 'kartu' : (diff < 5 ? 'karty' : 'karet')}.`);
+                    speak(`Je přetlak o ${getCardsTextCzech(diff)}.`);
                 } else {
                     statusEl.innerHTML = `<i class="fa-solid fa-arrow-down"></i> Nahlášeno o <strong>${Math.abs(diff)}</strong> méně než je karet`;
                     statusEl.style.background = 'rgba(0, 255, 204, 0.2)';
                     statusEl.style.color = 'var(--accent)';
                     // Voice announcement for podtlak
-                    const absDiff = Math.abs(diff);
-                    speak(`Je podtlak o ${absDiff} ${absDiff === 1 ? 'kartu' : (absDiff < 5 ? 'karty' : 'karet')}.`);
+                    speak(`Je podtlak o ${getCardsTextCzech(Math.abs(diff))}.`);
                 }
                 statusEl.style.display = 'block';
             } else {
@@ -2687,6 +2686,7 @@
         let detailedMode = false;
         let isEditMode = false;
         let awaitingResultsEntry = false; // Flag to open results on Enter
+        let awaitingNewRoundEntry = false; // Flag to open new round on Enter
 
         function openResultsModal(roundToEdit = null) {
             isEditMode = roundToEdit !== null;
@@ -2976,6 +2976,9 @@
                 
                 // Check for 100-point crossing and play clink sounds
                 checkAndPlayClinkSounds(scoresBefore);
+                
+                // Set flag to allow Enter to open new round
+                awaitingNewRoundEntry = true;
             } else {
                 alert(result.error);
             }
@@ -3468,6 +3471,9 @@
                 renderPlayerNameInputs();
                 document.addEventListener('keydown', handleNewGameKeypress);
             }
+            if (modalId === 'modal-new-round') {
+                document.addEventListener('keydown', handleNewRoundKeypress);
+            }
         }
 
         function closeModal(modalId) {
@@ -3487,6 +3493,10 @@
             // Remove keyboard listener for new game
             if (modalId === 'modal-new-game') {
                 document.removeEventListener('keydown', handleNewGameKeypress);
+            }
+            // Remove keyboard listener for new round
+            if (modalId === 'modal-new-round') {
+                document.removeEventListener('keydown', handleNewRoundKeypress);
             }
         }
 
@@ -3528,10 +3538,10 @@
             }
         }
 
-        // Global keydown handler for Enter to open results after bidding
+        // Global keydown handler for Enter to open results/new round
         document.addEventListener('keydown', (e) => {
+            // Enter to open results after bidding
             if (e.key === 'Enter' && awaitingResultsEntry) {
-                // Check no modal is open
                 const anyModalOpen = document.querySelector('.modal.active');
                 if (!anyModalOpen && currentGame && currentGame.rounds.length > 0) {
                     const lastRound = currentGame.rounds[currentGame.rounds.length - 1];
@@ -3542,7 +3552,66 @@
                     }
                 }
             }
+            
+            // Enter to open new round after results
+            if (e.key === 'Enter' && awaitingNewRoundEntry) {
+                const anyModalOpen = document.querySelector('.modal.active');
+                if (!anyModalOpen && currentGame) {
+                    const rounds = currentGame.rounds;
+                    const roundSequence = getRoundSequence(currentGame.game.max_cards);
+                    const lastRound = rounds[rounds.length - 1];
+                    // Can start new round if no rounds or last round is finished
+                    if ((!lastRound || lastRound.status === 'finished') && rounds.length < roundSequence.length) {
+                        e.preventDefault();
+                        awaitingNewRoundEntry = false;
+                        openNewRoundModal();
+                    }
+                }
+            }
         });
+        
+        // Keyboard handler for new round modal (trump selection)
+        function handleNewRoundKeypress(e) {
+            if (!document.getElementById('modal-new-round').classList.contains('active')) {
+                return;
+            }
+            
+            const key = e.key;
+            
+            // CTRL + 1-4 for suit selection
+            if (e.ctrlKey && /^[1-4]$/.test(key)) {
+                e.preventDefault();
+                const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
+                selectTrumpSuit(suits[parseInt(key) - 1]);
+                return;
+            }
+            
+            // Number keys 7-10 for card values
+            if (!e.ctrlKey && /^[7-9]$/.test(key)) {
+                e.preventDefault();
+                selectTrumpValue(key);
+                return;
+            }
+            if (!e.ctrlKey && key === '0') {
+                e.preventDefault();
+                selectTrumpValue('10');
+                return;
+            }
+            
+            // J, Q, K, A for card values
+            if (!e.ctrlKey && /^[jqkaJQKA]$/.test(key)) {
+                e.preventDefault();
+                selectTrumpValue(key.toUpperCase());
+                return;
+            }
+            
+            // Enter to continue to bidding
+            if (key === 'Enter') {
+                e.preventDefault();
+                createRound();
+                return;
+            }
+        }
 
         // Init
         document.addEventListener('DOMContentLoaded', () => {
