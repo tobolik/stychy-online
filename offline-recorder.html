@@ -2350,8 +2350,7 @@
             
             // Voice announcement: who is dealing and how many cards
             const dealerName = dealer ? dealer.name : 'neznámý';
-            const cardsText = getCardsTextCzech(cardsCount);
-            speak(`${getOrdinalCzech(nextRoundNumber)} kolo. ${dealerName} rozdává ${cardsText}.`);
+            speak(`${getOrdinalCzech(nextRoundNumber)} kolo. ${dealerName} rozdává ${getCardsTextCzech(cardsCount)}.`);
         }
 
         // Trump selection
