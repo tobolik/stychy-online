@@ -1256,6 +1256,9 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title">Kolo <span id="new-round-number">1</span> - Výběr trumfu</h2>
+                <button class="modal-voice-btn" onclick="toggleVoiceRecognition('global')" title="Hlasové ovládání">
+                    <i class="fa-solid fa-microphone"></i>
+                </button>
                 <button class="close-btn" onclick="closeModal('modal-new-round')">&times;</button>
             </div>
 
@@ -1658,11 +1661,23 @@
                 return;
             }
 
-            voiceMode = mode;
+            voiceMode = mode || 'global';
             isListening = true;
-            recognition.start();
+            try {
+                recognition.start();
+            } catch (e) {
+                // Already started
+            }
             updateMicButton(true);
-            showVoiceToast('🎤 Poslouchám... Řekněte jméno a číslo');
+            
+            // Show appropriate toast based on mode
+            if (mode === 'bids') {
+                showVoiceToast('🎤 Hlášení: říkejte čísla');
+            } else if (mode === 'results') {
+                showVoiceToast('🎤 Výsledky: ano/ne');
+            } else {
+                showVoiceToast('🎤 Poslouchám...');
+            }
         }
 
         function stopVoiceRecognition() {
@@ -1692,10 +1707,13 @@
             
             if (voiceInputEnabled) {
                 // Determine mode based on open modal
-                if (document.getElementById('modal-bidding').classList.contains('active')) {
+                if (document.getElementById('modal-bidding')?.classList.contains('active')) {
                     startVoiceRecognition('bids');
-                } else if (document.getElementById('modal-results').classList.contains('active')) {
+                } else if (document.getElementById('modal-results')?.classList.contains('active')) {
                     startVoiceRecognition('results');
+                } else {
+                    // Global mode - works for navigation, trump selection, etc.
+                    startVoiceRecognition('global');
                 }
             } else {
                 stopVoiceRecognition();
@@ -1745,11 +1763,112 @@
         }
 
         function processVoiceCommand(text) {
-            if (!currentGame || !currentRound) return;
-
             const textLower = text.toLowerCase();
             
-            // Check for save command first
+            // === GLOBAL COMMANDS (work anywhere) ===
+            
+            // Close modal command
+            if (textLower.includes('zavřít') || textLower.includes('zavři') || textLower.includes('zpět') || textLower.includes('zrušit')) {
+                const openModals = ['modal-bidding', 'modal-results', 'modal-new-round', 'modal-new-game', 'modal-stats'];
+                for (const modalId of openModals) {
+                    if (document.getElementById(modalId)?.classList.contains('active')) {
+                        closeModal(modalId);
+                        showVoiceToast('✓ Zavřeno');
+                        return;
+                    }
+                }
+            }
+            
+            // New round command
+            if (textLower.includes('nové kolo') || textLower.includes('další kolo') || textLower.includes('nový kolo')) {
+                if (currentGame && !document.getElementById('modal-new-round').classList.contains('active')) {
+                    openNewRoundModal();
+                    showVoiceToast('✓ Nové kolo');
+                    return;
+                }
+            }
+            
+            // Trump selection commands (when new round modal is open)
+            if (document.getElementById('modal-new-round')?.classList.contains('active')) {
+                // Trump suit selection
+                if (textLower.includes('srdce') || textLower.includes('srdíčka') || textLower.includes('červené')) {
+                    selectTrumpSuit('hearts');
+                    showVoiceToast('✓ Trumfy: srdce');
+                    return;
+                }
+                if (textLower.includes('káry') || textLower.includes('kára') || textLower.includes('diamanty')) {
+                    selectTrumpSuit('diamonds');
+                    showVoiceToast('✓ Trumfy: káry');
+                    return;
+                }
+                if (textLower.includes('kříže') || textLower.includes('kříž') || textLower.includes('žaludy') || textLower.includes('černé')) {
+                    selectTrumpSuit('clubs');
+                    showVoiceToast('✓ Trumfy: kříže');
+                    return;
+                }
+                if (textLower.includes('piky') || textLower.includes('pik') || textLower.includes('listy') || textLower.includes('zelené')) {
+                    selectTrumpSuit('spades');
+                    showVoiceToast('✓ Trumfy: piky');
+                    return;
+                }
+                
+                // Trump value selection
+                const valueMap = {
+                    'sedm': '7', 'sedmička': '7', 'sedmu': '7',
+                    'osm': '8', 'osmička': '8', 'osmu': '8',
+                    'devět': '9', 'devítka': '9', 'devítku': '9',
+                    'deset': '10', 'desítka': '10', 'desítku': '10',
+                    'kluk': 'J', 'spodek': 'J', 'jack': 'J', 'jota': 'J',
+                    'dáma': 'Q', 'královna': 'Q', 'queen': 'Q', 'kvído': 'Q',
+                    'král': 'K', 'king': 'K',
+                    'eso': 'A', 'es': 'A', 'ace': 'A'
+                };
+                for (const [word, value] of Object.entries(valueMap)) {
+                    if (textLower.includes(word)) {
+                        selectTrumpValue(value);
+                        showVoiceToast(`✓ Hodnota: ${value}`);
+                        return;
+                    }
+                }
+                
+                // Continue to bidding
+                if (textLower.includes('pokračovat') || textLower.includes('pokračuj') || textLower.includes('dál') || textLower.includes('potvrdit') || textLower.includes('ok')) {
+                    if (selectedTrumpSuit) {
+                        createRound();
+                        showVoiceToast('✓ Kolo vytvořeno');
+                    } else {
+                        showVoiceToast('❓ Nejprve vyberte trumfovou barvu');
+                    }
+                    return;
+                }
+            }
+            
+            // Open bidding modal
+            if (textLower.includes('hlášení') || textLower.includes('zadat hlášení') || textLower.includes('sázky')) {
+                if (currentRound?.status === 'bidding' && !document.getElementById('modal-bidding').classList.contains('active')) {
+                    openBiddingModal();
+                    showVoiceToast('✓ Hlášení');
+                    return;
+                }
+            }
+            
+            // Open results modal
+            if (textLower.includes('výsledky') || textLower.includes('zadat výsledky') || textLower.includes('zapsat')) {
+                if (currentRound?.status === 'playing' && !document.getElementById('modal-results').classList.contains('active')) {
+                    openResultsModal();
+                    showVoiceToast('✓ Výsledky');
+                    return;
+                }
+            }
+            
+            // === MODE-SPECIFIC COMMANDS ===
+            
+            if (!currentGame || !currentRound) {
+                showVoiceToast('❓ ' + text);
+                return;
+            }
+            
+            // Check for save command
             if (textLower.includes('ulož') || textLower.includes('uložit') || textLower.includes('hotovo') || textLower.includes('konec')) {
                 if (voiceMode === 'bids') {
                     // Check if all bids are set
@@ -3675,12 +3794,14 @@
                 document.addEventListener('keydown', handleNewRoundKeypress);
             }
             
-            // Auto-start voice recognition if global voice input is enabled
+            // Auto-start/switch voice recognition if global voice input is enabled
             if (voiceInputEnabled) {
                 if (modalId === 'modal-bidding') {
                     startVoiceRecognition('bids');
                 } else if (modalId === 'modal-results') {
                     startVoiceRecognition('results');
+                } else if (modalId === 'modal-new-round') {
+                    startVoiceRecognition('global');
                 }
             }
             updateAllVoiceButtons();
@@ -3688,26 +3809,25 @@
 
         function closeModal(modalId) {
             document.getElementById(modalId).classList.remove('active');
-            // Stop voice recognition when closing modal (but keep voiceInputEnabled for next modal)
-            if (isListening) {
-                stopVoiceRecognition();
-                // Keep voiceInputEnabled true so it auto-starts in next modal
-            }
-            // Remove keyboard listener for bidding
+            
+            // Remove keyboard listeners
             if (modalId === 'modal-bidding') {
                 document.removeEventListener('keydown', handleBiddingKeypress);
             }
-            // Remove keyboard listener for results
             if (modalId === 'modal-results') {
                 document.removeEventListener('keydown', handleResultsKeypress);
             }
-            // Remove keyboard listener for new game
             if (modalId === 'modal-new-game') {
                 document.removeEventListener('keydown', handleNewGameKeypress);
             }
-            // Remove keyboard listener for new round
             if (modalId === 'modal-new-round') {
                 document.removeEventListener('keydown', handleNewRoundKeypress);
+            }
+            
+            // If global voice is enabled, switch to global mode instead of stopping
+            if (voiceInputEnabled && isListening) {
+                voiceMode = 'global';
+                showVoiceToast('🎤 Poslouchám...');
             }
             updateAllVoiceButtons();
         }
