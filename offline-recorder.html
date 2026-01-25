@@ -1545,6 +1545,76 @@
             window.speechSynthesis.speak(utterance);
         }
         
+        // Detect gender from Czech name (names ending in -a are typically female)
+        function isFemale(name) {
+            const lowerName = name.toLowerCase().trim();
+            // Common male names ending in -a
+            const maleExceptions = ['honza', 'míša', 'péťa', 'jirka', 'miloša', 'saša'];
+            if (maleExceptions.some(ex => lowerName.includes(ex))) return false;
+            // Names ending in -a are typically female
+            return lowerName.endsWith('a') || lowerName.endsWith('á');
+        }
+        
+        // Get ordinal in Czech with proper gender
+        function getOrdinalWithGender(num, isFemale) {
+            const maleOrdinals = {
+                1: 'první', 2: 'druhý', 3: 'třetí', 4: 'čtvrtý', 5: 'pátý',
+                6: 'šestý', 7: 'sedmý', 8: 'osmý', 9: 'devátý', 10: 'desátý'
+            };
+            const femaleOrdinals = {
+                1: 'první', 2: 'druhá', 3: 'třetí', 4: 'čtvrtá', 5: 'pátá',
+                6: 'šestá', 7: 'sedmá', 8: 'osmá', 9: 'devátá', 10: 'desátá'
+            };
+            const ordinals = isFemale ? femaleOrdinals : maleOrdinals;
+            return ordinals[num] || `${num}.`;
+        }
+        
+        // Get "je/je" verb with gender (both are "je" in Czech, but good for future)
+        function getVerbByt(isFemale) {
+            return 'je';
+        }
+        
+        // Speak current ranking
+        function speakCurrentRanking() {
+            if (!currentGame || !currentGame.players) return;
+            
+            // Sort players by score descending
+            const sortedPlayers = [...currentGame.players].sort((a, b) => b.total_score - a.total_score);
+            
+            // Build ranking with ties
+            let rankText = [];
+            let currentRank = 1;
+            let previousScore = null;
+            let playersAtRank = 0;
+            
+            sortedPlayers.forEach((player, index) => {
+                if (previousScore !== null && player.total_score < previousScore) {
+                    currentRank += playersAtRank;
+                    playersAtRank = 1;
+                } else {
+                    playersAtRank++;
+                }
+                
+                const female = isFemale(player.name);
+                const ordinal = getOrdinalWithGender(currentRank, female);
+                const points = player.total_score;
+                const pointsText = points === 1 ? 'bod' : (points >= 2 && points <= 4 ? 'body' : 'bodů');
+                
+                rankText.push(`${ordinal} ${female ? 'je' : 'je'} ${player.name}, ${points} ${pointsText}`);
+                
+                previousScore = player.total_score;
+            });
+            
+            // Speak it
+            const fullText = rankText.join('. ') + '.';
+            
+            // Force speak even if announcements are disabled (user explicitly asked)
+            const wasEnabled = voiceAnnouncementsEnabled;
+            voiceAnnouncementsEnabled = true;
+            speak(fullText);
+            voiceAnnouncementsEnabled = wasEnabled;
+        }
+        
         function toggleVoiceAnnouncements() {
             voiceAnnouncementsEnabled = !voiceAnnouncementsEnabled;
             localStorage.setItem('voiceAnnouncements', voiceAnnouncementsEnabled);
@@ -1798,6 +1868,15 @@
                         showVoiceToast('✓ Zavřeno');
                         return;
                     }
+                }
+            }
+            
+            // Read current ranking command
+            if (textLower.includes('pořadí') || textLower.includes('kdo vede') || textLower.includes('kdo vyhrává')) {
+                if (currentGame && currentGame.players) {
+                    speakCurrentRanking();
+                    showVoiceToast('📊 Čtu pořadí...');
+                    return;
                 }
             }
             
