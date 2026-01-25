@@ -1790,49 +1790,78 @@
             
             // Trump selection commands (when new round modal is open)
             if (document.getElementById('modal-new-round')?.classList.contains('active')) {
-                // Trump suit selection
-                if (textLower.includes('srdce') || textLower.includes('srdíčka') || textLower.includes('červené')) {
-                    selectTrumpSuit('hearts');
-                    showVoiceToast('✓ Trumfy: srdce');
-                    return;
-                }
-                if (textLower.includes('káry') || textLower.includes('kára') || textLower.includes('diamanty')) {
-                    selectTrumpSuit('diamonds');
-                    showVoiceToast('✓ Trumfy: káry');
-                    return;
-                }
-                if (textLower.includes('kříže') || textLower.includes('kříž') || textLower.includes('žaludy') || textLower.includes('černé')) {
-                    selectTrumpSuit('clubs');
-                    showVoiceToast('✓ Trumfy: kříže');
-                    return;
-                }
-                if (textLower.includes('piky') || textLower.includes('pik') || textLower.includes('listy') || textLower.includes('zelené')) {
-                    selectTrumpSuit('spades');
-                    showVoiceToast('✓ Trumfy: piky');
-                    return;
+                // Smart trump parsing - detect suit and value from natural language
+                const suitPatterns = {
+                    'hearts': ['srdce', 'srdíčka', 'srdcov', 'červen'],
+                    'diamonds': ['káry', 'kára', 'károv', 'diamant'],
+                    'clubs': ['kříže', 'kříž', 'křížov', 'žalud', 'černé'],
+                    'spades': ['piky', 'pik', 'pikov', 'listy', 'zelené']
+                };
+                
+                const valuePatterns = {
+                    '7': ['sedm', 'sedmičk'],
+                    '8': ['osm', 'osmičk'],
+                    '9': ['devít', 'devět'],
+                    '10': ['deset', 'desítk'],
+                    'J': ['kluk', 'spodek', 'jack', 'jota', 'spodka'],
+                    'Q': ['dám', 'králov', 'queen', 'kvíd', 'svršek'],
+                    'K': ['král', 'king'],
+                    'A': ['eso', 'es ', 'ace']
+                };
+                
+                // Detect suit
+                let detectedSuit = null;
+                for (const [suit, patterns] of Object.entries(suitPatterns)) {
+                    for (const pattern of patterns) {
+                        if (textLower.includes(pattern)) {
+                            detectedSuit = suit;
+                            break;
+                        }
+                    }
+                    if (detectedSuit) break;
                 }
                 
-                // Trump value selection
-                const valueMap = {
-                    'sedm': '7', 'sedmička': '7', 'sedmu': '7',
-                    'osm': '8', 'osmička': '8', 'osmu': '8',
-                    'devět': '9', 'devítka': '9', 'devítku': '9',
-                    'deset': '10', 'desítka': '10', 'desítku': '10',
-                    'kluk': 'J', 'spodek': 'J', 'jack': 'J', 'jota': 'J',
-                    'dáma': 'Q', 'královna': 'Q', 'queen': 'Q', 'kvído': 'Q',
-                    'král': 'K', 'king': 'K',
-                    'eso': 'A', 'es': 'A', 'ace': 'A'
-                };
-                for (const [word, value] of Object.entries(valueMap)) {
-                    if (textLower.includes(word)) {
-                        selectTrumpValue(value);
-                        showVoiceToast(`✓ Hodnota: ${value}`);
-                        return;
+                // Detect value
+                let detectedValue = null;
+                for (const [value, patterns] of Object.entries(valuePatterns)) {
+                    for (const pattern of patterns) {
+                        if (textLower.includes(pattern)) {
+                            detectedValue = value;
+                            break;
+                        }
                     }
+                    if (detectedValue) break;
+                }
+                
+                // Apply detected suit and/or value
+                if (detectedSuit || detectedValue) {
+                    let message = '✓';
+                    
+                    if (detectedSuit) {
+                        selectTrumpSuit(detectedSuit);
+                        const suitNames = { hearts: 'srdce', diamonds: 'káry', clubs: 'kříže', spades: 'piky' };
+                        message += ` ${suitNames[detectedSuit]}`;
+                    }
+                    
+                    if (detectedValue) {
+                        selectTrumpValue(detectedValue);
+                        message += ` ${detectedValue}`;
+                    }
+                    
+                    showVoiceToast(message);
+                    
+                    // If both suit and value detected, auto-continue to bidding
+                    if (detectedSuit && detectedValue) {
+                        setTimeout(() => {
+                            createRound();
+                            showVoiceToast('✓ Kolo vytvořeno');
+                        }, 500);
+                    }
+                    return;
                 }
                 
                 // Continue to bidding
-                if (textLower.includes('pokračovat') || textLower.includes('pokračuj') || textLower.includes('dál') || textLower.includes('potvrdit') || textLower.includes('ok')) {
+                if (textLower.includes('pokračovat') || textLower.includes('pokračuj') || textLower.includes('dál') || textLower.includes('potvrdit') || textLower.includes('ok') || textLower.includes('hotovo')) {
                     if (selectedTrumpSuit) {
                         createRound();
                         showVoiceToast('✓ Kolo vytvořeno');
