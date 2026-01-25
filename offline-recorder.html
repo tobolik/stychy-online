@@ -1779,15 +1779,6 @@
                 }
             }
             
-            // New round command
-            if (textLower.includes('nové kolo') || textLower.includes('další kolo') || textLower.includes('nový kolo')) {
-                if (currentGame && !document.getElementById('modal-new-round').classList.contains('active')) {
-                    openNewRoundModal();
-                    showVoiceToast('✓ Nové kolo');
-                    return;
-                }
-            }
-            
             // Trump selection commands (when new round modal is open)
             if (document.getElementById('modal-new-round')?.classList.contains('active')) {
                 // Smart trump parsing - detect suit and value from natural language
@@ -1872,20 +1863,32 @@
                 }
             }
             
-            // Open bidding modal
+            // Open bidding modal - check if button is visible on page
             if (textLower.includes('hlášení') || textLower.includes('zadat hlášení') || textLower.includes('sázky')) {
-                if (currentRound?.status === 'bidding' && !document.getElementById('modal-bidding').classList.contains('active')) {
+                const biddingBtn = document.querySelector('button[onclick="openBiddingModal()"]');
+                if (biddingBtn && !document.getElementById('modal-bidding').classList.contains('active')) {
                     openBiddingModal();
                     showVoiceToast('✓ Hlášení');
                     return;
                 }
             }
             
-            // Open results modal
+            // Open results modal - check if button is visible on page
             if (textLower.includes('výsledky') || textLower.includes('zadat výsledky') || textLower.includes('zapsat')) {
-                if (currentRound?.status === 'playing' && !document.getElementById('modal-results').classList.contains('active')) {
+                const resultsBtn = document.querySelector('button[onclick="openResultsModal()"]');
+                if (resultsBtn && !document.getElementById('modal-results').classList.contains('active')) {
                     openResultsModal();
                     showVoiceToast('✓ Výsledky');
+                    return;
+                }
+            }
+            
+            // Open new round modal - check if button is visible on page  
+            if (textLower.includes('nové kolo') || textLower.includes('další kolo') || textLower.includes('nový kolo')) {
+                const newRoundBtn = document.querySelector('button[onclick="openNewRoundModal()"]');
+                if (newRoundBtn && !document.getElementById('modal-new-round').classList.contains('active')) {
+                    openNewRoundModal();
+                    showVoiceToast('✓ Nové kolo');
                     return;
                 }
             }
