@@ -151,6 +151,17 @@
             display: inline-block;
             box-shadow: 0 1px 2px rgba(0,0,0,0.3);
         }
+        .app-footer {
+            margin-top: 40px;
+            padding: 20px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            border-top: 1px solid var(--border-light);
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
 
         /* Screens */
         .screen {
@@ -1141,6 +1152,13 @@
             <div class="results-summary" id="results-summary" style="display: none;">
                 <!-- Dynamicky generováno -->
             </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="app-footer">
+            <span>Štychy Záznamník v1.0.0</span>
+            <span>•</span>
+            <span id="build-date">2026-01-25</span>
         </div>
     </div>
 
