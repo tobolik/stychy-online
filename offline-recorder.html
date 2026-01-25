@@ -2064,15 +2064,56 @@
                     console.log('🎯 Default success:', defaultSuccess, 'isSuccessPattern:', isSuccessPattern, 'isFailPattern:', isFailPattern);
                     
                     // Find player names mentioned in the text (these are the exceptions)
+                    // Handle Czech declension - generate common forms of names
+                    function getNameVariants(name) {
+                        const variants = [name.toLowerCase()];
+                        const nameLower = name.toLowerCase();
+                        
+                        // Common Czech female name endings and their declensions
+                        if (nameLower.endsWith('a')) {
+                            const stem = nameLower.slice(0, -1);
+                            variants.push(stem + 'y');  // genitiv (Terky, Jany)
+                            variants.push(stem + 'u');  // akuzativ (Terku, Janu)
+                            variants.push(stem + 'o');  // vokativ (Terko, Jano)
+                            variants.push(stem + 'e');  // lokál (Terce) - for -ka endings
+                            variants.push(stem + 'ou'); // instrumentál (Terkou)
+                            variants.push(stem + 'ě');  // dativ/lokál (Janě)
+                            // Handle -ka → -ce (Terka → Terce)
+                            if (nameLower.endsWith('ka')) {
+                                variants.push(nameLower.slice(0, -2) + 'ce');
+                            }
+                        }
+                        // Male names ending in consonant
+                        else if (!nameLower.endsWith('a') && !nameLower.endsWith('e') && !nameLower.endsWith('i') && !nameLower.endsWith('o') && !nameLower.endsWith('u')) {
+                            variants.push(nameLower + 'a');  // genitiv (Martina, Honzy)
+                            variants.push(nameLower + 'u');  // dativ (Martinovi shortened)
+                            variants.push(nameLower + 'ovi'); // dativ (Martinovi)
+                            variants.push(nameLower + 'em'); // instrumentál (Martinem)
+                            variants.push(nameLower + 'e');  // vokativ (Martine)
+                            // Handle -ek → -ka (Honzek → Honzka, but also Honza → Honzy)
+                        }
+                        // Names ending in -i or -y (Juli, Hony)
+                        else if (nameLower.endsWith('i') || nameLower.endsWith('y')) {
+                            variants.push(nameLower + 'ho'); // genitiv
+                            variants.push(nameLower + 'm');  // dativ
+                        }
+                        
+                        return variants;
+                    }
+                    
                     const exceptionPlayers = [];
                     const sortedPlayers = [...currentGame.players].sort((a, b) => b.name.length - a.name.length);
                     
                     for (const player of sortedPlayers) {
-                        const nameLower = player.name.toLowerCase();
-                        // Check if name appears after "kromě"
+                        const nameVariants = getNameVariants(player.name);
+                        // Check if any name variant appears after "kromě"
                         const kromeIndex = textLower.indexOf('kromě') !== -1 ? textLower.indexOf('kromě') : textLower.indexOf('krome');
-                        if (kromeIndex !== -1 && textLower.indexOf(nameLower) > kromeIndex) {
-                            exceptionPlayers.push(player);
+                        if (kromeIndex !== -1) {
+                            const textAfterKrome = textLower.substring(kromeIndex);
+                            const found = nameVariants.some(variant => textAfterKrome.includes(variant));
+                            if (found) {
+                                exceptionPlayers.push(player);
+                            }
                         }
                     }
                     
@@ -2106,14 +2147,15 @@
                 }
                 
                 // Also handle "uhráli/neuhráli všichni" without exceptions
-                const allSuccess = textLower.match(/(?:uhrál|splnil).*(?:všichni|všechny)\b/i) && !textLower.includes('kromě');
-                const allFail = textLower.match(/(?:neuhrál|nesplnil).*(?:všichni|všechny)\b/i) && !textLower.includes('kromě');
-                // Reverse order
-                const allSuccess2 = textLower.match(/(?:všichni|všechny).*(?:uhrál|splnil)/i) && !textLower.includes('kromě');
-                const allFail2 = textLower.match(/(?:všichni|všechny).*(?:neuhrál|nesplnil)/i) && !textLower.includes('kromě');
+                // Check for FAIL patterns FIRST (they contain the success words as substrings)
+                const hasFailWord = textLower.includes('neuhrál') || textLower.includes('nesplnil') || 
+                                   textLower.includes('neuhráli') || textLower.includes('nesplnili');
+                const hasSuccessWord = (textLower.includes('uhrál') || textLower.includes('splnil') ||
+                                       textLower.includes('uhráli') || textLower.includes('splnili')) && !hasFailWord;
+                const hasVsichniWord = textLower.includes('všichni') || textLower.includes('všechny');
                 
-                if (allSuccess || allFail || allSuccess2 || allFail2) {
-                    const success = !!(allSuccess || allSuccess2);
+                if (hasVsichniWord && (hasSuccessWord || hasFailWord) && !textLower.includes('kromě')) {
+                    const success = hasSuccessWord;
                     
                     for (let idx = 0; idx < orderedResultsPlayers.length; idx++) {
                         const player = orderedResultsPlayers[idx];
