@@ -1508,9 +1508,15 @@
         // Global voice input mode (persists across modals)
         let voiceInputEnabled = localStorage.getItem('voiceInput') === 'true';
         
+        // Flag to ignore voice input temporarily after TTS
+        let ignoringVoiceInput = false;
+        
         function speak(text) {
             if (!voiceAnnouncementsEnabled) return;
             if (!('speechSynthesis' in window)) return;
+            
+            // Temporarily ignore voice input to prevent picking up TTS output
+            ignoringVoiceInput = true;
             
             // Cancel any ongoing speech
             window.speechSynthesis.cancel();
@@ -1527,6 +1533,14 @@
             if (czechVoice) {
                 utterance.voice = czechVoice;
             }
+            
+            // Re-enable voice input after speech ends
+            utterance.onend = () => {
+                setTimeout(() => { ignoringVoiceInput = false; }, 500);
+            };
+            utterance.onerror = () => {
+                ignoringVoiceInput = false;
+            };
             
             window.speechSynthesis.speak(utterance);
         }
@@ -1763,6 +1777,12 @@
         }
 
         function processVoiceCommand(text) {
+            // Ignore voice input while TTS is speaking to prevent echo
+            if (ignoringVoiceInput) {
+                console.log('Ignoring voice input (TTS speaking):', text);
+                return;
+            }
+            
             const textLower = text.toLowerCase();
             
             // === GLOBAL COMMANDS (work anywhere) ===
@@ -1790,14 +1810,14 @@
                 };
                 
                 const valuePatterns = {
-                    '7': ['sedm', 'sedmičk'],
-                    '8': ['osm', 'osmičk'],
-                    '9': ['devít', 'devět'],
-                    '10': ['deset', 'desítk'],
-                    'J': ['kluk', 'spodek', 'jack', 'jota', 'spodka'],
-                    'Q': ['dám', 'králov', 'queen', 'kvíd', 'svršek'],
-                    'K': ['král', 'king'],
-                    'A': ['eso', 'es ', 'ace']
+                    '7': ['sedm', 'sedmičk', 'sedmu'],
+                    '8': ['osm', 'osmičk', 'osmu'],
+                    '9': ['devít', 'devět', 'devátk'],
+                    '10': ['deset', 'desít', 'desátk', '10'],
+                    'J': ['kluk', 'spodek', 'jack', 'jota', 'spodka', 'janek', 'jank'],
+                    'Q': ['dám', 'králov', 'queen', 'kvíd', 'svršek', 'fílek'],
+                    'K': ['král', 'king', 'kinge'],
+                    'A': ['eso', 'es ', 'ace', 'áčko']
                 };
                 
                 // Detect suit
@@ -1825,6 +1845,8 @@
                 }
                 
                 // Apply detected suit and/or value
+                console.log('Trump detection:', { text: textLower, detectedSuit, detectedValue });
+                
                 if (detectedSuit || detectedValue) {
                     let message = '✓';
                     
@@ -2736,9 +2758,10 @@
         }
 
         function selectTrumpValue(value) {
-            selectedTrumpValue = selectedTrumpValue === value ? null : value;
+            // Always set the value (don't toggle for better voice input UX)
+            selectedTrumpValue = value;
             document.querySelectorAll('.trump-value-btn').forEach(btn => {
-                btn.classList.toggle('selected', btn.textContent === selectedTrumpValue);
+                btn.classList.toggle('selected', btn.textContent.trim() === selectedTrumpValue);
             });
             updateTrumpPreview();
         }
