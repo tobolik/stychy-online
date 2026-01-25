@@ -1689,11 +1689,12 @@
                 'deset': 10, 'desítku': 10
             };
 
-            // Find player by name
+            // Find player by name - sort by name length descending to match longer names first (Martina before Martin)
             let foundPlayer = null;
             const textLower = text.toLowerCase();
             
-            for (const player of currentGame.players) {
+            const sortedPlayers = [...currentGame.players].sort((a, b) => b.name.length - a.name.length);
+            for (const player of sortedPlayers) {
                 const nameLower = player.name.toLowerCase();
                 if (textLower.includes(nameLower)) {
                     foundPlayer = player;
@@ -1754,27 +1755,36 @@
                     }
                 }
                 
-                // Check for explicit success/fail words first
-                if (textLower.includes('splnil') || textLower.includes('ano') || textLower.includes('ok') || textLower.includes('dobře') || textLower.includes('super')) {
+                // Check for explicit success/fail words first (these have priority)
+                const hasSuccess = textLower.includes('splnil') || textLower.includes('ok') || textLower.includes('dobře') || textLower.includes('super');
+                const hasFail = textLower.includes('nesplnil') || textLower.includes('špatně');
+                // Check for standalone "ano" or "ne" (word boundary check)
+                const hasAno = /\bano\b/.test(textLower);
+                const hasNe = /\bne\b/.test(textLower) && !textLower.includes('nesplnil');
+                
+                if (hasSuccess || hasAno) {
                     setResult(foundPlayer.position, true, bid, playerIndex);
                     showVoiceToast(`✓ ${foundPlayer.name} splnil`);
-                } else if (textLower.includes('nesplnil') || textLower.includes('špatně')) {
-                    setResult(foundPlayer.position, false, bid, playerIndex);
-                    showVoiceToast(`✗ ${foundPlayer.name} nesplnil`);
-                } else if (number === 1 || textLower.includes('jedna') || textLower.includes('jedničku')) {
-                    // "1" or "jedna" = splnil (like keyboard)
-                    setResult(foundPlayer.position, true, bid, playerIndex);
-                    showVoiceToast(`✓ ${foundPlayer.name} splnil`);
-                } else if (number === 0 || textLower.includes('nula') || textLower.includes('nulu') || textLower.includes('ne') || textLower.includes('nic')) {
-                    // "0" or "nula" or "ne" or "nic" = nesplnil (like keyboard)
+                } else if (hasFail || hasNe) {
                     setResult(foundPlayer.position, false, bid, playerIndex);
                     showVoiceToast(`✗ ${foundPlayer.name} nesplnil`);
                 } else if (detailedMode && number !== null) {
-                    // Only use detailed mode with specific numbers if detailed mode is active
+                    // In detailed mode, all numbers (including 0,1) are exact trick counts
                     selectTricks(foundPlayer.position, number);
                     moveToNextResultsPlayer(playerIndex);
                     updateResultsEnteredCount();
                     showVoiceToast(`✓ ${foundPlayer.name}: ${number} štychů`);
+                } else if (!detailedMode && number !== null) {
+                    // In simple mode: 1 = splnil, 0 = nesplnil
+                    if (number === 1) {
+                        setResult(foundPlayer.position, true, bid, playerIndex);
+                        showVoiceToast(`✓ ${foundPlayer.name} splnil`);
+                    } else if (number === 0) {
+                        setResult(foundPlayer.position, false, bid, playerIndex);
+                        showVoiceToast(`✗ ${foundPlayer.name} nesplnil`);
+                    } else {
+                        showVoiceToast(`❓ ${foundPlayer.name} - pouze 0 nebo 1`);
+                    }
                 } else {
                     showVoiceToast(`❓ ${foundPlayer.name} - splnil/nesplnil?`);
                 }
@@ -3592,37 +3602,44 @@
             }
             
             const key = e.key;
+            console.log('Trump keypress:', key, 'ctrlKey:', e.ctrlKey);
             
             // CTRL + 1-4 for suit selection
             if (e.ctrlKey && /^[1-4]$/.test(key)) {
                 e.preventDefault();
+                e.stopPropagation();
                 const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
+                console.log('Selecting suit:', suits[parseInt(key) - 1]);
                 selectTrumpSuit(suits[parseInt(key) - 1]);
                 return;
             }
             
-            // Number keys 7-10 for card values
+            // Number keys 7-10 for card values (without CTRL)
             if (!e.ctrlKey && /^[7-9]$/.test(key)) {
                 e.preventDefault();
+                console.log('Selecting value:', key);
                 selectTrumpValue(key);
                 return;
             }
             if (!e.ctrlKey && key === '0') {
                 e.preventDefault();
+                console.log('Selecting value: 10');
                 selectTrumpValue('10');
                 return;
             }
             
-            // J, Q, K, A for card values
+            // J, Q, K, A for card values (without CTRL)
             if (!e.ctrlKey && /^[jqkaJQKA]$/.test(key)) {
                 e.preventDefault();
+                console.log('Selecting value:', key.toUpperCase());
                 selectTrumpValue(key.toUpperCase());
                 return;
             }
             
             // Enter to continue to bidding
-            if (key === 'Enter') {
+            if (key === 'Enter' && !e.ctrlKey) {
                 e.preventDefault();
+                console.log('Creating round');
                 createRound();
                 return;
             }
