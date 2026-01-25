@@ -1,0 +1,28 @@
+# Konfigurace s hesly - NIKDY necommitovat!
+config/database.php
+
+# Zálohy
+*.bak
+*.backup
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS soubory
+.DS_Store
+Thumbs.db
+
+# Logy
+*.log
+logs/
+
+# Závislosti (pokud budou)
+vendor/
+node_modules/
+
+# Dočasné soubory
+*.tmp
+*.temp

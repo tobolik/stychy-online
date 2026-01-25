@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrace - Štychy Online</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #1a1c2c;
+            --accent: #00ffcc;
+            --accent-hover: #00cca3;
+            --text-main: #ffffff;
+            --text-muted: #a0a0a0;
+            --surface: #23263a;
+            --surface-hover: #2d314a;
+            --border-light: rgba(255,255,255,0.1);
+            --danger: #ff5e5e;
+            --success: #2ecc71;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: radial-gradient(circle at center, #2a2d45 0%, var(--bg-color) 70%);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: 3px;
+            margin-bottom: 10px;
+        }
+        .logo span { color: var(--accent); }
+
+        .auth-subtitle {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .auth-card {
+            background: var(--surface);
+            border-radius: 24px;
+            padding: 40px;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .auth-title {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--accent);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-input-wrapper {
+            position: relative;
+        }
+
+        .form-input-wrapper i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 15px 14px 45px;
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            background: rgba(0,0,0,0.3);
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0, 255, 204, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .form-input.error {
+            border-color: var(--danger);
+        }
+
+        .form-hint {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #1a1c2c;
+        }
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 255, 204, 0.3);
+        }
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: 25px;
+            color: var(--text-muted);
+        }
+
+        .auth-footer a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .auth-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            background: rgba(255, 94, 94, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            display: none;
+        }
+        .error-message.show {
+            display: block;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 25px 0;
+            color: var(--text-muted);
+        }
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border-light);
+        }
+        .divider span {
+            padding: 0 15px;
+            font-size: 0.85rem;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 30px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .back-link:hover {
+            color: var(--accent);
+        }
+
+        .password-strength {
+            height: 4px;
+            background: var(--border-light);
+            border-radius: 2px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+        .password-strength-bar {
+            height: 100%;
+            width: 0%;
+            transition: all 0.3s;
+        }
+        .password-strength-bar.weak { width: 33%; background: var(--danger); }
+        .password-strength-bar.medium { width: 66%; background: orange; }
+        .password-strength-bar.strong { width: 100%; background: var(--success); }
+
+        .loading-spinner {
+            display: none;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-header">
+            <div class="logo">ŠTYCHY <span>ONLINE</span></div>
+            <p class="auth-subtitle">Vytvořte si účet a začněte zapisovat hry</p>
+        </div>
+
+        <div class="auth-card">
+            <h1 class="auth-title">Registrace</h1>
+
+            <div class="error-message" id="error-message"></div>
+
+            <form id="register-form" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label class="form-label">Uživatelské jméno</label>
+                    <div class="form-input-wrapper">
+                        <i class="fa-solid fa-user"></i>
+                        <input type="text" class="form-input" id="username" placeholder="Zadejte uživatelské jméno" required minlength="3" maxlength="50">
+                    </div>
+                    <p class="form-hint">3-50 znaků</p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">E-mail</label>
+                    <div class="form-input-wrapper">
+                        <i class="fa-solid fa-envelope"></i>
+                        <input type="email" class="form-input" id="email" placeholder="Zadejte e-mail" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Heslo</label>
+                    <div class="form-input-wrapper">
+                        <i class="fa-solid fa-lock"></i>
+                        <input type="password" class="form-input" id="password" placeholder="Zadejte heslo" required minlength="6" oninput="checkPasswordStrength()">
+                    </div>
+                    <div class="password-strength">
+                        <div class="password-strength-bar" id="password-strength-bar"></div>
+                    </div>
+                    <p class="form-hint">Minimálně 6 znaků</p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Potvrzení hesla</label>
+                    <div class="form-input-wrapper">
+                        <i class="fa-solid fa-lock"></i>
+                        <input type="password" class="form-input" id="password-confirm" placeholder="Zadejte heslo znovu" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="submit-btn">
+                    <i class="fa-solid fa-user-plus"></i>
+                    <span>Vytvořit účet</span>
+                    <i class="fa-solid fa-spinner loading-spinner" id="loading"></i>
+                </button>
+            </form>
+
+            <div class="divider"><span>nebo</span></div>
+
+            <p class="auth-footer">
+                Už máte účet? <a href="login.html">Přihlaste se</a>
+            </p>
+        </div>
+
+        <a href="index.html" class="back-link">
+            <i class="fa-solid fa-arrow-left"></i> Zpět na hlavní stránku
+        </a>
+    </div>
+
+    <script>
+        function checkPasswordStrength() {
+            const password = document.getElementById('password').value;
+            const bar = document.getElementById('password-strength-bar');
+            
+            bar.className = 'password-strength-bar';
+            
+            if (password.length === 0) {
+                return;
+            }
+            
+            let strength = 0;
+            if (password.length >= 6) strength++;
+            if (password.length >= 8) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[^A-Za-z0-9]/.test(password)) strength++;
+
+            if (strength <= 2) {
+                bar.classList.add('weak');
+            } else if (strength <= 3) {
+                bar.classList.add('medium');
+            } else {
+                bar.classList.add('strong');
+            }
+        }
+
+        async function handleRegister(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const passwordConfirm = document.getElementById('password-confirm').value;
+            const submitBtn = document.getElementById('submit-btn');
+            const loading = document.getElementById('loading');
+            const errorMsg = document.getElementById('error-message');
+
+            errorMsg.classList.remove('show');
+
+            // Validation
+            if (password !== passwordConfirm) {
+                errorMsg.textContent = 'Hesla se neshodují';
+                errorMsg.classList.add('show');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            loading.style.display = 'inline-block';
+
+            try {
+                const response = await fetch('api/auth.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'register',
+                        username: username,
+                        email: email,
+                        password: password
+                    }),
+                    credentials: 'include'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    window.location.href = 'login.html?registered=true';
+                } else {
+                    errorMsg.textContent = result.error || 'Chyba registrace';
+                    errorMsg.classList.add('show');
+                }
+            } catch (error) {
+                errorMsg.textContent = 'Chyba připojení k serveru';
+                errorMsg.classList.add('show');
+            } finally {
+                submitBtn.disabled = false;
+                loading.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

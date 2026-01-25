@@ -1,0 +1,3499 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Záznamník offline her - Štychy Online</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #1a1c2c;
+            --accent: #00ffcc;
+            --accent-hover: #00cca3;
+            --text-main: #ffffff;
+            --text-muted: #a0a0a0;
+            --surface: #23263a;
+            --surface-hover: #2d314a;
+            --border-light: rgba(255,255,255,0.1);
+            --danger: #ff5e5e;
+            --success: #2ecc71;
+            --warning: #ffcc00;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border-light);
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+        }
+        .logo span { color: var(--accent); }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .username { color: var(--accent); font-weight: bold; }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #1a1c2c;
+        }
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: var(--surface);
+            color: var(--text-main);
+            border: 1px solid var(--border-light);
+        }
+        .btn-secondary:hover {
+            background: var(--surface-hover);
+        }
+
+        .btn-danger {
+            background: transparent;
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+        .btn-danger:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+        .btn-icon {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 5px 8px;
+            border-radius: 5px;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+        .btn-icon:hover {
+            background: rgba(255,255,255,0.1);
+            color: var(--accent);
+        }
+        .btn-icon-lg {
+            background: var(--surface);
+            border: 1px solid var(--border-light);
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            font-size: 1.1rem;
+        }
+        .btn-icon-lg:hover {
+            background: rgba(255,255,255,0.1);
+            color: var(--accent);
+        }
+        .btn-icon-lg.active {
+            background: var(--accent);
+            color: var(--bg-main);
+            border-color: var(--accent);
+        }
+
+        /* Screens */
+        .screen {
+            display: none;
+        }
+        .screen.active {
+            display: block;
+        }
+
+        /* Game List */
+        .section-title {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .game-card {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid var(--border-light);
+            transition: transform 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+        .game-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent);
+        }
+
+        .game-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .game-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .game-status {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        .game-status.active { background: var(--accent); color: #1a1c2c; }
+        .game-status.finished { background: var(--success); color: white; }
+
+        .game-info {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .game-card-copy-btn {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #00ffcc;
+            color: #1a1c2c;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.7;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+        .game-card:hover .game-card-copy-btn {
+            opacity: 1;
+        }
+        .game-card-copy-btn:hover {
+            transform: scale(1.1);
+            background: #00e6b8;
+        }
+
+        .new-game-card {
+            border: 2px dashed var(--border-light);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 150px;
+            background: transparent;
+        }
+        .new-game-card i {
+            font-size: 2rem;
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--surface);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid var(--border-light);
+        }
+        .modal-content.modal-large {
+            max-width: 800px;
+        }
+
+        /* Statistics Styles */
+        .stats-section {
+            margin-bottom: 25px;
+        }
+        .stats-section-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+        .stat-card {
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--accent);
+        }
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+        .stat-player {
+            font-size: 0.9rem;
+            color: var(--primary);
+            margin-top: 3px;
+            font-weight: bold;
+        }
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        .stats-table th, .stats-table td {
+            padding: 10px 8px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .stats-table th {
+            color: var(--text-muted);
+            font-weight: normal;
+            font-size: 0.8rem;
+        }
+        .stats-table td:first-child {
+            font-weight: bold;
+        }
+        .stats-table .highlight {
+            color: var(--accent);
+            font-weight: bold;
+        }
+        .stats-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        .stats-badge.gold { background: gold; color: #1a1c2c; }
+        .stats-badge.silver { background: silver; color: #1a1c2c; }
+        .stats-badge.bronze { background: #cd7f32; color: white; }
+
+        .modal-content.modal-wide {
+            max-width: 700px;
+        }
+
+        .trump-selectors {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--accent);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
+            background: rgba(0,0,0,0.3);
+            color: white;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        /* Player Count Selector */
+        .player-count-selector {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .player-count-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            border: 2px solid var(--border-light);
+            background: transparent;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .player-count-btn:hover {
+            border-color: var(--accent);
+        }
+        .player-count-btn.selected {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #1a1c2c;
+        }
+
+        /* Player Names */
+        .player-names-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .player-name-input {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .player-number {
+            background: var(--accent);
+            color: #1a1c2c;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .player-number.clickable:hover {
+            background: var(--primary);
+            transform: scale(1.15);
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+        }
+
+        .player-move-btns {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .player-move-btn {
+            width: 24px;
+            height: 18px;
+            padding: 0;
+            border: 1px solid var(--border-light);
+            background: var(--surface);
+            color: var(--text-muted);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.65rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .player-move-btn:hover {
+            background: var(--accent);
+            color: #1a1c2c;
+            border-color: var(--accent);
+        }
+        .player-move-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* Autocomplete */
+        .autocomplete-wrapper {
+            position: relative;
+            flex: 1;
+        }
+        .autocomplete-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+        .autocomplete-list.show {
+            display: block;
+        }
+        .autocomplete-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .autocomplete-item:hover {
+            background: rgba(0, 255, 204, 0.1);
+        }
+
+        /* Trump Card Selector */
+        .trump-selector {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .trump-suit-btn {
+            aspect-ratio: 3/4;
+            border: 2px solid var(--border-light);
+            border-radius: 12px;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 2.5rem;
+            position: relative;
+            min-height: 100px;
+        }
+        .trump-suit-btn:hover {
+            transform: scale(1.05);
+        }
+        .trump-suit-btn.selected {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.5);
+        }
+        .trump-suit-btn.hearts, .trump-suit-btn.diamonds { color: #e74c3c; }
+        .trump-suit-btn.clubs, .trump-suit-btn.spades { color: #2c3e50; }
+        .trump-suit-btn .trump-val {
+            position: absolute;
+            top: 5px;
+            left: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+        .trump-suit-btn .trump-val-bottom {
+            position: absolute;
+            bottom: 5px;
+            right: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            transform: rotate(180deg);
+        }
+
+        .trump-value-selector {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 5px;
+            justify-content: center;
+        }
+
+        .trump-value-btn {
+            width: 36px;
+            height: 36px;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            background: var(--surface);
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .trump-value-btn:hover {
+            border-color: var(--accent);
+        }
+        .trump-value-btn.selected {
+            background: var(--accent);
+            color: #1a1c2c;
+        }
+
+        /* Score Table */
+        .score-table-container {
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        .score-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+
+        .score-table th,
+        .score-table td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid var(--border-light);
+        }
+
+        .score-table th {
+            background: var(--surface);
+            font-weight: bold;
+        }
+
+        .score-table .player-header {
+            background: var(--accent);
+            color: #1a1c2c;
+            border-left: 2px solid #1a1c2c !important;
+            border-right: 2px solid #1a1c2c !important;
+        }
+        .score-table .player-header:first-of-type {
+            border-left: 1px solid var(--border-light) !important;
+        }
+
+        .score-table .round-num {
+            background: var(--surface);
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        .score-table .dealer-marker {
+            color: gold;
+        }
+
+        .bid-cell, .tricks-cell {
+            font-size: 0.9rem;
+        }
+
+        .bid-value { color: var(--warning); }
+        .tricks-value { color: var(--accent); }
+
+        .score-positive { color: var(--success); font-weight: bold; }
+        .score-negative { color: var(--danger); font-weight: bold; }
+
+        .total-row {
+            background: var(--surface-hover);
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .current-round-row {
+            background: rgba(0, 255, 204, 0.1);
+        }
+
+        /* Bid Input */
+        .bid-input-grid {
+            display: grid;
+            gap: 15px;
+        }
+
+        .bid-input-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+        }
+
+        .bid-input-row.dealer {
+            border: 1px solid gold;
+        }
+
+        .bid-input-row.current-input {
+            background: rgba(0, 255, 204, 0.15);
+            border: 2px solid var(--primary);
+        }
+
+        .bid-player-name {
+            flex: 1;
+            font-weight: bold;
+        }
+
+        .bid-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .bid-btn {
+            width: 36px;
+            height: 36px;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            background: var(--surface);
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        .bid-btn:hover:not(:disabled) {
+            background: var(--accent);
+            color: #1a1c2c;
+        }
+        .bid-btn.selected {
+            background: var(--warning);
+            color: #1a1c2c;
+            border-color: var(--warning);
+        }
+        .bid-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* Success/Fail buttons for results */
+        .result-btn {
+            padding: 12px 24px;
+            border: 2px solid var(--border-light);
+            border-radius: 10px;
+            background: var(--surface);
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .result-btn:hover {
+            transform: scale(1.05);
+        }
+        .result-btn.success {
+            border-color: var(--success);
+            color: var(--success);
+        }
+        .result-btn.success.selected {
+            background: var(--success);
+            color: white;
+        }
+        .result-btn.fail {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+        .result-btn.fail.selected {
+            background: var(--danger);
+            color: white;
+        }
+
+        .result-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            margin-bottom: 6px;
+            transition: all 0.2s;
+        }
+        .result-row.current-input {
+            background: rgba(0, 255, 204, 0.15);
+            border: 2px solid var(--accent);
+        }
+        .result-row .player-info {
+            flex: 1;
+        }
+        .result-row .player-name {
+            font-weight: bold;
+            font-size: 1rem;
+        }
+        .result-row .player-bid {
+            color: var(--warning);
+            font-size: 0.8rem;
+        }
+        .result-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        .result-btn {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+        }
+
+        /* Voice Recognition */
+        .mic-btn {
+            background: var(--surface);
+            border: 2px solid var(--accent);
+            color: var(--accent);
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+        .mic-btn:hover {
+            background: rgba(0, 255, 204, 0.1);
+        }
+        .mic-btn.active {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: white;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 94, 94, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(255, 94, 94, 0); }
+        }
+
+        .voice-toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            z-index: 10000;
+            animation: fadeInUp 0.3s ease;
+            border: 1px solid var(--accent);
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        .forbidden-info {
+            color: var(--danger);
+            font-size: 0.85rem;
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(255, 94, 94, 0.1);
+            border-radius: 8px;
+        }
+
+        /* Results Summary */
+        .results-summary {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 25px;
+            margin-top: 30px;
+        }
+
+        .results-title {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .ranking-list {
+            list-style: none;
+        }
+
+        .ranking-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .rank-badge {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        .rank-1 { background: gold; color: #1a1c2c; }
+        .rank-2 { background: silver; color: #1a1c2c; }
+        .rank-3 { background: #cd7f32; color: white; }
+        .rank-4 { background: #c9a86c; color: #1a1c2c; }
+        .rank-5 { background: #d35400; color: white; }
+        .rank-6 { background: #3498db; color: white; }
+        .rank-last { background: #2c3e50; color: white; }
+        .rank-other { background: var(--surface); color: white; }
+
+        .rank-name { flex: 1; font-weight: bold; }
+        .rank-score { font-size: 1.2rem; color: var(--accent); }
+
+        /* Current Ranking */
+        .current-ranking {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 25px;
+        }
+        .current-ranking-title {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            color: var(--text-muted);
+        }
+        .current-ranking-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .ranking-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 15px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            font-size: 1rem;
+        }
+        .ranking-row.top-3 {
+            background: rgba(0,0,0,0.4);
+        }
+        .ranking-row .position {
+            font-weight: bold;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+        .ranking-row .trophy {
+            font-size: 1.2rem;
+            min-width: 24px;
+        }
+        .ranking-row .trophy.gold { color: gold; }
+        .ranking-row .trophy.silver { color: silver; }
+        .ranking-row .trophy.bronze { color: #cd7f32; }
+        .ranking-row .trophy.potato { color: #f4d03f; }
+        .ranking-row .trophy.cookie { color: #e67e22; }
+        .ranking-row .trophy.frog { color: #2ecc71; }
+        .ranking-row .trophy.hamster { color: #e67e22; }
+        .ranking-row .trophy.snail { color: #9b59b6; }
+        .ranking-row .trophy.crow { color: #ecf0f1; }
+        .ranking-row .name { flex: 1; color: var(--text-main); }
+        .ranking-row .score { color: var(--primary); font-weight: bold; min-width: 50px; text-align: right; }
+
+        /* Round Info Bar */
+        .round-info-bar {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .round-info-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .round-info-label {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .round-info-value {
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        .trump-display {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: white;
+            color: black;
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .trump-display.hearts, .trump-display.diamonds { color: #e74c3c; }
+        .trump-display.clubs, .trump-display.spades { color: #2c3e50; }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+        .loading i {
+            font-size: 2rem;
+            color: var(--accent);
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .trump-selector {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .games-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">ŠTYCHY <span>ZÁZNAMNÍK</span></div>
+            <div class="user-info">
+                <span>Přihlášen jako: <span class="username" id="display-username">-</span></span>
+                <a href="index.html" class="btn btn-secondary btn-sm">
+                    <i class="fa-solid fa-home"></i> Domů
+                </a>
+                <button class="btn btn-danger btn-sm" onclick="logout()">
+                    <i class="fa-solid fa-sign-out-alt"></i> Odhlásit
+                </button>
+            </div>
+        </div>
+
+        <!-- Screen: Games List -->
+        <div id="screen-games-list" class="screen active">
+            <h1 class="section-title">
+                <i class="fa-solid fa-list"></i>
+                Moje hry
+            </h1>
+
+            <div class="games-grid" id="games-list">
+                <!-- Dynamicky generováno -->
+            </div>
+        </div>
+
+        <!-- Screen: Game Detail -->
+        <div id="screen-game-detail" class="screen">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                <h1 class="section-title" style="margin-bottom: 0; display: flex; align-items: center; gap: 10px;">
+                    <span id="game-detail-name">Hra</span>
+                    <button class="btn-icon" onclick="editGameName()" title="Přejmenovat hru">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
+                </h1>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                    <button id="voice-toggle-btn" class="btn-icon-lg" onclick="toggleVoiceAnnouncements()" title="Zapnout hlasové povely">
+                        <i class="fa-solid fa-volume-xmark"></i>
+                    </button>
+                    <button class="btn btn-secondary" onclick="openStatsModal()" title="Statistiky hry">
+                        <i class="fa-solid fa-chart-bar"></i> Statistiky
+                    </button>
+                    <button class="btn btn-primary" onclick="openCopyGameModal()">
+                        <i class="fa-solid fa-copy"></i> Kopírovat
+                    </button>
+                    <button class="btn btn-danger" onclick="deleteGame()">
+                        <i class="fa-solid fa-trash"></i> Smazat
+                    </button>
+                    <button class="btn btn-secondary" onclick="showScreen('screen-games-list'); loadGames();">
+                        <i class="fa-solid fa-arrow-left"></i> Zpět
+                    </button>
+                </div>
+            </div>
+
+            <div class="round-info-bar" id="round-info-bar">
+                <!-- Dynamicky generováno -->
+            </div>
+
+            <div class="score-table-container">
+                <table class="score-table" id="score-table">
+                    <!-- Dynamicky generováno -->
+                </table>
+            </div>
+
+            <div class="action-buttons" id="game-actions">
+                <!-- Dynamicky generováno -->
+            </div>
+
+            <div class="current-ranking" id="current-ranking" style="display: none;">
+                <!-- Dynamicky generováno -->
+            </div>
+
+            <div class="results-summary" id="results-summary" style="display: none;">
+                <!-- Dynamicky generováno -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: New Game -->
+    <div class="modal" id="modal-new-game">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Nová hra</h2>
+                <button class="close-btn" onclick="closeModal('modal-new-game')">&times;</button>
+            </div>
+
+            <div id="new-game-step-1">
+                <div class="form-group">
+                    <label class="form-label">Název hry</label>
+                    <input type="text" class="form-input" id="new-game-name" placeholder="např. Páteční večer">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Počet hráčů</label>
+                    <div class="player-count-selector">
+                        <button class="player-count-btn" onclick="selectPlayerCount(3)">3</button>
+                        <button class="player-count-btn" onclick="selectPlayerCount(4)">4</button>
+                        <button class="player-count-btn" onclick="selectPlayerCount(5)">5</button>
+                        <button class="player-count-btn" onclick="selectPlayerCount(6)">6</button>
+                        <button class="player-count-btn" onclick="selectPlayerCount(7)">7</button>
+                        <button class="player-count-btn selected" onclick="selectPlayerCount(8)">8</button>
+                        <button class="player-count-btn" onclick="selectPlayerCount(9)">9</button>
+                        <button class="player-count-btn" onclick="selectPlayerCount(10)">10</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Jména hráčů</label>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">
+                        <i class="fa-solid fa-hand-holding"></i> První hráč rozdává v prvním kole. Pořadí změníte šipkami ▲▼.
+                    </p>
+                    <div class="player-names-grid" id="player-names-inputs">
+                        <!-- Dynamicky generováno -->
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" style="width: 100%;" onclick="createGame()">
+                    <i class="fa-solid fa-play"></i> Vytvořit hru
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Statistics -->
+    <div class="modal" id="modal-stats">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2 class="modal-title"><i class="fa-solid fa-chart-bar"></i> Statistiky hry</h2>
+                <button class="close-btn" onclick="closeModal('modal-stats')">&times;</button>
+            </div>
+
+            <div id="stats-content" style="max-height: 70vh; overflow-y: auto;">
+                <!-- Dynamicky generováno -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: New Round -->
+    <div class="modal" id="modal-new-round">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Kolo <span id="new-round-number">1</span> - Výběr trumfu</h2>
+                <button class="close-btn" onclick="closeModal('modal-new-round')">&times;</button>
+            </div>
+
+            <div id="dealer-info" style="background: rgba(0, 255, 204, 0.1); border: 1px solid var(--primary); border-radius: 10px; padding: 15px; margin-bottom: 20px; text-align: center;">
+                <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 5px;">
+                    <i class="fa-solid fa-hand-holding"></i> Rozdává:
+                </div>
+                <div id="dealer-name" style="font-size: 1.3rem; font-weight: bold; color: var(--primary);">
+                    <!-- Jméno rozdávajícího -->
+                </div>
+                <div id="cards-in-round" style="font-size: 0.9rem; color: var(--text-muted); margin-top: 5px;">
+                    <!-- Počet karet -->
+                </div>
+            </div>
+
+            <div class="trump-selectors">
+                <div class="form-group">
+                    <label class="form-label">Trumfová barva</label>
+                    <div class="trump-selector">
+                        <button class="trump-suit-btn hearts" onclick="selectTrumpSuit('hearts')">
+                            <span class="trump-val"></span>♥<span class="trump-val-bottom"></span>
+                        </button>
+                        <button class="trump-suit-btn diamonds" onclick="selectTrumpSuit('diamonds')">
+                            <span class="trump-val"></span>♦<span class="trump-val-bottom"></span>
+                        </button>
+                        <button class="trump-suit-btn clubs" onclick="selectTrumpSuit('clubs')">
+                            <span class="trump-val"></span>♣<span class="trump-val-bottom"></span>
+                        </button>
+                        <button class="trump-suit-btn spades" onclick="selectTrumpSuit('spades')">
+                            <span class="trump-val"></span>♠<span class="trump-val-bottom"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Hodnota karty (volitelné)</label>
+                    <div class="trump-value-selector">
+                        <button class="trump-value-btn" onclick="selectTrumpValue('2')">2</button>
+                        <button class="trump-value-btn" onclick="selectTrumpValue('3')">3</button>
+                        <button class="trump-value-btn" onclick="selectTrumpValue('4')">4</button>
+                        <button class="trump-value-btn" onclick="selectTrumpValue('5')">5</button>
+                        <button class="trump-value-btn" onclick="selectTrumpValue('6')">6</button>
+                        <button class="trump-value-btn" onclick="selectTrumpValue('7')">7</button>
+                        <button class="trump-value-btn" onclick="selectTrumpValue('8')">8</button>
+                        <button class="trump-value-btn" onclick="selectTrumpValue('9')">9</button>
+                        <button class="trump-value-btn" onclick="selectTrumpValue('10')">10</button>
+                        <button class="trump-value-btn" onclick="selectTrumpValue('J')">J</button>
+                        <button class="trump-value-btn" onclick="selectTrumpValue('Q')">Q</button>
+                        <button class="trump-value-btn" onclick="selectTrumpValue('K')">K</button>
+                        <button class="trump-value-btn" onclick="selectTrumpValue('A')">A</button>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" style="width: 100%;" onclick="createRound()">
+                <i class="fa-solid fa-arrow-right"></i> Pokračovat k hlášení
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal: Bidding -->
+    <div class="modal" id="modal-bidding">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Hlášení - Kolo <span id="bidding-round-num">1</span></h2>
+                <button class="close-btn" onclick="closeModal('modal-bidding')">&times;</button>
+            </div>
+
+            <p style="margin-bottom: 10px; color: var(--text-muted); font-size: 0.85rem;">
+                Zadejte hlášení klávesami <strong>0-9</strong>, potvrďte <strong>Enter</strong>.
+            </p>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 12px;">
+                <div>
+                    <span style="color: var(--text-muted);">Počet karet:</span>
+                    <strong id="bidding-cards-count" style="color: var(--accent); font-size: 1.3rem; margin-left: 5px;">7</strong>
+                </div>
+                <div>
+                    <span style="color: var(--text-muted);">Součet hlášení:</span>
+                    <strong id="bids-sum" style="font-size: 1.3rem; margin-left: 5px;">0</strong>
+                    <span style="color: var(--text-muted);">/ <span id="bids-required">7</span></span>
+                </div>
+            </div>
+
+            <div class="bid-input-grid" id="bid-inputs">
+                <!-- Dynamicky generováno -->
+            </div>
+
+            <div class="forbidden-info" id="forbidden-bid-info" style="display: none;"></div>
+            
+            <div id="bids-status" style="margin-top: 15px; padding: 12px; border-radius: 8px; text-align: center; display: none;"></div>
+
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="mic-btn" onclick="toggleVoiceRecognition('bids')">
+                    <i class="fa-solid fa-microphone"></i> Hlasem
+                </button>
+                <button class="btn btn-primary" style="flex: 1;" onclick="saveBids()">
+                    <i class="fa-solid fa-check"></i> Uložit hlášení
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Results -->
+    <div class="modal" id="modal-results" tabindex="-1">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title"><span id="results-modal-title">Výsledky kola</span> <span id="results-round-num">1</span></h2>
+                <button class="close-btn" onclick="closeModal('modal-results')">&times;</button>
+            </div>
+
+            <p style="margin-bottom: 10px; color: var(--text-muted);">
+                Označte, kdo splnil svůj odhad.
+            </p>
+            <div style="margin-bottom: 15px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px; font-size: 0.85rem; color: var(--text-muted);">
+                <strong>Klávesnice:</strong> <span style="color: #ff5e5e;">0 = Nesplnil</span> | <span style="color: #2ecc71;">1 = Splnil</span> | Enter = Uložit
+            </div>
+
+            <!-- Edit cards count - only visible in edit mode -->
+            <div id="edit-cards-count-container" style="margin-bottom: 15px; display: none;">
+                <label style="display: flex; align-items: center; gap: 10px; color: var(--primary); font-size: 0.9rem;">
+                    <i class="fa-solid fa-cards"></i> Počet karet v kole:
+                    <select id="edit-cards-count" style="padding: 5px 10px; border-radius: 5px; background: var(--card-bg); color: var(--text); border: 1px solid var(--primary);">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                        <option value="10">10</option>
+                    </select>
+                </label>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: var(--text-muted); font-size: 0.9rem;">
+                    <input type="checkbox" id="detailed-mode" onchange="toggleDetailedMode()" style="width: 18px; height: 18px;">
+                    Zadat přesný počet štychů
+                </label>
+            </div>
+
+            <div class="bid-input-grid" id="tricks-inputs">
+                <!-- Dynamicky generováno -->
+            </div>
+
+            <div id="results-status-bar" style="margin-top: 10px; padding: 10px 15px; background: rgba(0,0,0,0.3); border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="color: var(--text-muted);">
+                    Zadáno: <strong id="results-entered-count" style="color: var(--accent);">0</strong> / <span id="results-total-count">0</span>
+                </div>
+                <div id="tricks-sum-container" style="color: var(--text-muted); display: none;">
+                    Štychů: <strong id="tricks-sum">0</strong> / <span id="tricks-required">7</span>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="mic-btn" onclick="toggleVoiceRecognition('results')">
+                    <i class="fa-solid fa-microphone"></i> Hlasem
+                </button>
+                <button class="btn btn-primary" style="flex: 1;" onclick="saveResults()">
+                    <i class="fa-solid fa-save"></i> Uložit výsledky
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // Audio Context for clink sounds
+        let audioContext = null;
+        
+        function getAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            return audioContext;
+        }
+        
+        // Play a single clink sound at given frequency
+        function playClink(frequency, delay = 0) {
+            const ctx = getAudioContext();
+            const startTime = ctx.currentTime + delay;
+            
+            // Create oscillator for the main tone
+            const osc = ctx.createOscillator();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(frequency, startTime);
+            
+            // Create gain node for envelope
+            const gainNode = ctx.createGain();
+            gainNode.gain.setValueAtTime(0.3, startTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
+            
+            // Add some harmonics for metallic sound
+            const osc2 = ctx.createOscillator();
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(frequency * 2.4, startTime);
+            
+            const gain2 = ctx.createGain();
+            gain2.gain.setValueAtTime(0.15, startTime);
+            gain2.gain.exponentialRampToValueAtTime(0.01, startTime + 0.2);
+            
+            const osc3 = ctx.createOscillator();
+            osc3.type = 'sine';
+            osc3.frequency.setValueAtTime(frequency * 3.8, startTime);
+            
+            const gain3 = ctx.createGain();
+            gain3.gain.setValueAtTime(0.08, startTime);
+            gain3.gain.exponentialRampToValueAtTime(0.01, startTime + 0.15);
+            
+            // Connect
+            osc.connect(gainNode);
+            osc2.connect(gain2);
+            osc3.connect(gain3);
+            gainNode.connect(ctx.destination);
+            gain2.connect(ctx.destination);
+            gain3.connect(ctx.destination);
+            
+            // Play
+            osc.start(startTime);
+            osc2.start(startTime);
+            osc3.start(startTime);
+            osc.stop(startTime + 0.4);
+            osc2.stop(startTime + 0.3);
+            osc3.stop(startTime + 0.25);
+        }
+        
+        // Play 3 ascending clinks (going up over 100)
+        function playClinkUp() {
+            playClink(800, 0);      // cink
+            playClink(1000, 0.25);  // cink (higher)
+            playClink(1200, 0.5);   // cink (highest)
+        }
+        
+        // Play 3 descending clinks (falling below 100)
+        function playClinkDown() {
+            playClink(1200, 0);     // cink
+            playClink(1000, 0.25);  // cink (lower)
+            playClink(800, 0.5);    // cink (lowest)
+        }
+        
+        // Voice announcements (Text-to-Speech)
+        let voiceAnnouncementsEnabled = localStorage.getItem('voiceAnnouncements') === 'true';
+        
+        function speak(text) {
+            if (!voiceAnnouncementsEnabled) return;
+            if (!('speechSynthesis' in window)) return;
+            
+            // Cancel any ongoing speech
+            window.speechSynthesis.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'cs-CZ';
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+            utterance.volume = 1.0;
+            
+            // Try to find Czech voice
+            const voices = window.speechSynthesis.getVoices();
+            const czechVoice = voices.find(v => v.lang.startsWith('cs'));
+            if (czechVoice) {
+                utterance.voice = czechVoice;
+            }
+            
+            window.speechSynthesis.speak(utterance);
+        }
+        
+        function toggleVoiceAnnouncements() {
+            voiceAnnouncementsEnabled = !voiceAnnouncementsEnabled;
+            localStorage.setItem('voiceAnnouncements', voiceAnnouncementsEnabled);
+            updateVoiceToggleButton();
+            
+            if (voiceAnnouncementsEnabled) {
+                speak('Hlasové povely zapnuty');
+            }
+        }
+        
+        function updateVoiceToggleButton() {
+            const btn = document.getElementById('voice-toggle-btn');
+            if (btn) {
+                btn.innerHTML = voiceAnnouncementsEnabled 
+                    ? '<i class="fa-solid fa-volume-high"></i>' 
+                    : '<i class="fa-solid fa-volume-xmark"></i>';
+                btn.title = voiceAnnouncementsEnabled ? 'Vypnout hlasové povely' : 'Zapnout hlasové povely';
+                btn.classList.toggle('active', voiceAnnouncementsEnabled);
+            }
+        }
+        
+        function getSuitNameCzech(suit) {
+            const names = {
+                'spades': 'piky',
+                'hearts': 'srdce', 
+                'diamonds': 'káry',
+                'clubs': 'kříže'
+            };
+            return names[suit] || suit;
+        }
+        
+        function getCardValueNameCzech(value) {
+            const names = {
+                '7': 'sedma',
+                '8': 'osma',
+                '9': 'devítka',
+                '10': 'desítka',
+                'J': 'spodek',
+                'Q': 'svršek',
+                'K': 'král',
+                'A': 'eso'
+            };
+            return names[value] || value;
+        }
+
+        // State
+        let currentUser = null;
+        let games = [];
+        let currentGame = null;
+        let currentRound = null;
+        let selectedPlayerCount = 8;
+        let selectedTrumpSuit = null;
+        let selectedTrumpValue = null;
+        let playerBids = {};
+        let playerTricks = {};
+        let knownPlayers = []; // Pro našeptávač
+        let prefilledPlayers = []; // Pro kopírování hry
+        let currentBiddingIndex = 0; // Pro klávesnicové zadávání
+        let orderedBiddingPlayers = []; // Pořadí hráčů pro hlášení
+        let currentResultsIndex = 0; // Pro klávesnicové zadávání výsledků
+        let orderedResultsPlayers = []; // Pořadí hráčů pro výsledky
+
+        // Voice Recognition
+        let recognition = null;
+        let isListening = false;
+        let voiceMode = null; // 'bids' or 'results'
+
+        function initVoiceRecognition() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                console.log('Speech recognition not supported');
+                return false;
+            }
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.lang = 'cs-CZ';
+            recognition.continuous = true;
+            recognition.interimResults = false;
+
+            recognition.onresult = (event) => {
+                const last = event.results.length - 1;
+                const text = event.results[last][0].transcript.toLowerCase().trim();
+                console.log('Voice input:', text);
+                processVoiceCommand(text);
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Speech recognition error:', event.error);
+                if (event.error === 'no-speech') {
+                    // Continue listening
+                } else {
+                    stopVoiceRecognition();
+                }
+            };
+
+            recognition.onend = () => {
+                if (isListening) {
+                    // Restart if still listening
+                    recognition.start();
+                }
+            };
+
+            return true;
+        }
+
+        function startVoiceRecognition(mode) {
+            if (!recognition && !initVoiceRecognition()) {
+                alert('Hlasové ovládání není v tomto prohlížeči podporováno. Zkuste Chrome.');
+                return;
+            }
+
+            voiceMode = mode;
+            isListening = true;
+            recognition.start();
+            updateMicButton(true);
+            showVoiceToast('🎤 Poslouchám... Řekněte jméno a číslo');
+        }
+
+        function stopVoiceRecognition() {
+            if (recognition) {
+                isListening = false;
+                recognition.stop();
+            }
+            updateMicButton(false);
+        }
+
+        function toggleVoiceRecognition(mode) {
+            if (isListening) {
+                stopVoiceRecognition();
+            } else {
+                startVoiceRecognition(mode);
+            }
+        }
+
+        function updateMicButton(active) {
+            const btns = document.querySelectorAll('.mic-btn');
+            btns.forEach(btn => {
+                btn.classList.toggle('active', active);
+                btn.innerHTML = active 
+                    ? '<i class="fa-solid fa-microphone-slash"></i> Zastavit'
+                    : '<i class="fa-solid fa-microphone"></i> Hlasem';
+            });
+        }
+
+        function showVoiceToast(message) {
+            // Remove existing toast
+            const existing = document.querySelector('.voice-toast');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.className = 'voice-toast';
+            toast.innerHTML = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function processVoiceCommand(text) {
+            if (!currentGame || !currentRound) return;
+
+            // Parse numbers from text
+            const numberWords = {
+                'nula': 0, 'nulu': 0, 'nic': 0,
+                'jeden': 1, 'jedna': 1, 'jednu': 1, 'jedničku': 1,
+                'dva': 2, 'dvě': 2, 'dvojku': 2,
+                'tři': 3, 'trojku': 3,
+                'čtyři': 4, 'čtyřku': 4,
+                'pět': 5, 'pětku': 5,
+                'šest': 6, 'šestku': 6,
+                'sedm': 7, 'sedmičku': 7,
+                'osm': 8, 'osmičku': 8,
+                'devět': 9, 'devítku': 9,
+                'deset': 10, 'desítku': 10
+            };
+
+            // Find player by name
+            let foundPlayer = null;
+            const textLower = text.toLowerCase();
+            
+            for (const player of currentGame.players) {
+                const nameLower = player.name.toLowerCase();
+                if (textLower.includes(nameLower)) {
+                    foundPlayer = player;
+                    break;
+                }
+            }
+
+            if (!foundPlayer) {
+                showVoiceToast('❓ Nerozpoznáno: ' + text);
+                return;
+            }
+
+            if (voiceMode === 'bids') {
+                // Find number in text
+                let number = null;
+                
+                // Check for digit
+                const digitMatch = text.match(/\d+/);
+                if (digitMatch) {
+                    number = parseInt(digitMatch[0]);
+                } else {
+                    // Check for word number
+                    for (const [word, num] of Object.entries(numberWords)) {
+                        if (textLower.includes(word)) {
+                            number = num;
+                            break;
+                        }
+                    }
+                }
+
+                if (number !== null && number >= 0 && number <= currentRound.cards_count) {
+                    selectBid(foundPlayer.position, number);
+                    showVoiceToast(`✓ ${foundPlayer.name}: ${number}`);
+                } else {
+                    showVoiceToast(`❓ ${foundPlayer.name} - jaké číslo?`);
+                }
+
+            } else if (voiceMode === 'results') {
+                const result = currentRound.results.find(r => r.position == foundPlayer.position);
+                const bid = result?.bid ?? 0;
+
+                if (textLower.includes('splnil') || textLower.includes('ano') || textLower.includes('ok') || textLower.includes('dobře') || textLower.includes('super')) {
+                    setResult(foundPlayer.position, true, bid);
+                    showVoiceToast(`✓ ${foundPlayer.name} splnil`);
+                } else if (textLower.includes('nesplnil') || textLower.includes('ne') || textLower.includes('špatně') || textLower.includes('nic')) {
+                    setResult(foundPlayer.position, false, bid);
+                    showVoiceToast(`✗ ${foundPlayer.name} nesplnil`);
+                } else {
+                    // Try to find a number for detailed mode
+                    let number = null;
+                    const digitMatch = text.match(/\d+/);
+                    if (digitMatch) {
+                        number = parseInt(digitMatch[0]);
+                    } else {
+                        for (const [word, num] of Object.entries(numberWords)) {
+                            if (textLower.includes(word)) {
+                                number = num;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (number !== null) {
+                        selectTricks(foundPlayer.position, number);
+                        showVoiceToast(`✓ ${foundPlayer.name}: ${number} štychů`);
+                    } else {
+                        showVoiceToast(`❓ ${foundPlayer.name} - splnil/nesplnil?`);
+                    }
+                }
+            }
+        }
+
+        // API calls
+        async function api(endpoint, data = {}) {
+            try {
+                const response = await fetch(`api/${endpoint}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data),
+                    credentials: 'include'
+                });
+                return await response.json();
+            } catch (error) {
+                console.error('API Error:', error);
+                return { success: false, error: 'Chyba připojení' };
+            }
+        }
+
+        // Auth
+        async function checkAuth() {
+            const result = await api('auth.php', { action: 'check' });
+            if (result.logged_in) {
+                currentUser = result.user;
+                document.getElementById('display-username').textContent = currentUser.username;
+                loadGames();
+            } else {
+                window.location.href = 'login.html';
+            }
+        }
+
+        async function logout() {
+            await api('auth.php', { action: 'logout' });
+            window.location.href = 'login.html';
+        }
+
+        // Games
+        async function loadGames() {
+            const result = await api('games.php', { action: 'list' });
+            if (result.success) {
+                games = result.games;
+                renderGamesList();
+            }
+        }
+
+        function renderGamesList() {
+            const container = document.getElementById('games-list');
+            
+            let html = `
+                <div class="game-card new-game-card" onclick="openNewGameModal()">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Nová hra</span>
+                </div>
+            `;
+
+            games.forEach(game => {
+                const statusClass = game.status === 'finished' ? 'finished' : 'active';
+                const statusText = game.status === 'finished' ? 'Dokončeno' : 'Aktivní';
+                const date = new Date(game.created_at).toLocaleDateString('cs-CZ');
+
+                html += `
+                    <div class="game-card" onclick="openGame(${game.id})">
+                        <div class="game-card-header">
+                            <div class="game-name">${escapeHtml(game.name)}</div>
+                            <span class="game-status ${statusClass}">${statusText}</span>
+                        </div>
+                        <div class="game-info">
+                            <div><i class="fa-solid fa-users"></i> ${game.player_count} hráčů</div>
+                            <div><i class="fa-solid fa-calendar"></i> ${date}</div>
+                            <div><i class="fa-solid fa-rotate"></i> ${game.rounds_played || 0} kol</div>
+                        </div>
+                        <button class="game-card-copy-btn" onclick="event.stopPropagation(); copyGameFromList(${game.id})" title="Kopírovat hru">
+                            <i class="fa-solid fa-copy"></i>
+                        </button>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // Create Game
+        function openNewGameModal() {
+            // Clear prefilled data for fresh new game
+            prefilledPlayers = [];
+            selectedPlayerCount = 8;
+            document.getElementById('new-game-name').value = '';
+            document.querySelectorAll('.player-count-btn').forEach(btn => {
+                btn.classList.toggle('selected', parseInt(btn.textContent) === 8);
+            });
+            openModal('modal-new-game');
+        }
+
+        function selectPlayerCount(count) {
+            // Preserve current player names when changing count
+            const currentNames = [];
+            for (let i = 0; i < selectedPlayerCount; i++) {
+                const input = document.getElementById(`player-name-${i}`);
+                if (input && input.value) {
+                    currentNames.push(input.value);
+                } else if (prefilledPlayers[i]) {
+                    currentNames.push(prefilledPlayers[i]);
+                }
+            }
+            prefilledPlayers = currentNames;
+            
+            selectedPlayerCount = count;
+            document.querySelectorAll('.player-count-btn').forEach(btn => {
+                btn.classList.toggle('selected', parseInt(btn.textContent) === count);
+            });
+            renderPlayerNameInputs();
+        }
+
+        function renderPlayerNameInputs() {
+            const container = document.getElementById('player-names-inputs');
+            let html = '';
+            for (let i = 0; i < selectedPlayerCount; i++) {
+                const prefilled = prefilledPlayers[i] || '';
+                const isDealer = i === 0;
+                html += `
+                    <div class="player-name-input" data-index="${i}" style="${isDealer ? 'background: rgba(0, 255, 204, 0.1); border-radius: 8px; padding: 5px; margin: -5px; margin-bottom: 5px;' : ''}">
+                        <span class="player-number ${isDealer ? '' : 'clickable'}" 
+                              onclick="${isDealer ? '' : 'makeDealer(' + i + ')'}" 
+                              title="${isDealer ? 'Rozdává první' : 'Klikni pro nastavení jako rozdávající'}"
+                              style="${isDealer ? '' : 'cursor: pointer;'}">${isDealer ? '🃏' : i + 1}</span>
+                        <div class="player-move-btns">
+                            <button type="button" class="player-move-btn" onclick="movePlayer(${i}, -1)" ${i === 0 ? 'disabled' : ''} title="Posunout nahoru">▲</button>
+                            <button type="button" class="player-move-btn" onclick="movePlayer(${i}, 1)" ${i === selectedPlayerCount - 1 ? 'disabled' : ''} title="Posunout dolů">▼</button>
+                        </div>
+                        <div class="autocomplete-wrapper" style="flex: 1;">
+                            <input type="text" class="form-input" id="player-name-${i}" placeholder="${isDealer ? 'Rozdávající' : 'Hráč ' + (i + 1)}" 
+                                   value="${escapeHtml(prefilled)}"
+                                   oninput="showAutocomplete(this, ${i})" 
+                                   onfocus="showAutocomplete(this, ${i})"
+                                   autocomplete="off">
+                            <div class="autocomplete-list" id="autocomplete-${i}"></div>
+                        </div>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+            
+            // Close autocomplete on outside click
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.autocomplete-wrapper')) {
+                    document.querySelectorAll('.autocomplete-list').forEach(el => el.classList.remove('show'));
+                }
+            });
+        }
+
+        function movePlayer(index, direction) {
+            // Get current player names
+            const names = [];
+            for (let i = 0; i < selectedPlayerCount; i++) {
+                const input = document.getElementById(`player-name-${i}`);
+                names.push(input ? input.value : '');
+            }
+            
+            // Swap with adjacent player
+            const newIndex = index + direction;
+            if (newIndex >= 0 && newIndex < selectedPlayerCount) {
+                const temp = names[index];
+                names[index] = names[newIndex];
+                names[newIndex] = temp;
+                
+                // Update prefilled and re-render
+                prefilledPlayers = names;
+                renderPlayerNameInputs();
+            }
+        }
+
+        function makeDealer(index) {
+            // Get current player names
+            const names = [];
+            for (let i = 0; i < selectedPlayerCount; i++) {
+                const input = document.getElementById(`player-name-${i}`);
+                names.push(input ? input.value : '');
+            }
+            
+            // Reorder - selected player becomes first, others follow in order
+            const reordered = [];
+            for (let i = 0; i < names.length; i++) {
+                const idx = (index + i) % names.length;
+                reordered.push(names[idx]);
+            }
+            
+            // Update prefilled and re-render
+            prefilledPlayers = reordered;
+            renderPlayerNameInputs();
+        }
+
+        async function createGame() {
+            const name = document.getElementById('new-game-name').value.trim();
+            if (!name) {
+                alert('Zadejte název hry');
+                return;
+            }
+
+            const players = [];
+            for (let i = 0; i < selectedPlayerCount; i++) {
+                const playerName = document.getElementById(`player-name-${i}`).value.trim() || `Hráč ${i + 1}`;
+                players.push(playerName);
+            }
+
+            // Výpočet max. karet podle počtu hráčů (52 karet v balíčku)
+            const maxCardsMap = { 3: 10, 4: 10, 5: 10, 6: 8, 7: 7, 8: 6, 9: 5, 10: 5 };
+            const maxCards = maxCardsMap[selectedPlayerCount] || 6;
+
+            const result = await api('games.php', {
+                action: 'create',
+                name: name,
+                player_count: selectedPlayerCount,
+                max_cards: maxCards,
+                players: players
+            });
+
+            if (result.success) {
+                closeModal('modal-new-game');
+                openGame(result.game_id);
+            } else {
+                alert(result.error);
+            }
+        }
+
+        // Open Game
+        async function openGame(gameId) {
+            const result = await api('games.php', { action: 'get', game_id: gameId });
+            if (result.success) {
+                currentGame = result;
+                // Update known players for autocomplete
+                updateKnownPlayers(currentGame.players.map(p => p.name));
+                showScreen('screen-game-detail');
+                renderGameDetail();
+            } else {
+                alert(result.error);
+            }
+        }
+
+        function renderGameDetail() {
+            document.getElementById('game-detail-name').textContent = currentGame.game.name;
+            
+            // Update voice toggle button state
+            updateVoiceToggleButton();
+
+            // Round info bar
+            const roundSequence = getRoundSequence(currentGame.game.max_cards);
+            const currentRoundNum = currentGame.rounds.length;
+            const totalRounds = roundSequence.length;
+            const nextRoundCards = roundSequence[currentRoundNum] || '-';
+            const lastRound = currentGame.rounds[currentGame.rounds.length - 1];
+
+            let roundInfoHtml = `
+                <div class="round-info-item">
+                    <span class="round-info-label">Odehráno kol:</span>
+                    <span class="round-info-value">${currentRoundNum} / ${totalRounds}</span>
+                </div>
+            `;
+
+            if (lastRound && lastRound.trump_suit !== 'none') {
+                const suitSymbol = getSuitSymbol(lastRound.trump_suit);
+                roundInfoHtml += `
+                    <div class="round-info-item">
+                        <span class="round-info-label">Poslední trumf:</span>
+                        <span class="trump-display ${lastRound.trump_suit}">${lastRound.trump_value || ''} ${suitSymbol}</span>
+                    </div>
+                `;
+            }
+
+            if (currentGame.game.status === 'active' && currentRoundNum < totalRounds) {
+                roundInfoHtml += `
+                    <div class="round-info-item">
+                        <span class="round-info-label">Příští kolo:</span>
+                        <span class="round-info-value">${nextRoundCards} karet</span>
+                    </div>
+                `;
+            }
+
+            document.getElementById('round-info-bar').innerHTML = roundInfoHtml;
+
+            // Score table
+            renderScoreTable();
+
+            // Actions
+            renderGameActions();
+
+            // Current ranking (during active game)
+            if (currentGame.game.status === 'active' && currentGame.rounds.length > 0) {
+                renderCurrentRanking();
+            } else {
+                document.getElementById('current-ranking').style.display = 'none';
+            }
+
+            // Results summary (for finished game)
+            if (currentGame.game.status === 'finished') {
+                renderResultsSummary();
+            } else {
+                document.getElementById('results-summary').style.display = 'none';
+            }
+        }
+
+        function renderScoreTable() {
+            const players = currentGame.players;
+            const rounds = currentGame.rounds;
+            const roundSequence = getRoundSequence(currentGame.game.max_cards);
+
+            let html = '<thead><tr><th>Kolo</th><th>Karty</th>';
+            players.forEach(p => {
+                html += `<th class="player-header">${escapeHtml(p.name)}</th>`;
+            });
+            html += '<th style="background: var(--surface);">Σ</th>';
+            if (currentGame.game.status === 'active') {
+                html += '<th style="background: var(--surface); width: 50px;"></th>';
+            }
+            html += '</tr></thead><tbody>';
+
+            // Pro každé odehrané kolo
+            rounds.forEach((round, idx) => {
+                const isCurrentRound = round.status !== 'finished';
+                html += `<tr class="${isCurrentRound ? 'current-round-row' : ''}">`;
+                html += `<td class="round-num">${round.round_number}.</td>`;
+                html += `<td>${round.cards_count}</td>`;
+
+                let sumBids = 0;
+                let sumTricks = 0;
+                let hasBids = false;
+                let hasTricks = false;
+
+                players.forEach((player, pIdx) => {
+                    const result = round.results.find(r => r.position == pIdx);
+                    if (result) {
+                        const bid = result.bid !== null ? result.bid : '-';
+                        const tricks = result.tricks_won !== null ? result.tricks_won : '-';
+                        const score = result.score !== null ? result.score : '-';
+                        const scoreClass = result.score > 0 ? 'score-positive' : (result.score < 0 ? 'score-negative' : '');
+                        const isDealer = round.dealer_position == pIdx;
+
+                        if (result.bid !== null) {
+                            sumBids += result.bid;
+                            hasBids = true;
+                        }
+                        if (result.tricks_won !== null) {
+                            sumTricks += result.tricks_won;
+                            hasTricks = true;
+                        }
+
+                        html += `<td>
+                            ${isDealer ? '<span class="dealer-marker">★</span>' : ''}
+                            <span class="bid-value">${bid}</span> / 
+                            <span class="tricks-value">${tricks}</span>
+                            ${result.score !== null ? `<br><span class="${scoreClass}">${score > 0 ? '+' : ''}${score}</span>` : ''}
+                        </td>`;
+                    } else {
+                        html += '<td>-</td>';
+                    }
+                });
+
+                // Sloupec se součty
+                const bidsSumDisplay = hasBids ? sumBids : '-';
+                const tricksSumDisplay = hasTricks ? sumTricks : '-';
+                const bidsColor = hasBids ? (sumBids === round.cards_count ? 'var(--danger)' : (sumBids > round.cards_count ? 'var(--warning)' : 'var(--accent)')) : 'inherit';
+                
+                html += `<td style="background: rgba(0,0,0,0.2);">
+                    <span style="color: ${bidsColor};">${bidsSumDisplay}</span> / 
+                    <span class="tricks-value">${tricksSumDisplay}</span>
+                </td>`;
+
+                // Tlačítko pro opravu (jen pokud je kolo dokončené a hra aktivní)
+                if (currentGame.game.status === 'active') {
+                    if (round.status === 'finished') {
+                        html += `<td style="background: rgba(0,0,0,0.2);">
+                            <button class="btn btn-sm btn-secondary" onclick="editRound(${round.id})" title="Opravit výsledky" style="padding: 4px 8px;">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                        </td>`;
+                    } else {
+                        html += `<td style="background: rgba(0,0,0,0.2);"></td>`;
+                    }
+                }
+
+                html += '</tr>';
+            });
+
+            // Celkové skóre
+            html += '<tr class="total-row"><td colspan="2">CELKEM</td>';
+            players.forEach(p => {
+                html += `<td>${p.total_score}</td>`;
+            });
+            html += '<td></td>';
+            if (currentGame.game.status === 'active') {
+                html += '<td></td>';
+            }
+            html += '</tr>';
+
+            html += '</tbody>';
+            document.getElementById('score-table').innerHTML = html;
+        }
+
+        function renderGameActions() {
+            const container = document.getElementById('game-actions');
+            const rounds = currentGame.rounds;
+            const lastRound = rounds[rounds.length - 1];
+            const roundSequence = getRoundSequence(currentGame.game.max_cards);
+            const isFinished = currentGame.game.status === 'finished';
+
+            let html = '';
+
+            if (isFinished) {
+                html = '<p style="color: var(--success);"><i class="fa-solid fa-trophy"></i> Hra byla dokončena</p>';
+            } else if (!lastRound || lastRound.status === 'finished') {
+                // Můžeme začít nové kolo
+                if (rounds.length < roundSequence.length) {
+                    html += `<button class="btn btn-primary" onclick="openNewRoundModal()">
+                        <i class="fa-solid fa-plus"></i> Nové kolo
+                    </button>`;
+                }
+
+                if (rounds.length > 0) {
+                    html += `<button class="btn btn-secondary" onclick="finishGame()">
+                        <i class="fa-solid fa-flag-checkered"></i> Ukončit hru
+                    </button>`;
+                }
+            } else if (lastRound.status === 'bidding') {
+                // Čekáme na hlášení
+                html += `<button class="btn btn-primary" onclick="openBiddingModal()">
+                    <i class="fa-solid fa-bullhorn"></i> Zadat hlášení
+                </button>`;
+                html += `<button class="btn btn-danger" onclick="deleteRound(${lastRound.id})" title="Smazat kolo">
+                    <i class="fa-solid fa-trash"></i>
+                </button>`;
+            } else if (lastRound.status === 'playing') {
+                // Čekáme na výsledky
+                html += `<button class="btn btn-primary" onclick="openResultsModal()">
+                    <i class="fa-solid fa-calculator"></i> Zadat výsledky
+                </button>`;
+                html += `<button class="btn btn-danger" onclick="deleteRound(${lastRound.id})" title="Smazat kolo">
+                    <i class="fa-solid fa-trash"></i>
+                </button>`;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function renderCurrentRanking() {
+            const container = document.getElementById('current-ranking');
+            const players = [...currentGame.players].sort((a, b) => b.total_score - a.total_score);
+            const finishedRounds = currentGame.rounds.filter(r => r.status === 'finished').length;
+            const totalRounds = getRoundSequence(currentGame.game.max_cards).length;
+
+            let html = `<div class="current-ranking-title">
+                <i class="fa-solid fa-chart-line"></i> Průběžné pořadí (po ${finishedRounds}. kole z ${totalRounds})
+            </div>`;
+            html += '<div class="current-ranking-list">';
+
+            // Calculate ranks with ties (consecutive - ties share rank, next gets rank+1)
+            let currentRank = 0;
+            let previousScore = null;
+
+            players.forEach((player, idx) => {
+                // Only increment rank if score is different from previous
+                if (previousScore === null || player.total_score !== previousScore) {
+                    currentRank++;
+                }
+                previousScore = player.total_score;
+
+                // Trophy/icon based on rank - find if this is last rank (can be shared)
+                const lastScore = players[players.length - 1].total_score;
+                const isLastRank = player.total_score === lastScore && players.length > 1;
+                const secondLastScore = players.length > 1 ? players[players.length - 2].total_score : null;
+                const isSecondLastRank = secondLastScore !== null && player.total_score === secondLastScore && !isLastRank;
+                
+                let trophyHtml = '';
+                if (isLastRank) {
+                    trophyHtml = '<i class="fa-solid fa-crow trophy crow"></i>';
+                } else if (isSecondLastRank) {
+                    trophyHtml = '<span class="trophy snail">🐌</span>';
+                } else if (currentRank === 1) {
+                    trophyHtml = '<i class="fa-solid fa-trophy trophy gold"></i>';
+                } else if (currentRank === 2) {
+                    trophyHtml = '<i class="fa-solid fa-trophy trophy silver"></i>';
+                } else if (currentRank === 3) {
+                    trophyHtml = '<i class="fa-solid fa-trophy trophy bronze"></i>';
+                } else if (currentRank === 4) {
+                    trophyHtml = '<span class="trophy potato">🥔</span>';
+                } else if (currentRank === 5) {
+                    trophyHtml = '<span class="trophy cookie">🍪</span>';
+                } else if (currentRank === 6) {
+                    trophyHtml = '<span class="trophy">⭐</span>';
+                } else if (currentRank === 7) {
+                    trophyHtml = '<span class="trophy frog">🐸</span>';
+                } else if (currentRank === 8) {
+                    trophyHtml = '<span class="trophy hamster">🐹</span>';
+                } else {
+                    trophyHtml = '<span class="trophy">🎯</span>';
+                }
+                
+                const isTop3 = currentRank <= 3;
+                html += `
+                    <div class="ranking-row ${isTop3 ? 'top-3' : ''}">
+                        <span class="position">${currentRank}</span>
+                        ${trophyHtml}
+                        <span class="name">${escapeHtml(player.name)}</span>
+                        <span class="score">${player.total_score} b.</span>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            container.innerHTML = html;
+            container.style.display = 'block';
+        }
+
+        function renderResultsSummary() {
+            const container = document.getElementById('results-summary');
+            const players = [...currentGame.players].sort((a, b) => b.total_score - a.total_score);
+
+            let html = '<h3 class="results-title"><i class="fa-solid fa-trophy"></i> Konečné pořadí</h3><ul class="ranking-list">';
+
+            // Calculate ranks with ties (consecutive - ties share rank, next gets rank+1)
+            let currentRank = 0;
+            let previousScore = null;
+
+            players.forEach((player, idx) => {
+                // Only increment rank if score is different from previous
+                if (previousScore === null || player.total_score !== previousScore) {
+                    currentRank++;
+                }
+                previousScore = player.total_score;
+
+                // Find if this is last rank (can be shared)
+                const lastScore = players[players.length - 1].total_score;
+                const isLastRank = player.total_score === lastScore && players.length > 1;
+                const secondLastScore = players.length > 1 ? players[players.length - 2].total_score : null;
+                const isSecondLastRank = secondLastScore !== null && player.total_score === secondLastScore && !isLastRank;
+                
+                let rankClass = currentRank <= 5 ? `rank-${currentRank}` : 'rank-other';
+                if (isLastRank) rankClass = 'rank-last';
+                
+                let iconHtml = '';
+                if (isLastRank) {
+                    iconHtml = ' <i class="fa-solid fa-crow" style="color: #ecf0f1;"></i>';
+                } else if (isSecondLastRank) {
+                    iconHtml = ' 🐌';
+                } else if (currentRank === 1) {
+                    iconHtml = ' <i class="fa-solid fa-trophy" style="color: gold;"></i>';
+                } else if (currentRank === 2) {
+                    iconHtml = ' <i class="fa-solid fa-trophy" style="color: silver;"></i>';
+                } else if (currentRank === 3) {
+                    iconHtml = ' <i class="fa-solid fa-trophy" style="color: #cd7f32;"></i>';
+                } else if (currentRank === 4) {
+                    iconHtml = ' 🥔';
+                } else if (currentRank === 5) {
+                    iconHtml = ' 🍪';
+                } else if (currentRank === 6) {
+                    iconHtml = ' ⭐';
+                } else if (currentRank === 7) {
+                    iconHtml = ' 🐸';
+                } else if (currentRank === 8) {
+                    iconHtml = ' 🐹';
+                }
+                
+                html += `
+                    <li class="ranking-item">
+                        <span class="rank-badge ${rankClass}">${currentRank}</span>${iconHtml}
+                        <span class="rank-name">${escapeHtml(player.name)}</span>
+                        <span class="rank-score">${player.total_score} bodů</span>
+                    </li>
+                `;
+            });
+
+            html += '</ul>';
+            container.innerHTML = html;
+            container.style.display = 'block';
+        }
+
+        // New round modal
+        function openNewRoundModal() {
+            const rounds = currentGame.rounds;
+            const roundSequence = getRoundSequence(currentGame.game.max_cards);
+            const nextRoundNumber = rounds.length + 1;
+            const cardsCount = roundSequence[nextRoundNumber - 1];
+            const dealerPosition = (nextRoundNumber - 1) % currentGame.players.length;
+            const dealer = currentGame.players.find(p => p.position == dealerPosition);
+
+            document.getElementById('new-round-number').textContent = nextRoundNumber;
+            document.getElementById('dealer-name').textContent = dealer ? dealer.name : '?';
+            document.getElementById('cards-in-round').textContent = `${cardsCount} ${cardsCount === 1 ? 'karta' : (cardsCount < 5 ? 'karty' : 'karet')}`;
+
+            // Reset trump selection
+            selectedTrumpSuit = null;
+            selectedTrumpValue = null;
+            document.querySelectorAll('.trump-suit-btn').forEach(btn => btn.classList.remove('selected'));
+            document.querySelectorAll('.trump-value-btn').forEach(btn => btn.classList.remove('selected'));
+            updateTrumpPreview();
+
+            openModal('modal-new-round');
+            
+            // Voice announcement: who is dealing and how many cards
+            const cardsWord = cardsCount === 1 ? 'karta' : (cardsCount < 5 ? 'karty' : 'karet');
+            const dealerName = dealer ? dealer.name : 'neznámý';
+            speak(`Kolo ${nextRoundNumber}. Rozdává ${dealerName}, ${cardsCount} ${cardsWord}.`);
+        }
+
+        // Trump selection
+        function selectTrumpSuit(suit) {
+            selectedTrumpSuit = suit;
+            document.querySelectorAll('.trump-suit-btn').forEach(btn => {
+                btn.classList.toggle('selected', btn.classList.contains(suit));
+            });
+            updateTrumpPreview();
+        }
+
+        function selectTrumpValue(value) {
+            selectedTrumpValue = selectedTrumpValue === value ? null : value;
+            document.querySelectorAll('.trump-value-btn').forEach(btn => {
+                btn.classList.toggle('selected', btn.textContent === selectedTrumpValue);
+            });
+            updateTrumpPreview();
+        }
+
+        function updateTrumpPreview() {
+            // Update value on all suit buttons - only show on selected one
+            document.querySelectorAll('.trump-suit-btn').forEach(btn => {
+                const valTop = btn.querySelector('.trump-val');
+                const valBottom = btn.querySelector('.trump-val-bottom');
+                const isSelected = btn.classList.contains('selected');
+                
+                if (isSelected && selectedTrumpValue) {
+                    valTop.textContent = selectedTrumpValue;
+                    valBottom.textContent = selectedTrumpValue;
+                } else {
+                    valTop.textContent = '';
+                    valBottom.textContent = '';
+                }
+            });
+        }
+
+        async function createRound() {
+            if (!selectedTrumpSuit) {
+                alert('Vyberte trumfovou barvu');
+                return;
+            }
+
+            // Save trump for announcement before clearing
+            const trumpSuitForAnnouncement = selectedTrumpSuit;
+            const trumpValueForAnnouncement = selectedTrumpValue;
+
+            const result = await api('rounds.php', {
+                action: 'create',
+                game_id: currentGame.game.id,
+                trump_suit: selectedTrumpSuit,
+                trump_value: selectedTrumpValue
+            });
+
+            if (result.success) {
+                closeModal('modal-new-round');
+                selectedTrumpSuit = null;
+                selectedTrumpValue = null;
+                await openGame(currentGame.game.id);
+                
+                // Voice announcement: trump selection
+                const suitName = getSuitNameCzech(trumpSuitForAnnouncement);
+                if (trumpValueForAnnouncement) {
+                    const valueName = getCardValueNameCzech(trumpValueForAnnouncement);
+                    speak(`Trumfy jsou ${suitName}, ${valueName}.`);
+                } else {
+                    speak(`Trumfy jsou ${suitName}.`);
+                }
+                
+                openBiddingModal();
+            } else {
+                alert(result.error);
+            }
+        }
+
+        // Bidding
+        function openBiddingModal() {
+            const lastRound = currentGame.rounds[currentGame.rounds.length - 1];
+            currentRound = lastRound;
+            playerBids = {};
+            currentBiddingIndex = 0;
+
+            document.getElementById('bidding-round-num').textContent = lastRound.round_number;
+            document.getElementById('bidding-cards-count').textContent = lastRound.cards_count;
+            document.getElementById('bids-required').textContent = lastRound.cards_count;
+            document.getElementById('bids-sum').textContent = '0';
+            document.getElementById('bids-status').style.display = 'none';
+
+            const dealerPosition = lastRound.dealer_position;
+            const startPosition = (dealerPosition + 1) % currentGame.players.length;
+
+            let html = '';
+            orderedBiddingPlayers = [];
+            for (let i = 0; i < currentGame.players.length; i++) {
+                const pos = (startPosition + i) % currentGame.players.length;
+                orderedBiddingPlayers.push(currentGame.players.find(p => p.position == pos));
+            }
+
+            orderedBiddingPlayers.forEach((player, idx) => {
+                const isDealer = player.position == dealerPosition;
+                playerBids[player.position] = null;
+
+                html += `
+                    <div class="bid-input-row ${isDealer ? 'dealer' : ''} ${idx === 0 ? 'current-input' : ''}" data-position="${player.position}" data-index="${idx}">
+                        <span class="bid-player-name">
+                            ${isDealer ? '<span class="dealer-marker">★</span>' : ''}
+                            ${escapeHtml(player.name)}
+                            ${isDealer ? '<small>(rozdává)</small>' : ''}
+                        </span>
+                        <div class="bid-buttons">
+                `;
+
+                for (let b = 0; b <= lastRound.cards_count; b++) {
+                    html += `<button class="bid-btn" onclick="selectBid(${player.position}, ${b}, ${idx})">${b}</button>`;
+                }
+
+                html += '</div></div>';
+            });
+
+            document.getElementById('bid-inputs').innerHTML = html;
+            document.getElementById('forbidden-bid-info').style.display = 'none';
+            openModal('modal-bidding');
+            
+            // Add keyboard listener
+            document.addEventListener('keydown', handleBiddingKeypress);
+        }
+
+        function selectBid(position, bid, index = null) {
+            playerBids[position] = bid;
+
+            // Update UI
+            const row = document.querySelector(`.bid-input-row[data-position="${position}"]`);
+            row.querySelectorAll('.bid-btn').forEach((btn, idx) => {
+                btn.classList.toggle('selected', idx === bid);
+            });
+
+            // Update sum display
+            updateBidsSum();
+
+            // Check dealer constraint
+            updateDealerConstraint();
+
+            // Move to next player if index provided
+            if (index !== null) {
+                moveToNextBiddingPlayer(index);
+            }
+        }
+
+        function moveToNextBiddingPlayer(currentIndex) {
+            // Remove current highlight
+            document.querySelectorAll('.bid-input-row').forEach(row => {
+                row.classList.remove('current-input');
+            });
+
+            // Move to next player (if not last)
+            if (currentIndex < orderedBiddingPlayers.length - 1) {
+                currentBiddingIndex = currentIndex + 1;
+                const nextRow = document.querySelector(`.bid-input-row[data-index="${currentBiddingIndex}"]`);
+                if (nextRow) {
+                    nextRow.classList.add('current-input');
+                    nextRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            } else {
+                currentBiddingIndex = orderedBiddingPlayers.length; // All done
+            }
+        }
+
+        function handleBiddingKeypress(e) {
+            // Only handle if bidding modal is open
+            if (!document.getElementById('modal-bidding').classList.contains('active')) {
+                return;
+            }
+
+            const key = e.key;
+            
+            // Enter to save
+            if (key === 'Enter') {
+                e.preventDefault();
+                saveBids();
+                return;
+            }
+
+            // Check if it's a number key (0-9)
+            if (/^[0-9]$/.test(key)) {
+                const bid = parseInt(key);
+                
+                // Check if bid is valid for this round
+                if (bid > currentRound.cards_count) {
+                    return;
+                }
+
+                // Get current player
+                if (currentBiddingIndex < orderedBiddingPlayers.length) {
+                    const player = orderedBiddingPlayers[currentBiddingIndex];
+                    selectBid(player.position, bid, currentBiddingIndex);
+                }
+            }
+        }
+
+        function updateBidsSum() {
+            const cardsCount = currentRound.cards_count;
+            let sum = 0;
+            let allBidsSet = true;
+
+            for (const bid of Object.values(playerBids)) {
+                if (bid !== null) {
+                    sum += bid;
+                } else {
+                    allBidsSet = false;
+                }
+            }
+
+            // Update sum display
+            const sumEl = document.getElementById('bids-sum');
+            sumEl.textContent = sum;
+            
+            // Color based on comparison to cards count
+            if (sum < cardsCount) {
+                sumEl.style.color = 'var(--warning)';
+            } else if (sum > cardsCount) {
+                sumEl.style.color = 'var(--danger)';
+            } else {
+                sumEl.style.color = 'var(--success)';
+            }
+
+            // Status message
+            const statusEl = document.getElementById('bids-status');
+            if (allBidsSet) {
+                const diff = sum - cardsCount;
+                if (diff === 0) {
+                    statusEl.innerHTML = '<i class="fa-solid fa-exclamation-triangle"></i> Součet = počet karet! Dealer nemůže mít tuto sázku.';
+                    statusEl.style.background = 'rgba(255, 94, 94, 0.2)';
+                    statusEl.style.color = 'var(--danger)';
+                } else if (diff > 0) {
+                    statusEl.innerHTML = `<i class="fa-solid fa-arrow-up"></i> Nahlášeno o <strong>${diff}</strong> více než je karet`;
+                    statusEl.style.background = 'rgba(255, 204, 0, 0.2)';
+                    statusEl.style.color = 'var(--warning)';
+                } else {
+                    statusEl.innerHTML = `<i class="fa-solid fa-arrow-down"></i> Nahlášeno o <strong>${Math.abs(diff)}</strong> méně než je karet`;
+                    statusEl.style.background = 'rgba(0, 255, 204, 0.2)';
+                    statusEl.style.color = 'var(--accent)';
+                }
+                statusEl.style.display = 'block';
+            } else {
+                statusEl.style.display = 'none';
+            }
+        }
+
+        function updateDealerConstraint() {
+            const dealerPosition = currentRound.dealer_position;
+            const cardsCount = currentRound.cards_count;
+
+            let sum = 0;
+            let allBidsExceptDealer = true;
+
+            for (const [pos, bid] of Object.entries(playerBids)) {
+                if (parseInt(pos) !== dealerPosition) {
+                    if (bid !== null) {
+                        sum += bid;
+                    } else {
+                        allBidsExceptDealer = false;
+                    }
+                }
+            }
+
+            const forbiddenBid = cardsCount - sum;
+            const dealerRow = document.querySelector(`.bid-input-row[data-position="${dealerPosition}"]`);
+            const forbiddenInfo = document.getElementById('forbidden-bid-info');
+
+            if (allBidsExceptDealer && forbiddenBid >= 0 && forbiddenBid <= cardsCount) {
+                forbiddenInfo.innerHTML = `<i class="fa-solid fa-exclamation-triangle"></i> Rozdávající nesmí nahlásit <strong>${forbiddenBid}</strong> (součet by byl ${cardsCount})`;
+                forbiddenInfo.style.display = 'block';
+
+                // Disable forbidden button
+                dealerRow.querySelectorAll('.bid-btn').forEach((btn, idx) => {
+                    btn.disabled = idx === forbiddenBid;
+                });
+            } else {
+                forbiddenInfo.style.display = 'none';
+                dealerRow.querySelectorAll('.bid-btn').forEach(btn => {
+                    btn.disabled = false;
+                });
+            }
+        }
+
+        async function saveBids() {
+            // Validate all bids are set
+            for (const player of currentGame.players) {
+                if (playerBids[player.position] === null) {
+                    alert(`Zadejte hlášení pro hráče ${player.name}`);
+                    return;
+                }
+            }
+
+            const result = await api('rounds.php', {
+                action: 'save_bids',
+                round_id: currentRound.id,
+                bids: playerBids
+            });
+
+            if (result.success) {
+                closeModal('modal-bidding');
+                await openGame(currentGame.game.id);
+                awaitingResultsEntry = true; // Flag to allow Enter to open results
+            } else {
+                alert(result.error);
+            }
+        }
+
+        // Results
+        let detailedMode = false;
+        let isEditMode = false;
+        let awaitingResultsEntry = false; // Flag to open results on Enter
+
+        function openResultsModal(roundToEdit = null) {
+            isEditMode = roundToEdit !== null;
+            const round = roundToEdit || currentGame.rounds[currentGame.rounds.length - 1];
+            currentRound = round;
+            playerTricks = {};
+            detailedMode = false;
+            currentResultsIndex = 0;
+
+            document.getElementById('results-modal-title').textContent = isEditMode ? 'Oprava kola' : 'Výsledky kola';
+            document.getElementById('results-round-num').textContent = round.round_number;
+            document.getElementById('tricks-required').textContent = round.cards_count;
+            document.getElementById('detailed-mode').checked = false;
+            document.getElementById('tricks-sum-container').style.display = 'none';
+
+            // Show/hide cards count edit field
+            const cardsCountContainer = document.getElementById('edit-cards-count-container');
+            if (isEditMode) {
+                cardsCountContainer.style.display = 'block';
+                document.getElementById('edit-cards-count').value = round.cards_count;
+            } else {
+                cardsCountContainer.style.display = 'none';
+            }
+
+            // Prepare ordered players list
+            orderedResultsPlayers = [...currentGame.players].sort((a, b) => a.position - b.position);
+
+            renderResultsInputs();
+            openModal('modal-results');
+            
+            // Update entered count display
+            updateResultsEnteredCount();
+            
+            // Add keyboard listener
+            document.addEventListener('keydown', handleResultsKeypress);
+            
+            // Set focus to modal for keyboard input
+            document.getElementById('modal-results').focus();
+        }
+
+        function toggleDetailedMode() {
+            // Save current values before re-rendering
+            const savedTricks = {...playerTricks};
+            
+            detailedMode = document.getElementById('detailed-mode').checked;
+            document.getElementById('tricks-sum-container').style.display = detailedMode ? 'block' : 'none';
+            
+            // Restore values after changing mode
+            playerTricks = savedTricks;
+            renderResultsInputs();
+        }
+
+        function renderResultsInputs() {
+            let html = '';
+            orderedResultsPlayers.forEach((player, idx) => {
+                const position = parseInt(player.position);
+                const result = currentRound.results.find(r => parseInt(r.position) == position);
+                const bid = parseInt(result?.bid ?? 0);
+                const existingTricks = result?.tricks_won;
+                
+                // Only initialize if not already set by user (undefined means not set)
+                if (!(position in playerTricks)) {
+                    if (isEditMode && existingTricks !== null) {
+                        playerTricks[position] = parseInt(existingTricks);
+                    } else {
+                        playerTricks[position] = null;
+                    }
+                }
+
+                if (detailedMode) {
+                    // Detailed mode - show number buttons
+                    html += `
+                        <div class="bid-input-row ${idx === currentResultsIndex ? 'current-input' : ''}" data-position="${position}" data-index="${idx}">
+                            <span class="bid-player-name">
+                                ${escapeHtml(player.name)}
+                                <small>(hlášení: ${bid})</small>
+                            </span>
+                            <div class="bid-buttons">
+                    `;
+                    for (let t = 0; t <= currentRound.cards_count; t++) {
+                        const selected = playerTricks[position] === t ? 'selected' : '';
+                        html += `<button class="bid-btn ${selected}" onclick="selectTricks(${position}, ${t})">${t}</button>`;
+                    }
+                    html += '</div></div>';
+                } else {
+                    // Simple mode - just success/fail
+                    const isSuccess = playerTricks[position] === bid;
+                    const isFail = playerTricks[position] !== null && playerTricks[position] !== bid;
+                    
+                    html += `
+                        <div class="result-row ${idx === currentResultsIndex ? 'current-input' : ''}" data-position="${position}" data-index="${idx}" data-bid="${bid}">
+                            <div class="player-info">
+                                <div class="player-name">${escapeHtml(player.name)}</div>
+                                <div class="player-bid">Hlásil: <strong>${bid}</strong> ${bid === 1 ? 'štych' : (bid >= 2 && bid <= 4 ? 'štychy' : 'štychů')}</div>
+                            </div>
+                            <div class="result-buttons">
+                                <button class="result-btn fail ${isFail ? 'selected' : ''}" onclick="setResult(${position}, false, ${bid}, ${idx})">
+                                    <i class="fa-solid fa-times"></i> 0
+                                </button>
+                                <button class="result-btn success ${isSuccess ? 'selected' : ''}" onclick="setResult(${position}, true, ${bid}, ${idx})">
+                                    <i class="fa-solid fa-check"></i> 1
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            document.getElementById('tricks-inputs').innerHTML = html;
+            updateTricksSum();
+        }
+
+        function setResult(position, success, bid, index = null) {
+            position = parseInt(position); // Ensure number type
+            bid = parseInt(bid);
+            
+            if (success) {
+                playerTricks[position] = bid; // Splnil = dostal přesně tolik, kolik hlásil
+            } else {
+                // Nesplnil - nastavíme na jinou hodnotu než bid
+                playerTricks[position] = bid === 0 ? 1 : 0; // Placeholder - nesplnil
+            }
+            
+            // Update UI without full re-render
+            updateResultButtons(position, success);
+            updateTricksSum();
+            updateResultsEnteredCount();
+            
+            // Move to next player if index provided
+            if (index !== null) {
+                moveToNextResultsPlayer(index);
+            }
+        }
+
+        function moveToNextResultsPlayer(currentIndex) {
+            // Remove current highlight
+            document.querySelectorAll('.result-row, .bid-input-row').forEach(row => {
+                row.classList.remove('current-input');
+            });
+
+            // Move to next player (if not last)
+            if (currentIndex < orderedResultsPlayers.length - 1) {
+                currentResultsIndex = currentIndex + 1;
+                const nextRow = document.querySelector(`#modal-results [data-index="${currentResultsIndex}"]`);
+                if (nextRow) {
+                    nextRow.classList.add('current-input');
+                    nextRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            } else {
+                currentResultsIndex = orderedResultsPlayers.length; // All done
+            }
+        }
+
+        function handleResultsKeypress(e) {
+            // Only handle if results modal is open
+            if (!document.getElementById('modal-results').classList.contains('active')) {
+                return;
+            }
+
+            const key = e.key;
+            
+            // Enter - save if all entered, otherwise just confirm/continue
+            if (key === 'Enter') {
+                e.preventDefault();
+                const enteredCount = Object.values(playerTricks).filter(v => v !== null).length;
+                if (enteredCount === orderedResultsPlayers.length) {
+                    saveResults();
+                }
+                // If not all entered, Enter does nothing (user continues with 0/1)
+                return;
+            }
+
+            // In simple mode: 1 = Splnil, 0 = Nesplnil
+            // In detailed mode: 0-9 for exact tricks
+            if (/^[0-9]$/.test(key)) {
+                if (currentResultsIndex < orderedResultsPlayers.length) {
+                    const player = orderedResultsPlayers[currentResultsIndex];
+                    const position = parseInt(player.position);
+                    
+                    if (detailedMode) {
+                        // Detailed mode - set exact tricks
+                        const tricks = parseInt(key);
+                        if (tricks <= currentRound.cards_count) {
+                            selectTricks(position, tricks);
+                            moveToNextResultsPlayer(currentResultsIndex);
+                            updateResultsEnteredCount();
+                        }
+                    } else {
+                        // Simple mode - 1 = Splnil, 0 = Nesplnil
+                        const row = document.querySelector(`#modal-results [data-index="${currentResultsIndex}"]`);
+                        const bid = parseInt(row?.dataset.bid || 0);
+                        
+                        if (key === '1') {
+                            setResult(position, true, bid, currentResultsIndex);
+                            updateResultsEnteredCount();
+                        } else if (key === '0') {
+                            setResult(position, false, bid, currentResultsIndex);
+                            updateResultsEnteredCount();
+                        }
+                    }
+                }
+            }
+        }
+
+        function updateResultsEnteredCount() {
+            const enteredCount = Object.values(playerTricks).filter(v => v !== null).length;
+            document.getElementById('results-entered-count').textContent = enteredCount;
+            document.getElementById('results-total-count').textContent = orderedResultsPlayers.length;
+        }
+
+        function updateResultButtons(position, success) {
+            const row = document.querySelector(`.result-row[data-position="${position}"]`);
+            if (row) {
+                const successBtn = row.querySelector('.result-btn.success');
+                const failBtn = row.querySelector('.result-btn.fail');
+                if (successBtn) successBtn.classList.toggle('selected', success);
+                if (failBtn) failBtn.classList.toggle('selected', !success);
+            }
+        }
+
+        function selectTricks(position, tricks) {
+            playerTricks[position] = tricks;
+
+            // Update UI
+            const row = document.querySelector(`#modal-results .bid-input-row[data-position="${position}"]`);
+            if (row) {
+                row.querySelectorAll('.bid-btn').forEach((btn, idx) => {
+                    btn.classList.toggle('selected', idx === tricks);
+                });
+            }
+
+            updateTricksSum();
+        }
+
+        function updateTricksSum() {
+            const sum = Object.values(playerTricks).reduce((a, b) => a + (b || 0), 0);
+            document.getElementById('tricks-sum').textContent = sum;
+        }
+
+        async function saveResults() {
+            // Validate all results are set
+            for (const player of currentGame.players) {
+                const pos = parseInt(player.position);
+                if (playerTricks[pos] === null || playerTricks[pos] === undefined) {
+                    alert(`Zadejte výsledek pro hráče ${player.name}`);
+                    return;
+                }
+            }
+
+            // Get cards count (might be edited)
+            let cardsCount = currentRound.cards_count;
+            if (isEditMode) {
+                cardsCount = parseInt(document.getElementById('edit-cards-count').value);
+            }
+
+            // In detailed mode, validate sum
+            if (detailedMode) {
+                const sum = Object.values(playerTricks).reduce((a, b) => a + b, 0);
+                if (sum !== cardsCount) {
+                    alert(`Součet štychů (${sum}) musí být ${cardsCount}`);
+                    return;
+                }
+            }
+
+            // Store scores BEFORE saving to detect 100-point crossing
+            const scoresBefore = {};
+            currentGame.players.forEach(p => {
+                scoresBefore[p.id] = parseInt(p.total_score) || 0;
+            });
+
+            const requestData = {
+                action: isEditMode ? 'update_results' : 'save_results',
+                round_id: currentRound.id,
+                tricks: playerTricks
+            };
+
+            // Include cards_count if editing
+            if (isEditMode) {
+                requestData.cards_count = cardsCount;
+            }
+
+            const result = await api('rounds.php', requestData);
+
+            if (result.success) {
+                closeModal('modal-results');
+                await openGame(currentGame.game.id);
+                
+                // Check for 100-point crossing and play clink sounds
+                checkAndPlayClinkSounds(scoresBefore);
+            } else {
+                alert(result.error);
+            }
+        }
+        
+        // Check if any player crossed 100 points and play appropriate sound
+        function checkAndPlayClinkSounds(scoresBefore) {
+            let playUp = false;
+            let playDown = false;
+            
+            currentGame.players.forEach(player => {
+                const before = scoresBefore[player.id] || 0;
+                const after = parseInt(player.total_score) || 0;
+                
+                // Crossing 100 going UP
+                if (before < 100 && after >= 100) {
+                    playUp = true;
+                }
+                // Crossing 100 going DOWN (lost points)
+                if (before >= 100 && after < 100) {
+                    playDown = true;
+                }
+            });
+            
+            // Play sounds (if both happened, prioritize up)
+            if (playUp) {
+                playClinkUp();
+            } else if (playDown) {
+                playClinkDown();
+            }
+        }
+
+        function editRound(roundId) {
+            const round = currentGame.rounds.find(r => r.id == roundId);
+            if (round) {
+                openResultsModal(round);
+            }
+        }
+
+        async function finishGame() {
+            if (!confirm('Opravdu chcete ukončit hru?')) return;
+
+            const result = await api('games.php', {
+                action: 'finish',
+                game_id: currentGame.game.id
+            });
+
+            if (result.success) {
+                await openGame(currentGame.game.id);
+            } else {
+                alert(result.error);
+            }
+        }
+
+        async function editGameName() {
+            const currentName = currentGame.game.name;
+            const newName = prompt('Zadejte nový název hry:', currentName);
+            
+            if (newName === null || newName.trim() === '') {
+                return; // Cancelled or empty
+            }
+            
+            if (newName.trim() === currentName) {
+                return; // No change
+            }
+
+            const result = await api('games.php', {
+                action: 'rename',
+                game_id: currentGame.game.id,
+                name: newName.trim()
+            });
+
+            if (result.success) {
+                // Reload game to get updated data
+                await openGame(result.game_id || currentGame.game.id);
+            } else {
+                alert(result.error);
+            }
+        }
+
+        async function deleteGame() {
+            if (!confirm('Opravdu chcete SMAZAT tuto hru? Tato akce je nevratná!')) return;
+
+            const result = await api('games.php', {
+                action: 'delete',
+                game_id: currentGame.game.id
+            });
+
+            if (result.success) {
+                showScreen('screen-games-list');
+                loadGames();
+            } else {
+                alert(result.error);
+            }
+        }
+
+        async function deleteRound(roundId) {
+            if (!confirm('Opravdu chcete smazat toto kolo? Body budou odečteny.')) return;
+
+            const result = await api('rounds.php', {
+                action: 'delete',
+                round_id: roundId
+            });
+
+            if (result.success) {
+                await openGame(currentGame.game.id);
+            } else {
+                alert(result.error);
+            }
+        }
+
+        // Known Players & Autocomplete
+        function updateKnownPlayers(playerNames) {
+            const stored = localStorage.getItem('stychy_known_players');
+            const existing = stored ? JSON.parse(stored) : [];
+            
+            playerNames.forEach(name => {
+                if (name && !existing.includes(name)) {
+                    existing.push(name);
+                }
+            });
+            
+            knownPlayers = existing;
+            localStorage.setItem('stychy_known_players', JSON.stringify(existing));
+        }
+
+        function loadKnownPlayers() {
+            const stored = localStorage.getItem('stychy_known_players');
+            knownPlayers = stored ? JSON.parse(stored) : [];
+        }
+
+        function showAutocomplete(input, index) {
+            const value = input.value.toLowerCase().trim();
+            const listEl = document.getElementById(`autocomplete-${index}`);
+            
+            if (!value) {
+                // Show all known players when focused with empty input
+                if (knownPlayers.length === 0) {
+                    listEl.classList.remove('show');
+                    return;
+                }
+            }
+            
+            const filtered = knownPlayers.filter(name => 
+                name.toLowerCase().includes(value) || value === ''
+            ).slice(0, 8);
+            
+            if (filtered.length === 0) {
+                listEl.classList.remove('show');
+                return;
+            }
+            
+            listEl.innerHTML = filtered.map(name => 
+                `<div class="autocomplete-item" onclick="selectAutocomplete('${escapeHtml(name)}', ${index})">${escapeHtml(name)}</div>`
+            ).join('');
+            listEl.classList.add('show');
+        }
+
+        function selectAutocomplete(name, index) {
+            document.getElementById(`player-name-${index}`).value = name;
+            document.getElementById(`autocomplete-${index}`).classList.remove('show');
+        }
+
+        // Copy Game - otevře formulář nové hry s předvyplněnými údaji
+        async function copyGameFromList(gameId) {
+            // Load game data first
+            const result = await api('games.php', { action: 'get', game_id: gameId });
+            if (result.success) {
+                currentGame = result;
+                updateKnownPlayers(currentGame.players.map(p => p.name));
+                openCopyGameModal();
+            } else {
+                alert(result.error);
+            }
+        }
+
+        // Statistics
+        function openStatsModal() {
+            if (!currentGame || !currentGame.rounds || currentGame.rounds.length === 0) {
+                alert('Nejsou k dispozici žádná data pro statistiky');
+                return;
+            }
+            
+            const stats = calculateGameStats();
+            renderStats(stats);
+            openModal('modal-stats');
+        }
+
+        function calculateGameStats() {
+            const players = currentGame.players;
+            const rounds = currentGame.rounds.filter(r => r.status === 'finished');
+            
+            if (rounds.length === 0) return null;
+
+            // Initialize player stats
+            const playerStats = {};
+            players.forEach(p => {
+                playerStats[p.position] = {
+                    name: p.name,
+                    totalBid: 0,
+                    totalWon: 0,
+                    successCount: 0,
+                    failCount: 0,
+                    zeroCount: 0,
+                    maxBid: 0,
+                    scores: [],
+                    roundScores: []
+                };
+            });
+
+            // Calculate per-round and per-player stats
+            let totalOverbid = 0;
+            let totalUnderbid = 0;
+            let perfectRounds = 0;
+            let disasterRounds = 0;
+            let bestRound = { num: 0, successRate: 0 };
+            let worstRound = { num: 0, successRate: 100 };
+
+            rounds.forEach(round => {
+                let roundBidSum = 0;
+                let roundSuccesses = 0;
+                
+                round.results.forEach(r => {
+                    const pos = r.position;
+                    const bid = parseInt(r.bid);
+                    const won = parseInt(r.tricks_won);
+                    const score = parseInt(r.score);
+                    const success = bid === won;
+
+                    playerStats[pos].totalBid += bid;
+                    playerStats[pos].totalWon += won;
+                    playerStats[pos].scores.push(score);
+                    playerStats[pos].roundScores.push({ round: round.round_number, score, bid, won, success });
+                    
+                    if (success) {
+                        playerStats[pos].successCount++;
+                        roundSuccesses++;
+                    } else {
+                        playerStats[pos].failCount++;
+                    }
+                    
+                    if (bid === 0) playerStats[pos].zeroCount++;
+                    if (bid > playerStats[pos].maxBid) playerStats[pos].maxBid = bid;
+                    
+                    roundBidSum += bid;
+                });
+
+                // Round stats
+                const cardsCount = round.cards_count;
+                if (roundBidSum > cardsCount) totalOverbid++;
+                if (roundBidSum < cardsCount) totalUnderbid++;
+                
+                const successRate = (roundSuccesses / players.length) * 100;
+                if (successRate === 100) perfectRounds++;
+                if (successRate === 0) disasterRounds++;
+                
+                if (successRate > bestRound.successRate) {
+                    bestRound = { num: round.round_number, successRate };
+                }
+                if (successRate < worstRound.successRate) {
+                    worstRound = { num: round.round_number, successRate };
+                }
+            });
+
+            // Calculate derived stats
+            const playerList = Object.values(playerStats);
+            
+            // Success rates
+            playerList.forEach(p => {
+                const totalRounds = p.successCount + p.failCount;
+                p.successRate = totalRounds > 0 ? Math.round((p.successCount / totalRounds) * 100) : 0;
+                p.avgBid = totalRounds > 0 ? (p.totalBid / totalRounds).toFixed(1) : 0;
+                p.avgWon = totalRounds > 0 ? (p.totalWon / totalRounds).toFixed(1) : 0;
+                
+                // Best and worst round
+                if (p.roundScores.length > 0) {
+                    p.bestScore = Math.max(...p.scores);
+                    p.worstScore = Math.min(...p.scores);
+                }
+            });
+
+            // Find award winners
+            const sniper = [...playerList].sort((a, b) => b.successRate - a.successRate)[0];
+            const gambler = [...playerList].sort((a, b) => b.totalBid - a.totalBid)[0];
+            const cautious = [...playerList].sort((a, b) => b.zeroCount - a.zeroCount)[0];
+            const lucky = [...playerList].sort((a, b) => b.totalWon - a.totalWon)[0];
+            const ambitious = [...playerList].sort((a, b) => parseFloat(b.avgBid) - parseFloat(a.avgBid))[0];
+            
+            // Score spread
+            const sortedByScore = [...players].sort((a, b) => b.total_score - a.total_score);
+            const scoreSpread = sortedByScore[0].total_score - sortedByScore[sortedByScore.length - 1].total_score;
+
+            return {
+                rounds: rounds.length,
+                totalRounds: getRoundSequence(currentGame.game.max_cards).length,
+                players: playerList,
+                totalOverbid,
+                totalUnderbid,
+                perfectRounds,
+                disasterRounds,
+                bestRound,
+                worstRound,
+                scoreSpread,
+                awards: { sniper, gambler, cautious, lucky, ambitious }
+            };
+        }
+
+        function renderStats(stats) {
+            if (!stats) {
+                document.getElementById('stats-content').innerHTML = '<p>Žádná data</p>';
+                return;
+            }
+
+            let html = '';
+
+            // Section 1: Přehled hry
+            html += `
+                <div class="stats-section">
+                    <div class="stats-section-title"><i class="fa-solid fa-gamepad"></i> Přehled hry</div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value">${stats.rounds} / ${stats.totalRounds}</div>
+                            <div class="stat-label">Odehraná kola</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${stats.perfectRounds}</div>
+                            <div class="stat-label">Kol, kde všichni splnili</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${stats.disasterRounds}</div>
+                            <div class="stat-label">Kol, kde nikdo nesplnil</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${stats.scoreSpread}</div>
+                            <div class="stat-label">Rozdíl 1. a posl. místa</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Section 2: Ocenění
+            html += `
+                <div class="stats-section">
+                    <div class="stats-section-title"><i class="fa-solid fa-award"></i> Ocenění</div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value">🎯</div>
+                            <div class="stat-label">Sniper (nejvyšší úspěšnost)</div>
+                            <div class="stat-player">${stats.awards.sniper.name} (${stats.awards.sniper.successRate}%)</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">🎰</div>
+                            <div class="stat-label">Gambler (nejvíce hlášeno)</div>
+                            <div class="stat-player">${stats.awards.gambler.name} (${stats.awards.gambler.totalBid})</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">🛡️</div>
+                            <div class="stat-label">Opatrný (nejvíce nul)</div>
+                            <div class="stat-player">${stats.awards.cautious.name} (${stats.awards.cautious.zeroCount}×)</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">🍀</div>
+                            <div class="stat-label">Šťastlivec (nejvíce uhrál)</div>
+                            <div class="stat-player">${stats.awards.lucky.name} (${stats.awards.lucky.totalWon})</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Section 3: Tabulka hráčů
+            html += `
+                <div class="stats-section">
+                    <div class="stats-section-title"><i class="fa-solid fa-users"></i> Statistiky hráčů</div>
+                    <div style="overflow-x: auto;">
+                        <table class="stats-table">
+                            <tr>
+                                <th>Hráč</th>
+                                <th>Úspěšnost</th>
+                                <th>Splnil/Nesplnil</th>
+                                <th>Ø Hlášení</th>
+                                <th>Ø Uhrál</th>
+                                <th>Max. skóre</th>
+                                <th>Min. skóre</th>
+                            </tr>
+            `;
+            
+            const sortedPlayers = [...stats.players].sort((a, b) => b.successRate - a.successRate);
+            sortedPlayers.forEach((p, idx) => {
+                let badge = '';
+                if (idx === 0) badge = '<span class="stats-badge gold">1.</span>';
+                else if (idx === 1) badge = '<span class="stats-badge silver">2.</span>';
+                else if (idx === 2) badge = '<span class="stats-badge bronze">3.</span>';
+                
+                html += `
+                    <tr>
+                        <td>${p.name} ${badge}</td>
+                        <td class="highlight">${p.successRate}%</td>
+                        <td>${p.successCount} / ${p.failCount}</td>
+                        <td>${p.avgBid}</td>
+                        <td>${p.avgWon}</td>
+                        <td style="color: #2ecc71;">${p.bestScore > 0 ? '+' : ''}${p.bestScore}</td>
+                        <td style="color: #e74c3c;">${p.worstScore > 0 ? '+' : ''}${p.worstScore}</td>
+                    </tr>
+                `;
+            });
+            
+            html += '</table></div></div>';
+
+            // Section 4: Zajímavá kola
+            html += `
+                <div class="stats-section">
+                    <div class="stats-section-title"><i class="fa-solid fa-star"></i> Zajímavá kola</div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value">Kolo ${stats.bestRound.num}</div>
+                            <div class="stat-label">Nejlepší kolo</div>
+                            <div class="stat-player">${stats.bestRound.successRate.toFixed(0)}% úspěšnost</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">Kolo ${stats.worstRound.num}</div>
+                            <div class="stat-label">Nejhorší kolo</div>
+                            <div class="stat-player">${stats.worstRound.successRate.toFixed(0)}% úspěšnost</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${stats.totalOverbid}</div>
+                            <div class="stat-label">Přehlášených kol (suma > karty)</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${stats.totalUnderbid}</div>
+                            <div class="stat-label">Podhlášených kol (suma < karty)</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('stats-content').innerHTML = html;
+        }
+
+        function openCopyGameModal() {
+            if (!currentGame || !currentGame.players) {
+                alert('Nejprve otevřete hru');
+                return;
+            }
+            
+            // Prefill data from current game
+            prefilledPlayers = currentGame.players.map(p => p.name);
+            selectedPlayerCount = currentGame.players.length;
+            
+            // Update player count buttons
+            document.querySelectorAll('.player-count-btn').forEach(btn => {
+                btn.classList.toggle('selected', parseInt(btn.textContent) === selectedPlayerCount);
+            });
+            
+            // Set game name
+            document.getElementById('new-game-name').value = currentGame.game.name + ' (nová)';
+            
+            // Open new game modal
+            openModal('modal-new-game');
+        }
+
+        // Helpers
+        function getRoundSequence(maxCards = 7) {
+            const sequence = [];
+            // Sestupně: 7, 6, 5, 4, 3, 2, 1
+            for (let i = maxCards; i >= 1; i--) sequence.push(i);
+            // Vzestupně včetně opakování 1: 1, 2, 3, 4, 5, 6, 7
+            for (let i = 1; i <= maxCards; i++) sequence.push(i);
+            return sequence;
+        }
+
+        function getSuitSymbol(suit) {
+            const symbols = { hearts: '♥', diamonds: '♦', clubs: '♣', spades: '♠' };
+            return symbols[suit] || '';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+            if (modalId === 'modal-new-game') {
+                renderPlayerNameInputs();
+                document.addEventListener('keydown', handleNewGameKeypress);
+            }
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+            // Stop voice recognition when closing modal
+            if (isListening) {
+                stopVoiceRecognition();
+            }
+            // Remove keyboard listener for bidding
+            if (modalId === 'modal-bidding') {
+                document.removeEventListener('keydown', handleBiddingKeypress);
+            }
+            // Remove keyboard listener for results
+            if (modalId === 'modal-results') {
+                document.removeEventListener('keydown', handleResultsKeypress);
+            }
+            // Remove keyboard listener for new game
+            if (modalId === 'modal-new-game') {
+                document.removeEventListener('keydown', handleNewGameKeypress);
+            }
+        }
+
+        function handleNewGameKeypress(e) {
+            // Only handle if new game modal is open
+            if (!document.getElementById('modal-new-game').classList.contains('active')) {
+                return;
+            }
+
+            const key = e.key;
+            
+            // CTRL + number to select player count (CTRL+3 = 3 players, etc.)
+            if (e.ctrlKey && /^[3-9]$/.test(key)) {
+                e.preventDefault();
+                const count = parseInt(key);
+                selectPlayerCount(count);
+                return;
+            }
+            
+            // CTRL+0 for 10 players
+            if (e.ctrlKey && key === '0') {
+                e.preventDefault();
+                selectPlayerCount(10);
+                return;
+            }
+            
+            // Don't intercept dealer selection if typing in an input field
+            if (e.target.tagName === 'INPUT') {
+                return;
+            }
+            
+            // Number keys 1-9 to select dealer (without CTRL)
+            if (!e.ctrlKey && /^[1-9]$/.test(key)) {
+                const playerIndex = parseInt(key) - 1; // Convert to 0-based index
+                if (playerIndex > 0 && playerIndex < selectedPlayerCount) {
+                    e.preventDefault();
+                    makeDealer(playerIndex);
+                }
+            }
+        }
+
+        // Global keydown handler for Enter to open results after bidding
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && awaitingResultsEntry) {
+                // Check no modal is open
+                const anyModalOpen = document.querySelector('.modal.active');
+                if (!anyModalOpen && currentGame && currentGame.rounds.length > 0) {
+                    const lastRound = currentGame.rounds[currentGame.rounds.length - 1];
+                    if (lastRound.status === 'playing') {
+                        e.preventDefault();
+                        awaitingResultsEntry = false;
+                        openResultsModal();
+                    }
+                }
+            }
+        });
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            loadKnownPlayers();
+            checkAuth();
+            
+            // Pre-load speech synthesis voices (required by some browsers)
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.getVoices();
+                // Chrome requires waiting for voiceschanged event
+                window.speechSynthesis.onvoiceschanged = () => {
+                    window.speechSynthesis.getVoices();
+                };
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Štychy - Hra</title>
+    <style>
+        :root {
+            --bg-color: #1a1c2c;
+            --card-w: 65px;
+            --card-h: 95px;
+            --accent: #00ffcc; 
+            --bid-color: #ffcc00; 
+            --panel-bg: rgba(0, 0, 0, 0.85);
+            --switch-w: 50px;
+            --switch-h: 26px;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            user-select: none;
+        }
+
+        #game-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            background: radial-gradient(circle, #23263a 0%, #1a1c2c 100%);
+            overflow: hidden;
+        }
+
+        /* Kontejner pro herní prvky, který budeme škálovat */
+        #game-scaler {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 0; height: 0;
+            transform-origin: center center;
+        }
+
+        /* --- SCREENS --- */
+        .screen {
+            position: absolute; inset: 0; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 10000;
+            background: radial-gradient(circle, #2a2d45 0%, #10111a 100%);
+            transition: opacity 0.5s ease;
+        }
+
+        .menu-title {
+            font-size: 4rem; margin-bottom: 10px;
+            text-shadow: 0 0 20px var(--accent); letter-spacing: 5px;
+        }
+
+        .name-input-container { margin-bottom: 20px; text-align: center; }
+        .name-input-container label { display: block; font-size: 0.8rem; color: var(--accent); margin-bottom: 5px; text-transform: uppercase; }
+        
+        #player-name-input {
+            background: rgba(255, 255, 255, 0.1); border: 1px solid var(--accent);
+            color: white; padding: 10px 15px; border-radius: 8px; font-size: 1.2rem;
+            text-align: center; outline: none; width: 200px; transition: box-shadow 0.3s;
+        }
+
+        /* --- SETTINGS STYLES --- */
+        .settings-row {
+            display: flex; justify-content: space-between; align-items: center;
+            width: 420px; max-width: 90vw; margin: 12px 0;
+            background: rgba(255,255,255,0.05); padding: 12px 20px; border-radius: 12px;
+        }
+        .settings-label { font-weight: bold; color: #ddd; font-size: 1rem; }
+        .opt-group { display: flex; gap: 5px; }
+        .opt-btn {
+            background: transparent; border: 1px solid #555; color: #888;
+            padding: 8px 12px; border-radius: 5px; cursor: pointer;
+            font-size: 0.85rem; transition: 0.2s; min-width: 80px;
+        }
+        .opt-btn.selected {
+            background: var(--accent); color: #1a1c2c; border-color: var(--accent);
+            font-weight: bold; box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+        }
+
+        .switch { position: relative; display: inline-block; width: var(--switch-w); height: var(--switch-h); cursor: pointer; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        input:checked + .slider { background-color: var(--accent); }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        /* --- TOP BAR --- */
+        #top-bar {
+            position: absolute; top: 0; left: 0; width: 100%; height: 70px;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 30px; box-sizing: border-box; background: var(--panel-bg);
+            backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 1000;
+        }
+
+        .speed-control { display: flex; background: #333; border-radius: 20px; padding: 2px; margin-right: 15px; }
+        .speed-btn { background: transparent; border: none; color: #888; padding: 5px 12px; border-radius: 18px; cursor: pointer; font-size: 0.8rem; font-weight: bold; transition: 0.2s; }
+        .speed-btn.active { background: var(--accent); color: #1a1c2c; }
+
+        #round-display { display: flex; flex-direction: column; line-height: 1.2; }
+        #round-num { font-size: 1.2rem; font-weight: bold; }
+        #round-direction { font-size: 0.8rem; color: var(--accent); opacity: 0.9; }
+
+        .trump-mini-card {
+            background: white; color: black; padding: 4px 10px; border-radius: 6px;
+            display: inline-flex; align-items: center; gap: 5px;
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.3); border: 1px solid #ddd;
+        }
+
+        /* --- GAMEPLAY --- */
+        .player-slot {
+            position: absolute; width: 140px; text-align: center;
+            transition: transform 0.4s ease, opacity 0.3s;
+            z-index: 2;
+        }
+        .active-player .player-info {
+            border-color: var(--accent); box-shadow: 0 0 15px var(--accent);
+            background: rgba(0, 255, 204, 0.15); transform: scale(1.05);
+        }
+        .player-info {
+            background: rgba(0, 0, 0, 0.7); padding: 8px; border-radius: 12px;
+            border: 2px solid rgba(255,255,255,0.1); font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+        .status-line { font-weight: bold; font-size: 1.1rem; margin: 3px 0; }
+        .bid-highlight { color: var(--bid-color); font-size: 1.2rem; }
+        .dealer-icon { color: gold; font-size: 1.2rem; margin-right: 5px; }
+
+        .played-card {
+            position: absolute; width: var(--card-w); height: var(--card-h);
+            background: white; color: black; border-radius: 6px; display: flex;
+            flex-direction: column; align-items: center; justify-content: center;
+            font-weight: bold; box-shadow: 2px 2px 10px rgba(0,0,0,0.5); z-index: 5;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 1.4rem; border: 1px solid #999;
+        }
+
+        .card-animation-proxy {
+            position: fixed; width: var(--card-w); height: var(--card-h);
+            background: white; border-radius: 6px; z-index: 9000;
+            pointer-events: none; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; font-weight: bold; font-size: 1.4rem;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.4);
+            opacity: 0; transition: all 0.5s linear;
+        }
+
+        /* Ovládací oblast dole */
+        #bottom-control-area {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            display: flex; flex-direction: column; align-items: center; z-index: 100;
+            width: 100%;
+        }
+
+        #my-hand { 
+            display: flex; justify-content: center; height: 110px; align-items: flex-end; 
+            margin-bottom: 10px;
+        }
+        .card {
+            width: var(--card-w); height: var(--card-h); background: white; color: black;
+            border-radius: 6px; margin: 0 -15px; border: 1px solid #333; cursor: pointer;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-size: 1.5rem; font-weight: bold; transition: transform 0.2s, filter 0.2s;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.3); position: relative;
+        }
+        .card:hover:not(.disabled) { transform: translateY(-30px) scale(1.1); z-index: 200; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        .card.disabled { filter: grayscale(1) brightness(0.5); pointer-events: none; opacity: 0.6; }
+
+        .txt-red { color: #e74c3c !important; }
+        .txt-black { color: #2c3e50 !important; }
+
+        /* --- MODALS --- */
+        .modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.7); 
+            display: flex; justify-content: center; align-items: center; z-index: 900;
+            padding-top: 50px;
+        }
+        .modal-content {
+            background: #2c3e50; padding: 32px; border-radius: 20px;
+            text-align: center; width: 600px; max-width: 95vw; border: 1px solid var(--accent);
+        }
+
+        #bid-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(60px, 1fr)); gap: 10px; margin-top: 20px; }
+        .bid-btn {
+            padding: 15px; font-size: 1.3rem; border: none; border-radius: 8px;
+            background: #34495e; color: white; cursor: pointer; transition: 0.2s;
+            font-weight: bold;
+        }
+        .bid-btn:hover:not(:disabled) { background: var(--accent); color: #1a1c2c; transform: scale(1.05); }
+        .bid-btn:disabled { opacity: 0.2; cursor: not-allowed; background: #222; }
+
+        .hidden { display: none !important; }
+
+        .btn-menu {
+            width: 250px; padding: 15px; margin: 10px; font-size: 1.2rem; font-weight: bold;
+            border: 2px solid var(--accent); background: transparent; color: var(--accent);
+            cursor: pointer; border-radius: 10px; transition: all 0.3s;
+        }
+        .btn-menu:hover { background: var(--accent); color: #1a1c2c; box-shadow: 0 0 20px var(--accent); }
+
+        .streak-badge { background: rgba(255, 215, 0, 0.1); border: 1px solid gold; color: gold; padding: 5px 15px; border-radius: 20px; margin-bottom: 10px; font-weight: bold; }
+        .difficulty-badge { font-size: 0.9rem; color: var(--accent); margin-bottom: 30px; opacity: 0.8; }
+        
+        #score-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 1rem; }
+        #score-table th, #score-table td { padding: 8px; border: 1px solid rgba(255,255,255,0.1); text-align: center; }
+        .plus { color: #2ecc71; }
+        .minus { color: #ff5e5e; }
+        .current-row { background: rgba(0, 255, 204, 0.1); }
+
+        /* Toast Notifications */
+        #toast-container {
+            position: absolute; top: 80px; left: 50%; transform: translateX(-50%);
+            display: flex; flex-direction: column; gap: 5px; pointer-events: none; z-index: 2000;
+        }
+        .toast {
+            background: rgba(0,0,0,0.8); border: 1px solid #555; padding: 8px 20px;
+            border-radius: 20px; color: white; font-size: 0.9rem; opacity: 0;
+            animation: fadeInOut 2s forwards;
+        }
+        @keyframes fadeInOut { 
+            0% { opacity: 0; transform: translateY(-10px); } 
+            10% { opacity: 1; transform: translateY(0); } 
+            80% { opacity: 1; transform: translateY(0); } 
+            100% { opacity: 0; transform: translateY(-10px); } 
+        }
+
+        #trump-card-visual {
+            position: absolute; top: 0; left: 0; margin-left: -65px; margin-top: -95px;
+            width: 130px; height: 190px; background: white;
+            border-radius: 12px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; font-weight: bold;
+            font-size: 3rem;
+            box-shadow: 0 0 50px rgba(0, 255, 204, 0.8); border: 3px solid var(--accent);
+            z-index: 9500; transition: opacity 0.5s ease;
+            pointer-events: none;
+        }
+
+        #my-player-slot-container { width: 100%; height: 80px; position: relative; display: flex; justify-content: center; }
+        #my-player-slot-container .player-slot { position: relative; left: auto !important; top: auto !important; transform: none !important; }
+        #my-player-slot-container .player-info { border-color: var(--accent); }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <!-- HLAVNÍ OBRAZOVKA (Nyní spíše jako Pause menu / Setup) -->
+    <div id="screen-home" class="screen">
+        <div class="menu-title">ŠTYCHY</div>
+        <div class="name-input-container">
+            <label for="player-name-input">Tvé jméno</label>
+            <input type="text" id="player-name-input" maxlength="10" placeholder="Zadej jméno..." onchange="savePlayerName(this.value)">
+        </div>
+        <div id="win-streak-display" class="streak-badge">WIN STREAK: 0</div>
+        <div id="current-diff-display" class="difficulty-badge">OBTÍŽNOST: STŘEDNÍ</div>
+        <button class="btn-menu" onclick="handleMenuClick(() => showGame())">POKRAČOVAT</button>
+        <button class="btn-menu" onclick="handleMenuClick(() => showScreen('screen-settings'))">NASTAVENÍ</button>
+        <button class="btn-menu" onclick="exitToWeb()" style="border-color: #ff5e5e; color: #ff5e5e;">UKONČIT HRU</button>
+    </div>
+
+    <!-- NASTAVENÍ -->
+    <div id="screen-settings" class="screen hidden">
+        <h1 style="color: var(--accent); margin-bottom: 20px;">NASTAVENÍ</h1>
+        <div class="settings-row">
+            <span class="settings-label">OBTÍŽNOST</span>
+            <div class="opt-group">
+                <button class="opt-btn" onclick="setDifficulty('easy')" id="diff-easy">Lehká</button>
+                <button class="opt-btn" onclick="setDifficulty('medium')" id="diff-medium">Střední</button>
+                <button class="opt-btn" onclick="setDifficulty('hard')" id="diff-hard">Těžká</button>
+            </div>
+        </div>
+        <div class="settings-row">
+            <span class="settings-label">ZVUKOVÉ EFEKTY</span>
+            <label class="switch"><input type="checkbox" id="check-sound" onchange="toggleSetting('sound')"><span class="slider"></span></label>
+        </div>
+        <div class="settings-row">
+            <span class="settings-label">VIBRACE</span>
+            <label class="switch"><input type="checkbox" id="check-vibration" onchange="toggleSetting('vibration')"><span class="slider"></span></label>
+        </div>
+        <button class="btn-menu" onclick="handleMenuClick(() => showScreen('screen-home'))" style="margin-top: 30px;">ZPĚT</button>
+    </div>
+
+    <!-- HRA UI -->
+    <div id="top-bar">
+        <div id="round-display">
+            <div id="round-num">KOLO: 1</div>
+            <div id="round-direction">7 karet</div>
+        </div>
+        <div style="display: flex; align-items: center;">
+            <div class="speed-control">
+                <button class="speed-btn active" data-speed="1" onclick="setSpeed(1)">1x</button>
+                <button class="speed-btn" data-speed="2" onclick="setSpeed(2)">2x</button>
+                <button class="speed-btn" data-speed="4" onclick="setSpeed(4)">4x</button>
+            </div>
+            <div id="trump-display"><span id="trump-val-text">-</span></div>
+        </div>
+        <button onclick="handleMenuClick(() => showScreen('screen-home'))" style="background:transparent; border:1px solid #555; color:white; padding:5px 10px; border-radius:5px; cursor:pointer;">Menu</button>
+    </div>
+
+    <div id="game-scaler">
+        <div id="players-container"></div>
+        <div id="center-area">
+            <div id="trump-card-visual" class="hidden"></div>
+        </div>
+    </div>
+    
+    <div id="bottom-control-area">
+        <div id="my-hand"></div>
+        <div id="my-player-slot-container"></div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <div id="bid-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2 style="margin:0 0 10px 0">Tvůj odhad</h2>
+            <div id="forbidden-info" style="color: #ff5e5e; margin-bottom: 10px; font-size: 0.9rem;"></div>
+            <div id="bid-grid"></div>
+        </div>
+    </div>
+
+    <div id="results-modal" class="modal hidden" style="z-index: 2000;">
+        <div class="modal-content" style="max-height: 90vh; overflow-y: auto;">
+            <h2 id="results-title" style="font-size: 1.8rem;">Průběžné výsledky</h2>
+            <div style="overflow-x: auto;">
+                <table id="score-table">
+                    <thead id="score-head"></thead>
+                    <tbody id="score-body"></tbody>
+                    <tfoot id="score-foot"></tfoot>
+                </table>
+            </div>
+            <button onclick="handleMenuClick(() => closeResults())" style="margin-top:25px; padding:15px; background:var(--accent); border:none; border-radius:8px; font-weight:bold; font-size:1.1rem; cursor:pointer; width:100%;">DALŠÍ KOLO</button>
+            <button onclick="exitToWeb()" style="margin-top:12px; background:transparent; border:1px solid #ff5e5e; color:#ff5e5e; padding:10px; border-radius:8px; cursor:pointer; width:100%;">UKONČIT HRU</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const SUITS = ['♣', '♠', '♦', '♥'];
+    const VALUES = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+    const NAMES = ["Lily", "Otto", "Max", "Mia", "Hugo", "Ema", "Leo", "Sofia", "Bruno", "Viktor", "Sára"];
+
+    // Načtení parametrů z URL (počet hráčů)
+    const urlParams = new URLSearchParams(window.location.search);
+    const totalPlayers = parseInt(urlParams.get('players')) || 8;
+    
+    // Max karet podle počtu hráčů (52 karet v balíčku)
+    const maxCardsMap = { 3: 10, 4: 10, 5: 10, 6: 8, 7: 7, 8: 6 };
+    const maxCardsInGame = maxCardsMap[totalPlayers] || 7;
+
+    let game = {
+        players: [],
+        deck: [],
+        trump: null,
+        currentCardsCount: 6, // Bude přepsáno při initGame podle počtu hráčů 
+        direction: -1,        
+        repeatOne: false,     
+        dealerIdx: 0,
+        turnIdx: null,
+        playedCards: [],
+        bidsCount: 0,
+        scoreHistory: [],
+        streaks: { easy: 0, medium: 0, hard: 0 },
+        difficulty: 'medium',
+        sound: true,
+        vibration: true,
+        gameActive: false,
+        playerName: "TY",
+        speed: 1, 
+        baseAiDelay: 800,
+        baseAnimDuration: 600
+    };
+
+    function exitToWeb() {
+        if(confirm("Opravdu ukončit hru?")) {
+            window.location.href = "index.html";
+        }
+    }
+
+    function setSpeed(s) {
+        game.speed = s;
+        document.querySelectorAll('.speed-btn').forEach(btn => {
+            btn.classList.toggle('active', parseInt(btn.dataset.speed) === s);
+        });
+    }
+
+    function getAiDelay() { return game.baseAiDelay / game.speed; }
+    function getAnimDuration() { return game.baseAnimDuration / game.speed; }
+    function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    function handleMenuClick(action) {
+        if(game.sound) { /* Zvuk kliknutí */ }
+        action();
+    }
+
+    function showToast(msg) {
+        const container = document.getElementById('toast-container');
+        const el = document.createElement('div');
+        el.className = 'toast';
+        el.innerText = msg;
+        container.appendChild(el);
+        setTimeout(() => el.remove(), 2000);
+    }
+
+    function resizeGame() {
+        const wrapper = document.getElementById('game-scaler');
+        if(!wrapper) return;
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        const baseSize = 750; 
+        const minSide = Math.min(w, h);
+        let scale = minSide < baseSize ? minSide / baseSize : 1;
+        wrapper.style.transform = `translate(-50%, -50%) scale(${scale})`;
+        wrapper.style.top = "42%"; 
+    }
+    window.addEventListener('resize', resizeGame);
+
+    function setDifficulty(level) {
+        game.difficulty = level;
+        saveGlobalState();
+        updateSettingsUI();
+    }
+
+    function toggleSetting(key) {
+        const checkbox = document.getElementById(`check-${key}`);
+        if (checkbox) game[key] = checkbox.checked;
+        saveGlobalState();
+        updateSettingsUI();
+        if (key === 'vibration' && game.vibration) tryVibrate(50);
+    }
+
+    function tryVibrate(ms) {
+        if (game.vibration && navigator.vibrate) navigator.vibrate(ms);
+    }
+
+    function updateSettingsUI() {
+        ['easy', 'medium', 'hard'].forEach(l => {
+            const btn = document.getElementById(`diff-${l}`);
+            if(btn) btn.classList.toggle('selected', game.difficulty === l);
+        });
+        document.getElementById('check-sound').checked = game.sound;
+        document.getElementById('check-vibration').checked = game.vibration;
+        const diffNames = { easy: "LEHKÁ", medium: "STŘEDNÍ", hard: "TĚŽKÁ" };
+        document.getElementById('current-diff-display').innerText = `OBTÍŽNOST: ${diffNames[game.difficulty]}`;
+        document.getElementById('win-streak-display').innerText = `WIN STREAK: ${game.streaks[game.difficulty] || 0}`;
+    }
+
+    function savePlayerName(val) {
+        game.playerName = val.trim() || "TY";
+        if (game.players.length > 0) game.players[0].name = game.playerName;
+        saveGlobalState();
+    }
+
+    function saveGlobalState() {
+        localStorage.setItem('stychy_global', JSON.stringify({ 
+            streaks: game.streaks, 
+            difficulty: game.difficulty, 
+            playerName: game.playerName,
+            sound: game.sound,
+            vibration: game.vibration
+        }));
+    }
+
+    function loadAll() {
+        const global = localStorage.getItem('stychy_global');
+        if (global) {
+            const data = JSON.parse(global);
+            game.playerName = data.playerName || "TY";
+            game.difficulty = data.difficulty || 'medium';
+            game.streaks = data.streaks || { easy: 0, medium: 0, hard: 0 };
+            if (data.sound !== undefined) game.sound = data.sound;
+            if (data.vibration !== undefined) game.vibration = data.vibration;
+            document.getElementById('player-name-input').value = game.playerName;
+        }
+        updateSettingsUI();
+        resizeGame();
+        
+        // Hned po načtení nastavení spustíme hru
+        initGame();
+        game.gameActive = true;
+        showScreen('none');
+    }
+
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+        if (id !== 'none') document.getElementById(id).classList.remove('hidden');
+        if (id === 'screen-home') updateSettingsUI();
+    }
+
+    function showGame() { showScreen('none'); }
+
+    // --- HERNÍ LOGIKA ---
+    function initGame() {
+        let pool = [...NAMES].sort(() => Math.random() - 0.5);
+        game.players = [{ name: game.playerName, isHuman: true, score: 0, hand: [], bid: 0, won: 0, hasBid: false }];
+        
+        // Generování botů podle vybraného počtu (minus human)
+        for(let i=0; i < totalPlayers - 1; i++) {
+            game.players.push({ name: pool[i], isHuman: false, score: 0, hand: [], bid: 0, won: 0, hasBid: false });
+        }
+        
+        game.dealerIdx = Math.floor(Math.random() * totalPlayers);
+        game.currentCardsCount = maxCardsInGame;
+        game.direction = -1;
+        game.scoreHistory = [];
+        startRound();
+    }
+
+    async function startRound() {
+        game.deck = [];
+        SUITS.forEach(s => VALUES.forEach((v, i) => {
+            game.deck.push({ suit: s, val: v, power: i, isRed: (s === '♥' || s === '♦') });
+        }));
+        game.deck.sort(() => Math.random() - 0.5);
+
+        // Kontrola, zda máme dost karet pro počet hráčů * počet karet
+        // Balíček má 52 karet (4*13). Max 7 hráčů * 7 karet = 49. OK.
+        
+        game.players.forEach(p => {
+            p.hand = []; p.won = 0; p.bid = 0; p.hasBid = false;
+            for(let i=0; i<game.currentCardsCount; i++) p.hand.push(game.deck.pop());
+            p.hand.sort((a, b) => {
+                if (a.suit !== b.suit) return SUITS.indexOf(a.suit) - SUITS.indexOf(b.suit);
+                return a.power - b.power;
+            });
+        });
+
+        game.trump = game.deck.pop();
+        
+        const trumpText = document.getElementById('trump-val-text');
+        const colorClass = game.trump.isRed ? 'txt-red' : 'txt-black';
+        trumpText.innerHTML = `<span class="trump-mini-card ${colorClass}"><b>${game.trump.val}</b> ${game.trump.suit}</span>`;
+        
+        const visual = document.getElementById('trump-card-visual');
+        visual.className = `played-card ${colorClass}`;
+        visual.innerHTML = `<div>${game.trump.val}</div><div>${game.trump.suit}</div>`;
+        visual.style.display = 'flex';
+        visual.style.opacity = '1';
+        
+        const totalRound = game.scoreHistory.length + 1;
+        document.getElementById('round-num').innerText = `KOLO: ${totalRound}`;
+        document.getElementById('round-direction').innerText = `${game.direction === -1 ? 'Sestupně' : 'Vzestupně'}: ${game.currentCardsCount} karet`;
+        
+        game.bidsCount = 0;
+        game.turnIdx = (game.dealerIdx + 1) % totalPlayers;
+        game.playedCards = [];
+        
+        renderAll();
+
+        setTimeout(() => {
+            visual.style.opacity = '0';
+            setTimeout(() => { visual.style.display = 'none'; }, 500);
+        }, 3000);
+
+        await delay(800);
+        processBidding();
+    }
+
+    async function processBidding() {
+        while (game.bidsCount < totalPlayers) {
+            renderAll();
+            let p = game.players[game.turnIdx];
+            
+            if (p.isHuman) {
+                showBidModal();
+                return;
+            } else {
+                await delay(getAiDelay() / 1.5);
+                let aiBid = calculateAiBid(p.hand);
+                
+                // Kontrola DEALERA
+                if (game.bidsCount === totalPlayers - 1) { 
+                    const currentSum = game.players.reduce((s, pl) => s + (pl.hasBid ? pl.bid : 0), 0);
+                    if (currentSum + aiBid === game.currentCardsCount) {
+                        if (aiBid === 0) aiBid = 1;
+                        else if (aiBid === game.currentCardsCount) aiBid--;
+                        else aiBid += (Math.random() > 0.5 ? 1 : -1);
+                    }
+                }
+
+                p.bid = aiBid;
+                p.hasBid = true;
+                game.bidsCount++;
+                showToast(`${p.name} hlásí: ${p.bid}`);
+                game.turnIdx = (game.turnIdx + 1) % totalPlayers;
+            }
+        }
+        await delay(500);
+        game.turnIdx = (game.dealerIdx + 1) % totalPlayers;
+        showToast("Hra začíná!");
+        playTurn();
+    }
+
+    function calculateAiBid(hand) {
+        if (game.difficulty === 'easy') {
+            return Math.floor(Math.random() * (game.currentCardsCount > 3 ? 3 : game.currentCardsCount + 1));
+        }
+        let bid = 0;
+        hand.forEach(c => {
+            if (c.val === 'A') bid += 0.9;
+            if (c.val === 'K' && c.suit !== game.trump.suit) bid += 0.6; 
+            if (c.suit === game.trump.suit) {
+                if (['J','Q','K','A'].includes(c.val)) bid += 1;
+                else bid += 0.4;
+            }
+        });
+        if (game.difficulty === 'medium') {
+            if (Math.random() < 0.2) bid += (Math.random() > 0.5 ? 1 : -1);
+        }
+        return Math.max(0, Math.min(game.currentCardsCount, Math.round(bid)));
+    }
+
+    function showBidModal() {
+        const modal = document.getElementById('bid-modal');
+        const grid = document.getElementById('bid-grid');
+        const info = document.getElementById('forbidden-info');
+        modal.classList.remove('hidden');
+        grid.innerHTML = '';
+        info.innerText = '';
+
+        let currentSum = game.players.reduce((s, p) => s + (p.hasBid ? p.bid : 0), 0);
+        let isDealer = (game.turnIdx === game.dealerIdx);
+        let forbiddenBid = -1;
+        
+        if (isDealer) {
+            forbiddenBid = game.currentCardsCount - currentSum;
+            if (forbiddenBid >= 0 && forbiddenBid <= game.currentCardsCount) {
+                info.innerText = `Jsi rozdávající. Součet sázek nesmí být ${game.currentCardsCount}. Nemůžeš nahlásit ${forbiddenBid}.`;
+            }
+        }
+
+        for (let i = 0; i <= game.currentCardsCount; i++) {
+            let btn = document.createElement('button');
+            btn.className = 'bid-btn'; 
+            btn.innerText = i;
+            if (isDealer && i === forbiddenBid) {
+                btn.disabled = true;
+                btn.title = "Zakázaná sázka";
+            }
+            btn.onclick = () => {
+                game.players[game.turnIdx].bid = i;
+                game.players[game.turnIdx].hasBid = true;
+                game.bidsCount++;
+                game.turnIdx = (game.turnIdx + 1) % totalPlayers;
+                modal.classList.add('hidden');
+                processBidding();
+            };
+            grid.appendChild(btn);
+        }
+    }
+
+    async function playTurn() {
+        renderAll();
+        let p = game.players[game.turnIdx];
+
+        if (!p.isHuman) {
+            await delay(getAiDelay());
+            let ledSuit = game.playedCards.length > 0 ? game.playedCards[0].card.suit : null;
+            let legal = getLegalCards(p.hand, ledSuit);
+            let card;
+            if (game.difficulty === 'easy') {
+                card = legal[Math.floor(Math.random() * legal.length)];
+            } else {
+                card = chooseBestCard(p, legal);
+            }
+            executeMove(p.hand.indexOf(card));
+        }
+    }
+    
+    function chooseBestCard(player, legal) {
+        const wantToWin = player.won < player.bid;
+        let currentBestCard = null;
+        if (game.playedCards.length > 0) {
+            let bestEntry = game.playedCards.reduce((b, c) => {
+                let cardA = c.card, cardB = b.card;
+                if (cardA.suit === game.trump.suit && cardB.suit !== game.trump.suit) return c;
+                if (cardA.suit !== game.trump.suit && cardB.suit === game.trump.suit) return b;
+                if (cardA.suit === cardB.suit) return cardA.power > cardB.power ? c : b;
+                return b;
+            });
+            currentBestCard = bestEntry.card;
+        }
+
+        legal.sort((a, b) => a.power - b.power);
+
+        if (wantToWin) {
+            if (!currentBestCard) {
+                return legal[legal.length - 1]; 
+            } else {
+                let winningOptions = legal.filter(c => isCardStronger(c, currentBestCard, game.playedCards[0].card.suit));
+                if (winningOptions.length > 0) return winningOptions[0]; 
+                else return legal[0]; 
+            }
+        } else {
+            if (!currentBestCard) {
+                return legal[0];
+            } else {
+                let losingOptions = legal.filter(c => !isCardStronger(c, currentBestCard, game.playedCards[0].card.suit));
+                if (losingOptions.length > 0) return losingOptions[losingOptions.length - 1];
+                else return legal[legal.length - 1]; 
+            }
+        }
+    }
+
+    function isCardStronger(cardA, cardB, ledSuit) {
+        if (cardA.suit === game.trump.suit && cardB.suit !== game.trump.suit) return true;
+        if (cardB.suit === game.trump.suit && cardA.suit !== game.trump.suit) return false;
+        if (cardA.suit === cardB.suit) return cardA.power > cardB.power;
+        if (cardB.suit === ledSuit && cardA.suit !== ledSuit) return false;
+        if (cardA.suit === ledSuit && cardB.suit !== ledSuit) return true;
+        return false;
+    }
+
+    function getLegalCards(hand, ledSuit) {
+        if (!ledSuit) return hand;
+        let follow = hand.filter(c => c.suit === ledSuit);
+        if (follow.length > 0) return follow;
+        let trumps = hand.filter(c => c.suit === game.trump.suit);
+        if (trumps.length > 0) return trumps;
+        return hand;
+    }
+
+    async function executeMove(idx) {
+        let pIdx = game.turnIdx;
+        let p = game.players[pIdx];
+        
+        let startRect;
+        if (p.isHuman) {
+            const cardEls = document.querySelectorAll('#my-hand .card');
+            if(cardEls[idx]) startRect = cardEls[idx].getBoundingClientRect();
+            else startRect = {left:0, top:0};
+            tryVibrate(30);
+        } else {
+            const playerDiv = document.querySelector(`.player-slot[data-pid="${pIdx}"]`);
+            startRect = playerDiv ? playerDiv.getBoundingClientRect() : {left:0, top:0};
+        }
+
+        let card = p.hand.splice(idx, 1)[0];
+        renderAll();
+
+        const rot = (Math.random() * 20) - 10;
+        await animateCardMove(pIdx, card, startRect, rot);
+
+        game.playedCards.push({ playerIdx: pIdx, card: card, rotation: rot });
+        game.turnIdx = (pIdx + 1) % totalPlayers;
+        
+        renderAll();
+        
+        if (game.playedCards.length === totalPlayers) await evaluateTrick();
+        else playTurn();
+    }
+
+    async function animateCardMove(pIdx, card, startRect, rot) {
+        const proxy = document.createElement('div');
+        proxy.className = `card-animation-proxy ${card.isRed ? 'txt-red' : 'txt-black'}`;
+        proxy.innerHTML = `<div>${card.val}</div><div>${card.suit}</div>`;
+        proxy.style.transitionDuration = (getAnimDuration() / 1000) + 's';
+        
+        const scaler = document.getElementById('game-scaler').getBoundingClientRect();
+        const cx = scaler.left + scaler.width/2; 
+        const cy = scaler.top + scaler.height/2;
+
+        // Pozor: Zde se počítá pozice karty na stole
+        const angle = (pIdx * (360/totalPlayers) + 90) * (Math.PI/180);
+        const tableR = 90 * (scaler.width / 750); 
+        
+        const endX = cx + tableR * Math.cos(angle) - (32);
+        const endY = cy + tableR * Math.sin(angle) - (47);
+
+        proxy.style.left = startRect.left + 'px';
+        proxy.style.top = startRect.top + 'px';
+        proxy.style.opacity = "1";
+        document.body.appendChild(proxy);
+        
+        proxy.getBoundingClientRect(); // force reflow
+        
+        proxy.style.left = endX + "px"; 
+        proxy.style.top = endY + "px";
+        proxy.style.transform = `scale(${scaler.width/750}) rotate(${rot}deg)`;
+        
+        await delay(getAnimDuration() + 50); 
+        proxy.remove();
+    }
+
+    async function evaluateTrick() {
+        await delay(getAiDelay());
+        
+        let best = game.playedCards.reduce((b, c) => {
+            let cardA = c.card, cardB = b.card;
+            if (cardA.suit === game.trump.suit && cardB.suit !== game.trump.suit) return c;
+            if (cardA.suit !== game.trump.suit && cardB.suit === game.trump.suit) return b;
+            if (cardA.suit === cardB.suit) return cardA.power > cardB.power ? c : b;
+            return b;
+        });
+
+        const winnerIdx = best.playerIdx;
+        const winnerName = game.players[winnerIdx].name;
+        showToast(`Bere: ${winnerName}`);
+
+        const cardsOnTable = document.querySelectorAll('#center-area .played-card:not(#trump-card-visual)');
+        cardsOnTable.forEach(el => {
+            el.style.transition = `all 0.5s ease-in`;
+            el.style.opacity = '0';
+            el.style.transform = 'scale(0.5)';
+        });
+
+        await delay(500);
+        game.players[winnerIdx].won++;
+        game.playedCards = [];
+        game.turnIdx = winnerIdx;
+        
+        if (game.players[0].hand.length === 0) endRound();
+        else playTurn();
+    }
+
+    function endRound() {
+        let res = game.players.map(p => {
+            let diff = 0;
+            // Specifické pravidlo pro nulu: +5 / -5
+            if (p.bid === 0) {
+                if (p.won === 0) diff = 5;
+                else diff = -5;
+            } else {
+                // Standardní pravidlo: 10+bid / -rozdíl
+                if (p.won === p.bid) diff = 10 + p.bid; 
+                else diff = -Math.abs(p.won - p.bid);
+            }
+            p.score += diff; 
+            return diff;
+        });
+        
+        game.scoreHistory.push(res);
+        renderScoreTable();
+        document.getElementById('results-modal').classList.remove('hidden');
+    }
+
+    function renderScoreTable() {
+        const body = document.getElementById('score-body');
+        const foot = document.getElementById('score-foot');
+        document.getElementById('score-head').innerHTML = '<tr><th>#</th>' + game.players.map(p => `<th>${p.name.substring(0,3)}</th>`).join('') + '</tr>';
+        body.innerHTML = game.scoreHistory.map((r, i) => 
+            `<tr><td>${i+1}.</td>` + r.map(s => `<td class="${s>=0?'plus':'minus'}">${s}</td>`).join('') + '</tr>'
+        ).join('');
+        foot.innerHTML = '<tr style="background:#444; font-weight:bold;"><td>Σ</td>' + game.players.map(p => `<td>${p.score}</td>`).join('') + '</tr>';
+    }
+
+    function closeResults() {
+        document.getElementById('results-modal').classList.add('hidden');
+        if (game.direction === -1) {
+            game.currentCardsCount--;
+            if (game.currentCardsCount === 0) {
+                // Po dosažení 0 se kolo s 1 kartou opakuje
+                game.currentCardsCount = 1; 
+                game.direction = 1;
+            }
+        } else {
+            game.currentCardsCount++;
+        }
+
+        if (game.currentCardsCount > maxCardsInGame) {
+            alert("Konec hry! Vítěz: " + [...game.players].sort((a,b)=>b.score-a.score)[0].name);
+            exitToWeb();
+        } else {
+            game.dealerIdx = (game.dealerIdx + 1) % totalPlayers;
+            startRound();
+        }
+    }
+
+    function renderAll() {
+        if (!game.players || game.players.length === 0) return;
+        const pCont = document.getElementById('players-container');
+        const mySlot = document.getElementById('my-player-slot-container');
+        if (!pCont || !mySlot) return;
+
+        pCont.innerHTML = ''; mySlot.innerHTML = '';
+        const radiusX = 320; 
+        const radiusY = 240;
+
+        game.players.forEach((p, i) => {
+            let div = document.createElement('div');
+            div.className = `player-slot ${game.turnIdx===i?'active-player':''}`;
+            div.dataset.pid = i;
+            let dealerHtml = i === game.dealerIdx ? '<span class="dealer-icon">★</span>' : '';
+            let bidHtml = p.hasBid ? `<span class="bid-highlight">${p.bid}</span>` : '?';
+            
+            div.innerHTML = `<div class="player-info">
+                <div>${dealerHtml}<strong>${p.name}</strong></div>
+                <div class="status-line">Štychy: ${p.won} / ${bidHtml}</div>
+                <div style="font-size:0.8em; opacity:0.7">Body: ${p.score}</div>
+            </div>`;
+
+            if (p.isHuman) {
+                mySlot.appendChild(div);
+            } else {
+                const ang = (i * (360/totalPlayers) + 90) * (Math.PI/180);
+                div.style.left = (radiusX * Math.cos(ang)) + 'px'; 
+                div.style.top = (radiusY * Math.sin(ang)) + 'px';
+                div.style.transform = "translate(-50%, -50%)";
+                pCont.appendChild(div);
+            }
+        });
+
+        const hCont = document.getElementById('my-hand'); 
+        hCont.innerHTML = '';
+        const myPlayer = game.players[0];
+        const isMyTurn = game.turnIdx === 0;
+        const ledSuit = game.playedCards[0]?.card.suit;
+        const legal = (isMyTurn && myPlayer.hand) ? getLegalCards(myPlayer.hand, ledSuit) : [];
+        
+        if (myPlayer.hand) {
+            myPlayer.hand.forEach((c, idx) => {
+                let d = document.createElement('div');
+                const isL = legal.includes(c);
+                d.className = `card ${c.isRed?'txt-red':'txt-black'} ${isMyTurn && !isL ? 'disabled' : ''}`;
+                d.innerHTML = `<div>${c.val}</div><div>${c.suit}</div>`;
+                d.onclick = () => { if(isMyTurn && isL) executeMove(idx); };
+                hCont.appendChild(d);
+            });
+        }
+
+        const center = document.getElementById('center-area');
+        center.querySelectorAll('.played-card:not(#trump-card-visual)').forEach(el => el.remove());
+        
+        game.playedCards.forEach(pc => {
+            let d = document.createElement('div');
+            d.className = `played-card ${pc.card.isRed?'txt-red':'txt-black'}`;
+            const ang = (pc.playerIdx * (360/totalPlayers) + 90) * (Math.PI/180);
+            const rTable = 90;
+            d.style.left = (rTable * Math.cos(ang)) + "px";
+            d.style.top = (rTable * Math.sin(ang)) + "px";
+            d.style.transform = `translate(-50%, -50%) rotate(${pc.rotation}deg)`;
+            d.innerHTML = `<div>${pc.card.val}</div><div>${pc.card.suit}</div>`;
+            center.appendChild(d);
+        });
+    }
+
+    window.onload = loadAll;
+</script>
+</body>
+</html>

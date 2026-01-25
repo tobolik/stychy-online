@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Štychy Online - stychy.cz</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #1a1c2c;
+            --accent: #00ffcc; 
+            --accent-hover: #00cca3;
+            --text-main: #ffffff;
+            --text-muted: #a0a0a0;
+            --surface: #23263a;
+            --surface-hover: #2d314a;
+            --border-light: rgba(255,255,255,0.1);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* --- NAVIGACE --- */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .logo span { color: var(--accent); }
+
+        .nav-links { display: flex; gap: 25px; }
+        .nav-btn {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 600;
+            transition: 0.3s;
+            position: relative;
+        }
+        .nav-btn:hover { color: var(--accent); }
+        .nav-btn-highlight {
+            background: var(--accent);
+            color: #1a1c2c !important;
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+        .nav-btn-highlight:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 204, 0.3);
+        }
+
+        /* --- HERO --- */
+        header.hero {
+            text-align: center;
+            padding: 100px 0 80px;
+            background: radial-gradient(circle at center, #2a2d45 0%, var(--bg-color) 70%);
+        }
+
+        h1.hero-title {
+            font-size: 4rem;
+            margin: 0 auto 20px auto;
+            max-width: 900px;
+            line-height: 1.1;
+            font-weight: 800;
+            background: linear-gradient(to right, #fff, #b3b3b3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.5rem;
+            color: var(--text-main);
+            max-width: 800px;
+            margin: 0 auto 10px auto;
+            font-weight: 600;
+        }
+
+        .hero-desc {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin: 0 auto 50px auto;
+            max-width: 600px;
+        }
+
+        /* --- HERNÍ SETUP --- */
+        .game-setup {
+            background: rgba(255,255,255,0.03);
+            padding: 40px;
+            border-radius: 24px;
+            display: inline-block;
+            border: 1px solid var(--border-light);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        }
+
+        .player-select-label {
+            display: block;
+            margin-bottom: 20px;
+            font-weight: bold;
+            color: var(--accent);
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        .player-count-options {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .p-btn {
+            background: var(--surface);
+            border: 1px solid #444;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.2rem;
+            transition: all 0.2s;
+        }
+        .p-btn:hover { border-color: var(--accent); transform: translateY(-2px); }
+        .p-btn.active {
+            background: var(--accent);
+            color: #1a1c2c;
+            border-color: var(--accent);
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.4);
+        }
+
+        .cta-button {
+            background: var(--accent);
+            color: #1a1c2c;
+            padding: 18px 60px;
+            border-radius: 50px;
+            font-size: 1.4rem;
+            font-weight: 800;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 0 30px rgba(0, 255, 204, 0.3);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            width: 100%;
+        }
+        .cta-button:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 0 50px rgba(0, 255, 204, 0.6);
+            background: var(--accent-hover);
+        }
+
+        /* --- SECTIONS --- */
+        .section-padding { padding: 100px 0; }
+        .bg-darker { background: #151620; }
+        
+        .section-title {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 60px;
+            color: var(--text-main);
+        }
+        .section-title span { border-bottom: 4px solid var(--accent); padding-bottom: 5px; }
+
+        /* --- STORY --- */
+        .story-content {
+            text-align: left;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .story-text {
+            font-size: 1.1rem;
+            color: #ddd;
+            margin-bottom: 20px;
+            text-align: left;
+            line-height: 1.8;
+        }
+        .story-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .story-photo-placeholder {
+            /* Místo pro případnou fotku autorů */
+            margin-bottom: 30px;
+        }
+
+        /* --- RULES GRID (Symmetrical Fix) --- */
+        .features-grid {
+            display: grid;
+            grid-template-columns: 1fr; /* Mobile default */
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+        @media (min-width: 600px) {
+            .features-grid {
+                grid-template-columns: repeat(2, 1fr); /* Tablet: 2 cols */
+            }
+        }
+        @media (min-width: 1024px) {
+            .features-grid {
+                grid-template-columns: repeat(3, 1fr); /* Desktop: 3 cols (2 rows of 3) */
+            }
+        }
+
+        .feature-card {
+            background: var(--surface);
+            padding: 35px;
+            border-radius: 20px;
+            border: 1px solid var(--border-light);
+            transition: transform 0.3s;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .feature-card:hover { transform: translateY(-10px); background: var(--surface-hover); }
+        .f-icon { font-size: 2.5rem; color: var(--accent); margin-bottom: 25px; }
+        .f-title { font-size: 1.4rem; margin-bottom: 15px; font-weight: bold; }
+        .f-text { color: var(--text-muted); font-size: 1rem; }
+
+        /* --- DETAILED RULES --- */
+        .detailed-rules {
+            background: var(--surface);
+            border-radius: 24px;
+            padding: 50px;
+            border: 1px solid var(--border-light);
+        }
+        .rule-block { margin-bottom: 30px; border-left: 4px solid var(--accent); padding-left: 25px; }
+        .rule-block h3 { color: var(--accent); font-size: 1.5rem; margin-top: 0; margin-bottom: 10px; }
+        .rule-block p, .rule-block li { color: #ccc; font-size: 1.05rem; margin-bottom: 10px; }
+        .rule-block ul { padding-left: 20px; }
+
+        /* --- ROADMAP & FOOTER --- */
+        .roadmap-list { list-style: none; padding: 0; max-width: 600px; margin: 0 auto; }
+        .roadmap-item { 
+            display: flex; align-items: center; margin-bottom: 20px; 
+            padding: 15px; background: rgba(255,255,255,0.03); border-radius: 12px;
+        }
+        .roadmap-item i { margin-right: 20px; font-size: 1.2rem; }
+        .roadmap-item.done { border-left: 4px solid #2ecc71; }
+        .roadmap-item.done i { color: #2ecc71; }
+        .roadmap-item.locked { opacity: 0.6; border-left: 4px solid #555; }
+
+        footer {
+            text-align: center; padding: 60px 0; color: var(--text-muted);
+            font-size: 0.95rem; border-top: 1px solid var(--border-light);
+        }
+
+        @media (max-width: 768px) {
+            h1.hero-title { font-size: 2.8rem; }
+            .hero-subtitle { font-size: 1.1rem; }
+            .container { padding: 0 20px; }
+            .detailed-rules { padding: 30px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <nav>
+            <div class="logo">ŠTYCHY <span>ONLINE</span></div>
+            <div class="nav-links">
+                <a href="#rules" class="nav-btn">Pravidla</a>
+                <a href="#about-us" class="nav-btn">O nás</a>
+                <a href="offline-recorder.html" class="nav-btn nav-btn-highlight">
+                    <i class="fa-solid fa-clipboard-list"></i> Záznamník her
+                </a>
+            </div>
+        </nav>
+
+        <header class="hero">
+            <h1 class="hero-title">Ichtylně geniální karetní hra</h1>
+            <p class="hero-subtitle">
+                aneb hra, kde neplatí standardní logika, ale náhoda to taky není.
+            </p>
+            <p class="hero-desc">
+                Změřte své síly s naší AI v moderní verzi klasické karetní hry. Bez registrace, zdarma, ihned.
+            </p>
+
+            <div class="game-setup">
+                <span class="player-select-label">Kolik vás bude hrát? (s boty)</span>
+                <div class="player-count-options">
+                    <button class="p-btn" onclick="selectPlayers(3)">3</button>
+                    <button class="p-btn" onclick="selectPlayers(4)">4</button>
+                    <button class="p-btn" onclick="selectPlayers(5)">5</button>
+                    <button class="p-btn" onclick="selectPlayers(6)">6</button>
+                    <button class="p-btn" onclick="selectPlayers(7)">7</button>
+                    <button class="p-btn active" onclick="selectPlayers(8)">8</button>
+                </div>
+                <button class="cta-button" onclick="startGame()">
+                    <i class="fa-solid fa-play"></i> SPUSTIT HRU
+                </button>
+            </div>
+        </header>
+
+        <!-- ZÁZNAMNÍK HER PROMO -->
+        <section class="section-padding" style="background: linear-gradient(135deg, rgba(0, 255, 204, 0.1) 0%, rgba(0, 0, 0, 0) 100%);">
+            <div class="container">
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 40px;">
+                    <div style="flex: 1; min-width: 300px;">
+                        <h2 style="font-size: 2rem; margin-bottom: 15px;">
+                            <i class="fa-solid fa-clipboard-list" style="color: var(--accent);"></i>
+                            Hrajete offline s přáteli?
+                        </h2>
+                        <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 20px;">
+                            Využijte náš online záznamník her! Zapisujte výsledky, sledujte průběžné skóre a uchovávejte historii všech vašich partií.
+                        </p>
+                        <ul style="list-style: none; margin-bottom: 25px;">
+                            <li style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+                                <i class="fa-solid fa-check-circle" style="color: var(--accent);"></i>
+                                Automatický výpočet bodů
+                            </li>
+                            <li style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+                                <i class="fa-solid fa-check-circle" style="color: var(--accent);"></i>
+                                Kontrola validních hlášení (zakázaná sázka dealera)
+                            </li>
+                            <li style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+                                <i class="fa-solid fa-check-circle" style="color: var(--accent);"></i>
+                                Historie her a statistiky
+                            </li>
+                            <li style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+                                <i class="fa-solid fa-check-circle" style="color: var(--accent);"></i>
+                                Přehledná tabulka s výsledky
+                            </li>
+                        </ul>
+                        <a href="offline-recorder.html" class="cta-button" style="display: inline-flex; width: auto; padding: 15px 40px; font-size: 1.1rem;">
+                            <i class="fa-solid fa-play"></i> Vyzkoušet záznamník
+                        </a>
+                    </div>
+                    <div style="flex: 1; min-width: 300px; text-align: center;">
+                        <div style="background: var(--surface); border-radius: 20px; padding: 25px; border: 1px solid var(--border-light);">
+                            <div style="font-size: 3rem; color: var(--accent); margin-bottom: 10px;">
+                                <i class="fa-solid fa-table"></i>
+                            </div>
+                            <p style="font-size: 0.9rem; color: var(--text-muted);">
+                                Ukázka tabulky výsledků
+                            </p>
+                            <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.85rem;">
+                                <thead>
+                                    <tr style="background: rgba(0, 255, 204, 0.2);">
+                                        <th style="padding: 8px; border: 1px solid var(--border-light);">Kolo</th>
+                                        <th style="padding: 8px; border: 1px solid var(--border-light);">Petr</th>
+                                        <th style="padding: 8px; border: 1px solid var(--border-light);">Jana</th>
+                                        <th style="padding: 8px; border: 1px solid var(--border-light);">Tomáš</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="padding: 8px; border: 1px solid var(--border-light);">1</td>
+                                        <td style="padding: 8px; border: 1px solid var(--border-light); color: #2ecc71;">+12</td>
+                                        <td style="padding: 8px; border: 1px solid var(--border-light); color: #ff5e5e;">-2</td>
+                                        <td style="padding: 8px; border: 1px solid var(--border-light); color: #2ecc71;">+11</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px; border: 1px solid var(--border-light);">2</td>
+                                        <td style="padding: 8px; border: 1px solid var(--border-light); color: #ff5e5e;">-1</td>
+                                        <td style="padding: 8px; border: 1px solid var(--border-light); color: #2ecc71;">+5</td>
+                                        <td style="padding: 8px; border: 1px solid var(--border-light); color: #2ecc71;">+13</td>
+                                    </tr>
+                                    <tr style="background: var(--surface-hover); font-weight: bold;">
+                                        <td style="padding: 8px; border: 1px solid var(--border-light);">Σ</td>
+                                        <td style="padding: 8px; border: 1px solid var(--border-light);">11</td>
+                                        <td style="padding: 8px; border: 1px solid var(--border-light);">3</td>
+                                        <td style="padding: 8px; border: 1px solid var(--border-light);">24</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PŘEHLED PRAVIDEL -->
+        <section id="rules" class="section-padding bg-darker">
+            <div class="container">
+                <h2 class="section-title"><span>Pravidla v kostce</span></h2>
+                <div class="features-grid">
+                    <!-- 1. Rozdání -->
+                    <div class="feature-card">
+                        <i class="fa-solid fa-layer-group f-icon"></i>
+                        <h3 class="f-title">Rozdání karet</h3>
+                        <p class="f-text">Na začátku se rozdají karty hráčům. Zbývající karty zůstanou v balíčku (ten už pro hru není důležitý). Ze zbylých karet se otočí jedna, která určí <strong>trumf</strong> (nejsilnější barvu kola).</p>
+                    </div>
+
+                    <!-- 2. Hlášení -->
+                    <div class="feature-card">
+                        <i class="fa-solid fa-bullhorn f-icon"></i>
+                        <h3 class="f-title">Hlášení</h3>
+                        <p class="f-text">Musíš odhadnout počet zdvihů. <strong>Pozor:</strong> Rozdávající (poslední na řadě) nesmí nahlásit tak, aby součet sázek odpovídal počtu karet. Vždy tak někdo musí prohrát!</p>
+                    </div>
+
+                    <!-- 3. Hra -->
+                    <div class="feature-card">
+                        <i class="fa-solid fa-hand-holding-heart f-icon"></i>
+                        <h3 class="f-title">Hra & Barva</h3>
+                        <p class="f-text">Musíš ctít barvu. Nemáš-li barvu, <strong>musíš</strong> hrát trumf. Pokud nemáš ani trumf, hraj cokoliv. Přebíjí vyšší karta nebo trumf. Kdo vezme zdvih, vynáší další.</p>
+                    </div>
+
+                    <!-- 4. Bodování -->
+                    <div class="feature-card">
+                        <i class="fa-solid fa-calculator f-icon"></i>
+                        <h3 class="f-title">Bodování</h3>
+                        <p class="f-text">Po skončení kola se sčítá. Za splněný plán bereš body. Za chybu (i když vezmeš <strong>víc</strong> zdvihů, než jsi chtěl) se body nemilosrdně odečítají.</p>
+                    </div>
+
+                    <!-- 5. Průběh (Kola) -->
+                    <div class="feature-card">
+                        <i class="fa-solid fa-arrow-down-up-across-line f-icon"></i>
+                        <h3 class="f-title">Průběh hry</h3>
+                        <p class="f-text">V každém kole počet rozdaných karet klesá (např. 7, 6... 1) a poté opět stoupá (1, 2... 7). Celkově se odehraje dvojnásobný počet kol, než je maximální počet karet na začátku.</p>
+                    </div>
+
+                    <!-- 6. Cíl -->
+                    <div class="feature-card">
+                        <i class="fa-solid fa-trophy f-icon"></i>
+                        <h3 class="f-title">Cíl hry</h3>
+                        <p class="f-text">Nejde o to vyhrát každou kartu, ale plnit své předpovědi. Cílem je získat největší počet bodů v rámci bodovací tabulky po odehrání všech kol.</p>
+                    </div>
+                </div>
+
+                <!-- PODROBNÁ PRAVIDLA -->
+                <div class="detailed-rules">
+                    <h2 class="section-title" style="margin-bottom: 40px; font-size: 2rem;"><span>Podrobný průvodce hrou</span></h2>
+                    
+                    <div class="rule-block">
+                        <h3>1. Cíl hry</h3>
+                        <p>Na rozdíl od jiných karetních her není cílem nasbírat co nejvíce karet. Cílem je <strong>splnit svůj plán</strong>. Pokud řeknete, že vyhrajete 2 zdvihy, musíte vyhrát přesně 2. Tři jsou špatně (moc), jeden je špatně (málo). Vítězí hráč s nejvyšším počtem bodů po odehrání všech kol.</p>
+                    </div>
+
+                    <div class="rule-block">
+                        <h3>2. Průběh hry (Kola)</h3>
+                        <p>Hra se skládá ze série kol, ve kterých se mění počet karet v ruce. Začínáme na <strong>7 kartách</strong> (při hře 7 hráčů). V každém dalším kole se počet rozdávaných karet snižuje o jednu, až dojdeme k <strong>1 kartě</strong>. Poté se počet karet opět zvyšuje až zpátky do 7. Celkově se tedy odehraje dvojnásobný počet kol, než je maximální počet karet.</p>
+                    </div>
+
+                    <div class="rule-block">
+                        <h3>3. Rozdání a Trumf</h3>
+                        <p>Na začátku kola se rozdají karty všem hráčům. Ze zbývajícího balíčku se otočí jedna karta, která určí <strong>trumf</strong> (nejsilnější barvu kola). Zbylé karty se odloží a nehrají. V kolech s maximálním počtem karet (kdy se rozdá celý balíček) se hraje bez trumfů.</p>
+                    </div>
+
+                    <div class="rule-block">
+                        <h3>4. Hlášení a "Zakázaná sázka"</h3>
+                        <p>Jakmile mají hráči karty, postupně hlásí, kolik zdvihů (štychů) v tomto kole získají. Začíná hráč po levici rozdávajícího.</p>
+                        <p><strong>Pravidlo pro rozdávajícího:</strong> Hráč, který rozdával (je na řadě jako poslední), má omezení. Nesmí nahlásit takové číslo, aby součet všech sázek odpovídal počtu karet v kole.</p>
+                        <p><em>Příklad: Hraje se s 5 kartami. Součet sázek ostatních je 4. Rozdávající <strong>nesmí</strong> nahlásit 1 (protože 4+1=5). Musí nahlásit 0 nebo více než 1.</em></p>
+                        <p>Toto pravidlo matematicky zaručuje, že v každém kole někdo prohraje – buď někdo vezme víc, než chtěl, nebo na někoho nezbyde.</p>
+                    </div>
+
+                    <div class="rule-block">
+                        <h3>5. Hra (Vynášení a Barva)</h3>
+                        <p>Hru začíná hráč po levici rozdávajícího. Vynese libovolnou kartu. Ostatní hráči v pořadí musí reagovat:</p>
+                        <ul>
+                            <li><strong>Ctít barvu:</strong> Musíte vždy přiznat barvu, která byla vynesena jako první.</li>
+                            <li><strong>Trumfovat:</strong> Pokud nemáte nesenou barvu, <strong>musíte</strong> hrát trumf (pokud ho máte). Trumf přebíjí jakoukoliv jinou barvu.</li>
+                            <li><strong>Odhodit:</strong> Pokud nemáte barvu ani trumf, hrajete cokoliv (tato karta zdvih nevyhraje).</li>
+                        </ul>
+                        <p>Zdvih získává hráč s nejvyšším trumfem, nebo (pokud trumf nebyl zahrán) s nejvyšší kartou vynesené barvy. Síla karet jde sestupně: A, K, Q, J, 10... 2. Vítěz zdvihu vynáší do dalšího kola.</p>
+                    </div>
+
+                    <div class="rule-block">
+                        <h3>6. Počítání bodů</h3>
+                        <p>Na konci kola se porovná váš nahlášený odhad s realitou:</p>
+                        <ul>
+                            <li><strong>Splněno přesně (kladná sázka):</strong> Získáváte <strong>10 bodů</strong> + počet zdvihů. <br><em>(Např. nahlásil jsem 2, vzal jsem 2 -> Mám 12 bodů).</em></li>
+                            <li><strong>Splněno přesně (sázka na nulu):</strong> Pokud nahlásíte 0 a nic nevezmete, získáváte <strong>5 bodů</strong>.</li>
+                            <li><strong>Nesplněno (kladná sázka):</strong> Odečítá se rozdíl mezi sázkou a realitou. <br><em>(Např. nahlásil jsem 2, vzal jsem 3 -> Rozdíl je 1 -> Mám -1 bod).</em></li>
+                            <li><strong>Nesplněno (sázka na nulu):</strong> Pokud nahlásíte 0 a vezmete alespoň jeden zdvih, odečítá se vám <strong>5 bodů</strong>.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PŘÍBĚH -->
+        <section class="section-padding" id="about-us">
+            <div class="container">
+                <div class="story-content">
+                    <div class="story-header">
+                        <h2 class="section-title" style="margin-bottom: 20px;"><span>O projektu</span></h2>
+                    </div>
+                    
+                    <p class="story-text">
+                        Štychy jsou karetní hra, která nás velmi baví. Hraje se s přáteli většinou u dobrého jídla a pití. Ale ne vždy je čas i nálada se sejít. A proto vznikla myšlenka na online verzi. Aktuálně je možné si zahrát proti robotům, hra mezi živými hráči je ve fázi příprav.
+                    </p>
+                    <p class="story-text">
+                        A kdo za tím stojí? <strong>Já, Honza</strong> (AI konzultant a školitel) a moje dcera <strong>Juli</strong> (toho času studentka kvinty gymnázia). Jednoho dne jsme měli rozpravu na téma AI a vibecodingu (způsob, jak tvořit software tak, že AI popíšete svou myšlenku, svou vizi, a ona vám pomůže ji postavit) a Juli objevila úplně nový svět, který ji začal děsně bavit. Aplikaci (hru) v základní funkční verzi měla za necelou hodinu, za další hodinu ji vyladila o animace rozdávání karet, celkový design a další drobnosti. A to je i verze, kterou máte aktuálně před sebou.
+                    </p>
+                    <p class="story-text">
+                        Já jsem na základě tohoto zdrojového kódu nechal zpracovat tyto webové stránky, které byly hotové za pár minut. Nejdéle trvalo sepsat tento text, který jsem na AI už nechávat nechtěl. 😊
+                    </p>
+                    <p class="story-text">
+                        Od té doby pracujeme na vylepšování algoritmu (chytrosti) AI protihráčů, aby bylo možné nastavit i úroveň obtížnosti a další vychytávky, jako přihlašování uživatelů, aby bylo možné hrát nejen proti AI, ale i živí lidé proti sobě. Aby bylo možné si ukládat jednotlivé partie, tvořit turnaje atd.
+                    </p>
+                    <p class="story-text">
+                        Je to ukázka toho, jak díky AI dokáže i neprogramátor vytvořit funkční aplikaci.
+                    </p>
+                    <p class="story-text">
+                        To, na co se právě díváte, není projekt profesionálního studia. Je to výsledek jednoho odpoledne, kdy dcera dodala herní logiku, nadšení a designový cit, a táta pomohl s tím, aby to celé běželo na webu.
+                    </p>
+                    <p class="story-text" style="font-weight: bold; color: var(--accent); margin-top: 30px;">
+                        Vytvořeno pro zábavu. Hrajte s námi.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section class="roadmap section-padding bg-darker" style="background: transparent;">
+            <div class="container">
+                <h2 class="section-title"><span>Roadmapa aneb co už to umí a co ještě chystáme</span></h2>
+                <ul class="roadmap-list">
+                    <li class="roadmap-item done">
+                        <i class="fa-solid fa-check-circle"></i>
+                        <span>Singleplayer verze s chytrou AI</span>
+                    </li>
+                    <li class="roadmap-item done">
+                        <i class="fa-solid fa-check-circle"></i>
+                        <span>Možnost nastavení počtu hráčů</span>
+                    </li>
+                    <li class="roadmap-item done">
+                        <i class="fa-solid fa-check-circle"></i>
+                        <span>Uživatelské účty a přihlašování</span>
+                    </li>
+                    <li class="roadmap-item done">
+                        <i class="fa-solid fa-check-circle"></i>
+                        <span>Záznamník offline her s ukládáním do databáze</span>
+                    </li>
+                    <li class="roadmap-item locked">
+                        <i class="fa-solid fa-lock"></i>
+                        <span>Chytřejší algoritmus botů</span>
+                    </li>
+                    <li class="roadmap-item locked">
+                        <i class="fa-solid fa-lock"></i>
+                        <span>Online Multiplayer (živí hráči proti sobě)</span>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <footer>
+            &copy; <span id="copyright-year">2025</span> – Štychy Online – stychy.cz. Vytvořeno pro zábavu by Juli & Honza.
+        </footer>
+    </div>
+
+    <script>
+        let selectedPlayers = 8;
+
+        function selectPlayers(num) {
+            selectedPlayers = num;
+            document.querySelectorAll('.p-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function startGame() {
+            // Přesměrování na hru s parametrem
+            window.location.href = `game.html?players=${selectedPlayers}`;
+        }
+
+        // Footer year logic
+        const currentYear = new Date().getFullYear();
+        const startYear = 2025;
+        const yearDisplay = currentYear > startYear ? `${startYear}–${currentYear}` : startYear;
+        document.getElementById('copyright-year').textContent = yearDisplay;
+    </script>
+</body>
+</html>
