@@ -1698,6 +1698,84 @@
                 }
                 return;
             }
+            
+            // Check for sequence of ano/ne in results mode (e.g., "ano ano ne ano ne")
+            if (voiceMode === 'results' && !detailedMode) {
+                // Find all ano/ne words in the text in order
+                const sequenceMatches = textLower.match(/\b(ano|ne|jo|jasně|splnil|nesplnil)\b/g);
+                if (sequenceMatches && sequenceMatches.length > 1) {
+                    // Multiple results in sequence - apply to players starting from current
+                    let idx = currentResultsIndex;
+                    let applied = 0;
+                    
+                    for (const word of sequenceMatches) {
+                        if (idx >= orderedResultsPlayers.length) break;
+                        
+                        const player = orderedResultsPlayers[idx];
+                        const result = currentRound.results.find(r => r.position == player.position);
+                        const bid = result?.bid ?? 0;
+                        const success = (word === 'ano' || word === 'jo' || word === 'jasně' || word === 'splnil');
+                        
+                        setResult(player.position, success, bid, idx);
+                        applied++;
+                        idx++;
+                    }
+                    
+                    if (applied > 0) {
+                        showVoiceToast(`✓ Zadáno ${applied}x výsledků`);
+                    }
+                    return;
+                }
+            }
+            
+            // Check for sequence of numbers in bids mode (e.g., "jedna dva nula tři")
+            if (voiceMode === 'bids') {
+                const numberWords = {
+                    'nula': 0, 'nulu': 0,
+                    'jeden': 1, 'jedna': 1, 'jednu': 1,
+                    'dva': 2, 'dvě': 2,
+                    'tři': 3,
+                    'čtyři': 4,
+                    'pět': 5,
+                    'šest': 6,
+                    'sedm': 7,
+                    'osm': 8,
+                    'devět': 9,
+                    'deset': 10
+                };
+                
+                // Try to find multiple numbers
+                const words = textLower.split(/[\s,]+/);
+                const numbers = [];
+                for (const word of words) {
+                    if (numberWords[word] !== undefined) {
+                        numbers.push(numberWords[word]);
+                    } else if (/^\d+$/.test(word)) {
+                        numbers.push(parseInt(word));
+                    }
+                }
+                
+                if (numbers.length > 1) {
+                    // Multiple bids in sequence
+                    let idx = currentBiddingIndex;
+                    let applied = 0;
+                    
+                    for (const num of numbers) {
+                        if (idx >= orderedBiddingPlayers.length) break;
+                        if (num < 0 || num > currentRound.cards_count) continue;
+                        
+                        const player = orderedBiddingPlayers[idx];
+                        selectBid(player.position, num, idx);
+                        applied++;
+                        idx++;
+                    }
+                    
+                    if (applied > 0) {
+                        showVoiceToast(`✓ Zadáno ${applied}x hlášení`);
+                    }
+                    return;
+                }
+            }
 
             // Parse numbers from text
             const numberWords = {
