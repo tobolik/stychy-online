@@ -1689,9 +1689,25 @@
                 'deset': 10, 'desítku': 10
             };
 
+            const textLower = text.toLowerCase();
+            
+            // Try to find a number in the text
+            let number = null;
+            const digitMatch = text.match(/\d+/);
+            if (digitMatch) {
+                number = parseInt(digitMatch[0]);
+            } else {
+                for (const [word, num] of Object.entries(numberWords)) {
+                    if (textLower.includes(word)) {
+                        number = num;
+                        break;
+                    }
+                }
+            }
+
             // Find player by name - sort by name length descending to match longer names first (Martina before Martin)
             let foundPlayer = null;
-            const textLower = text.toLowerCase();
+            let playerIndex = -1;
             
             const sortedPlayers = [...currentGame.players].sort((a, b) => b.name.length - a.name.length);
             for (const player of sortedPlayers) {
@@ -1702,32 +1718,29 @@
                 }
             }
 
+            // If no player name found, use the currently focused player
+            if (!foundPlayer) {
+                if (voiceMode === 'bids' && currentBiddingIndex < orderedBiddingPlayers.length) {
+                    foundPlayer = orderedBiddingPlayers[currentBiddingIndex];
+                    playerIndex = currentBiddingIndex;
+                } else if (voiceMode === 'results' && currentResultsIndex < orderedResultsPlayers.length) {
+                    foundPlayer = orderedResultsPlayers[currentResultsIndex];
+                    playerIndex = currentResultsIndex;
+                }
+            }
+
             if (!foundPlayer) {
                 showVoiceToast('❓ Nerozpoznáno: ' + text);
                 return;
             }
 
             if (voiceMode === 'bids') {
-                // Find number in text
-                let number = null;
-                
-                // Check for digit
-                const digitMatch = text.match(/\d+/);
-                if (digitMatch) {
-                    number = parseInt(digitMatch[0]);
-                } else {
-                    // Check for word number
-                    for (const [word, num] of Object.entries(numberWords)) {
-                        if (textLower.includes(word)) {
-                            number = num;
-                            break;
-                        }
-                    }
+                // Find player index if not already set
+                if (playerIndex === -1) {
+                    playerIndex = orderedBiddingPlayers.findIndex(p => p.position == foundPlayer.position);
                 }
 
                 if (number !== null && number >= 0 && number <= currentRound.cards_count) {
-                    // Find player index in orderedBiddingPlayers
-                    const playerIndex = orderedBiddingPlayers.findIndex(p => p.position == foundPlayer.position);
                     selectBid(foundPlayer.position, number, playerIndex);
                     showVoiceToast(`✓ ${foundPlayer.name}: ${number}`);
                 } else {
@@ -1738,21 +1751,9 @@
                 const result = currentRound.results.find(r => r.position == foundPlayer.position);
                 const bid = result?.bid ?? 0;
 
-                // Find player index in orderedResultsPlayers
-                const playerIndex = orderedResultsPlayers.findIndex(p => p.position == foundPlayer.position);
-                
-                // Try to find a number first
-                let number = null;
-                const digitMatch = text.match(/\d+/);
-                if (digitMatch) {
-                    number = parseInt(digitMatch[0]);
-                } else {
-                    for (const [word, num] of Object.entries(numberWords)) {
-                        if (textLower.includes(word)) {
-                            number = num;
-                            break;
-                        }
-                    }
+                // Find player index if not already set
+                if (playerIndex === -1) {
+                    playerIndex = orderedResultsPlayers.findIndex(p => p.position == foundPlayer.position);
                 }
                 
                 // Check for explicit success/fail words first (these have priority)
