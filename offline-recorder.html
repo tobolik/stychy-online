@@ -2044,15 +2044,24 @@
             
             // Check for "všichni kromě" pattern in results mode
             if (voiceMode === 'results' && !detailedMode) {
-                // Pattern: "uhráli/splnili všichni kromě X, Y, Z" or "neuhráli/nesplnili všichni kromě X, Y, Z"
-                const allExceptSuccess = textLower.match(/(?:uhrál|splnil|ano|jo).*(?:všichni|všechny).*kromě/i);
-                const allExceptFail = textLower.match(/(?:neuhrál|nesplnil|ne).*(?:všichni|všechny).*kromě/i);
-                // Also handle reverse: "kromě X, Y všichni uhráli"
-                const exceptAllSuccess = textLower.match(/kromě.*(?:všichni|všechny|ostatní).*(?:uhrál|splnil|ano)/i);
-                const exceptAllFail = textLower.match(/kromě.*(?:všichni|všechny|ostatní).*(?:neuhrál|nesplnil|ne\b)/i);
+                // Check if text contains "kromě" keyword - this is the key indicator
+                const hasKrome = textLower.includes('kromě') || textLower.includes('krome');
+                const hasVsichni = textLower.includes('všichni') || textLower.includes('vsichni') || textLower.includes('všechny');
                 
-                if (allExceptSuccess || allExceptFail || exceptAllSuccess || exceptAllFail) {
-                    const defaultSuccess = !!(allExceptSuccess || exceptAllSuccess);
+                if (hasKrome && hasVsichni) {
+                    console.log('🎯 Detected "všichni kromě" pattern');
+                    
+                    // Determine if it's success or fail for the majority
+                    const isSuccessPattern = textLower.includes('uhrál') || textLower.includes('splnil') || 
+                                            textLower.includes('uhráli') || textLower.includes('splnili');
+                    const isFailPattern = textLower.includes('neuhrál') || textLower.includes('nesplnil') ||
+                                         textLower.includes('neuhráli') || textLower.includes('nesplnili');
+                    
+                    // Default: if contains "uhráli/splnili" -> success for all except named
+                    // if contains "neuhráli/nesplnili" -> fail for all except named
+                    const defaultSuccess = isSuccessPattern && !isFailPattern;
+                    
+                    console.log('🎯 Default success:', defaultSuccess, 'isSuccessPattern:', isSuccessPattern, 'isFailPattern:', isFailPattern);
                     
                     // Find player names mentioned in the text (these are the exceptions)
                     const exceptionPlayers = [];
@@ -2060,10 +2069,14 @@
                     
                     for (const player of sortedPlayers) {
                         const nameLower = player.name.toLowerCase();
-                        if (textLower.includes(nameLower)) {
+                        // Check if name appears after "kromě"
+                        const kromeIndex = textLower.indexOf('kromě') !== -1 ? textLower.indexOf('kromě') : textLower.indexOf('krome');
+                        if (kromeIndex !== -1 && textLower.indexOf(nameLower) > kromeIndex) {
                             exceptionPlayers.push(player);
                         }
                     }
+                    
+                    console.log('🎯 Exception players:', exceptionPlayers.map(p => p.name));
                     
                     if (exceptionPlayers.length > 0) {
                         let applied = 0;
