@@ -1777,9 +1777,11 @@
         }
 
         function processVoiceCommand(text) {
+            console.log('🎤 Voice input received:', text);
+            
             // Ignore voice input while TTS is speaking to prevent echo
             if (ignoringVoiceInput) {
-                console.log('Ignoring voice input (TTS speaking):', text);
+                console.log('⏸️ Ignoring voice input (TTS speaking):', text);
                 return;
             }
             
@@ -1801,12 +1803,14 @@
             
             // Trump selection commands (when new round modal is open)
             if (document.getElementById('modal-new-round')?.classList.contains('active')) {
+                console.log('🎯 Trump modal active, processing:', textLower);
+                
                 // Smart trump parsing - detect suit and value from natural language
                 const suitPatterns = {
-                    'hearts': ['srdce', 'srdíčka', 'srdcov', 'červen'],
-                    'diamonds': ['káry', 'kára', 'károv', 'diamant'],
-                    'clubs': ['kříže', 'kříž', 'křížov', 'žalud', 'černé'],
-                    'spades': ['piky', 'pik', 'pikov', 'listy', 'zelené']
+                    'hearts': ['srdce', 'srdíčk', 'srdcov', 'červen', 'červená'],
+                    'diamonds': ['káry', 'kára', 'károv', 'diamant', 'kárová'],
+                    'clubs': ['kříže', 'kříž', 'křížov', 'žalud', 'černé', 'křížová', 'trefy', 'tref'],
+                    'spades': ['piky', 'piková', 'pik', 'pikov', 'listy', 'zelené', 'list']
                 };
                 
                 const valuePatterns = {
@@ -1825,6 +1829,7 @@
                 for (const [suit, patterns] of Object.entries(suitPatterns)) {
                     for (const pattern of patterns) {
                         if (textLower.includes(pattern)) {
+                            console.log(`  ✓ Suit match: "${pattern}" in "${textLower}" → ${suit}`);
                             detectedSuit = suit;
                             break;
                         }
@@ -1837,6 +1842,7 @@
                 for (const [value, patterns] of Object.entries(valuePatterns)) {
                     for (const pattern of patterns) {
                         if (textLower.includes(pattern)) {
+                            console.log(`  ✓ Value match: "${pattern}" in "${textLower}" → ${value}`);
                             detectedValue = value;
                             break;
                         }
@@ -1845,7 +1851,7 @@
                 }
                 
                 // Apply detected suit and/or value
-                console.log('Trump detection:', { text: textLower, detectedSuit, detectedValue });
+                console.log('🎲 Trump detection result:', { detectedSuit, detectedValue });
                 
                 if (detectedSuit || detectedValue) {
                     let message = '✓';
