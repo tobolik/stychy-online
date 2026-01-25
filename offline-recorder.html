@@ -2465,6 +2465,11 @@
             
             // Add keyboard listener
             document.addEventListener('keydown', handleBiddingKeypress);
+            
+            // Announce first player
+            if (orderedBiddingPlayers.length > 0) {
+                speak(`${orderedBiddingPlayers[0].name}?`);
+            }
         }
 
         function selectBid(position, bid, index = null) {
@@ -2501,6 +2506,12 @@
                 if (nextRow) {
                     nextRow.classList.add('current-input');
                     nextRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+                
+                // Announce next player's name
+                const nextPlayer = orderedBiddingPlayers[currentBiddingIndex];
+                if (nextPlayer) {
+                    speak(`${nextPlayer.name}?`);
                 }
             } else {
                 currentBiddingIndex = orderedBiddingPlayers.length; // All done
