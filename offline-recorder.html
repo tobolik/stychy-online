@@ -693,16 +693,16 @@
         /* Bid Input */
         .bid-input-grid {
             display: grid;
-            gap: 15px;
+            gap: 6px;
         }
 
         .bid-input-row {
             display: flex;
             align-items: center;
-            gap: 15px;
-            padding: 10px;
+            gap: 10px;
+            padding: 6px 10px;
             background: rgba(0,0,0,0.2);
-            border-radius: 10px;
+            border-radius: 8px;
         }
 
         .bid-input-row.dealer {
@@ -788,10 +788,10 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 8px 12px;
+            padding: 6px 10px;
             background: rgba(0,0,0,0.2);
-            border-radius: 8px;
-            margin-bottom: 6px;
+            border-radius: 6px;
+            margin-bottom: 4px;
             transition: all 0.2s;
         }
         .result-row.current-input {
@@ -1674,6 +1674,31 @@
         function processVoiceCommand(text) {
             if (!currentGame || !currentRound) return;
 
+            const textLower = text.toLowerCase();
+            
+            // Check for save command first
+            if (textLower.includes('ulož') || textLower.includes('uložit') || textLower.includes('hotovo') || textLower.includes('konec')) {
+                if (voiceMode === 'bids') {
+                    // Check if all bids are set
+                    const allSet = Object.values(playerBids).every(b => b !== null);
+                    if (allSet) {
+                        saveBids();
+                        showVoiceToast('✓ Hlášení uloženo');
+                    } else {
+                        showVoiceToast('❓ Nejsou zadány všechny sázky');
+                    }
+                } else if (voiceMode === 'results') {
+                    const enteredCount = Object.values(playerTricks).filter(v => v !== null).length;
+                    if (enteredCount === orderedResultsPlayers.length) {
+                        saveResults();
+                        showVoiceToast('✓ Výsledky uloženy');
+                    } else {
+                        showVoiceToast('❓ Nejsou zadány všechny výsledky');
+                    }
+                }
+                return;
+            }
+
             // Parse numbers from text
             const numberWords = {
                 'nula': 0, 'nulu': 0, 'nic': 0,
@@ -1688,8 +1713,6 @@
                 'devět': 9, 'devítku': 9,
                 'deset': 10, 'desítku': 10
             };
-
-            const textLower = text.toLowerCase();
             
             // Try to find a number in the text
             let number = null;
@@ -2510,8 +2533,8 @@
             // Add keyboard listener
             document.addEventListener('keydown', handleBiddingKeypress);
             
-            // Announce first player
-            if (orderedBiddingPlayers.length > 0) {
+            // Announce first player (only if voice recognition is NOT active)
+            if (orderedBiddingPlayers.length > 0 && !isListening) {
                 speak(`${orderedBiddingPlayers[0].name}?`);
             }
         }
@@ -2552,9 +2575,9 @@
                     nextRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 }
                 
-                // Announce next player's name
+                // Announce next player's name (only if voice recognition is NOT active)
                 const nextPlayer = orderedBiddingPlayers[currentBiddingIndex];
-                if (nextPlayer) {
+                if (nextPlayer && !isListening) {
                     speak(`${nextPlayer.name}?`);
                 }
             } else {
