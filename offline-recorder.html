@@ -4016,6 +4016,14 @@
             updateAllVoiceButtons();
             updateVoiceToggleButton();
             
+            // Auto-start voice recognition if it was enabled
+            if (voiceInputEnabled) {
+                // Small delay to let page fully load
+                setTimeout(() => {
+                    startVoiceRecognition('global');
+                }, 500);
+            }
+            
             // Pre-load speech synthesis voices (required by some browsers)
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.getVoices();
