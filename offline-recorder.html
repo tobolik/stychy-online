@@ -2052,10 +2052,13 @@
                     console.log('🎯 Detected "všichni kromě" pattern');
                     
                     // Determine if it's success or fail for the majority
+                    // Include "vyhrál" as synonym for "uhrál"
                     const isSuccessPattern = textLower.includes('uhrál') || textLower.includes('splnil') || 
-                                            textLower.includes('uhráli') || textLower.includes('splnili');
+                                            textLower.includes('uhráli') || textLower.includes('splnili') ||
+                                            textLower.includes('vyhrál') || textLower.includes('vyhráli');
                     const isFailPattern = textLower.includes('neuhrál') || textLower.includes('nesplnil') ||
-                                         textLower.includes('neuhráli') || textLower.includes('nesplnili');
+                                         textLower.includes('neuhráli') || textLower.includes('nesplnili') ||
+                                         textLower.includes('nevyhrál') || textLower.includes('nevyhráli');
                     
                     // Default: if contains "uhráli/splnili" -> success for all except named
                     // if contains "neuhráli/nesplnili" -> fail for all except named
@@ -2146,13 +2149,31 @@
                     }
                 }
                 
-                // Also handle "uhráli/neuhráli všichni" without exceptions
+                // Also handle "uhráli/neuhráli všichni" or "nikdo neuhrál" without exceptions
                 // Check for FAIL patterns FIRST (they contain the success words as substrings)
+                // Include "vyhrál" as synonym for "uhrál"
                 const hasFailWord = textLower.includes('neuhrál') || textLower.includes('nesplnil') || 
-                                   textLower.includes('neuhráli') || textLower.includes('nesplnili');
+                                   textLower.includes('neuhráli') || textLower.includes('nesplnili') ||
+                                   textLower.includes('nevyhrál') || textLower.includes('nevyhráli');
                 const hasSuccessWord = (textLower.includes('uhrál') || textLower.includes('splnil') ||
-                                       textLower.includes('uhráli') || textLower.includes('splnili')) && !hasFailWord;
+                                       textLower.includes('uhráli') || textLower.includes('splnili') ||
+                                       textLower.includes('vyhrál') || textLower.includes('vyhráli')) && !hasFailWord;
                 const hasVsichniWord = textLower.includes('všichni') || textLower.includes('všechny');
+                const hasNikdoWord = textLower.includes('nikdo');
+                
+                // "nikdo neuhrál/nevyhrál/nesplnil" = everyone failed
+                // "nikdo uhrál/vyhrál" = everyone failed (nobody succeeded)
+                if (hasNikdoWord && (hasFailWord || hasSuccessWord) && !textLower.includes('kromě')) {
+                    // "nikdo" always means failure for everyone
+                    for (let idx = 0; idx < orderedResultsPlayers.length; idx++) {
+                        const player = orderedResultsPlayers[idx];
+                        const result = currentRound.results.find(r => r.position == player.position);
+                        const bid = result?.bid ?? 0;
+                        setResult(player.position, false, bid, idx);
+                    }
+                    showVoiceToast(`✗ Nikdo nesplnil`);
+                    return;
+                }
                 
                 if (hasVsichniWord && (hasSuccessWord || hasFailWord) && !textLower.includes('kromě')) {
                     const success = hasSuccessWord;
