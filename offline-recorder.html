@@ -1574,6 +1574,32 @@
             return 'je';
         }
         
+        // Convert number to Czech words for TTS (to avoid wrong inflection)
+        function numberToWords(n) {
+            if (n === 0) return 'nula';
+            
+            const ones = ['', 'jedna', 'dva', 'tři', 'čtyři', 'pět', 'šest', 'sedm', 'osm', 'devět'];
+            const teens = ['deset', 'jedenáct', 'dvanáct', 'třináct', 'čtrnáct', 'patnáct', 'šestnáct', 'sedmnáct', 'osmnáct', 'devatenáct'];
+            const tens = ['', '', 'dvacet', 'třicet', 'čtyřicet', 'padesát', 'šedesát', 'sedmdesát', 'osmdesát', 'devadesát'];
+            const hundreds = ['', 'sto', 'dvě stě', 'tři sta', 'čtyři sta', 'pět set', 'šest set', 'sedm set', 'osm set', 'devět set'];
+            
+            if (n < 0) return 'mínus ' + numberToWords(-n);
+            if (n < 10) return ones[n];
+            if (n < 20) return teens[n - 10];
+            if (n < 100) {
+                const ten = Math.floor(n / 10);
+                const one = n % 10;
+                return tens[ten] + (one > 0 ? ' ' + ones[one] : '');
+            }
+            if (n < 1000) {
+                const hundred = Math.floor(n / 100);
+                const rest = n % 100;
+                return hundreds[hundred] + (rest > 0 ? ' ' + numberToWords(rest) : '');
+            }
+            // For larger numbers, just return the number
+            return n.toString();
+        }
+        
         // Speak current ranking
         function speakCurrentRanking() {
             if (!currentGame || !currentGame.players) return;
@@ -1598,11 +1624,11 @@
                 const female = isFemale(player.name);
                 const ordinal = getOrdinalWithGender(currentRank, female);
                 const points = player.total_score;
-                // Use "má X bodů" format so TTS reads cardinal number, not ordinal
-                const pointsText = points === 1 ? 'bod' : (points >= 2 && points <= 4 ? 'body' : 'bodů');
+                // Convert number to words to ensure correct pronunciation
+                const pointsWords = numberToWords(points);
                 
-                // Format: "První Honza má 39 bodů" - explicit "má X bodů" forces cardinal reading
-                rankText.push(`${ordinal} ${player.name} má ${points} ${pointsText}`);
+                // Format: "První Terka, sedmdesát jedna" - using words avoids TTS inflection issues
+                rankText.push(`${ordinal} ${player.name}, ${pointsWords}`);
                 
                 previousScore = player.total_score;
             });
@@ -1854,7 +1880,11 @@
             const textLower = text.toLowerCase();
             
             // Stop speech command - MUST be before ignoringVoiceInput check to allow interrupting TTS
-            if (textLower.includes('stop') || textLower.includes('přestaň') || textLower.includes('ticho') || textLower.includes('dost') || textLower.includes('stačí')) {
+            // Extended list of stop words including partial matches
+            if (textLower.includes('stop') || textLower.includes('přestaň') || textLower.includes('ticho') || 
+                textLower.includes('dost') || textLower.includes('stačí') || textLower.includes('ztiš') ||
+                textLower.includes('pauza') || textLower.includes('zastavit') || textLower.includes('zastav') ||
+                textLower.includes('klid') || textLower.includes('hotovo')) {
                 if ('speechSynthesis' in window) {
                     window.speechSynthesis.cancel();
                     ignoringVoiceInput = false;
@@ -1884,10 +1914,20 @@
             }
             
             // Read current ranking command
-            if (textLower.includes('pořadí') || textLower.includes('kdo vede') || textLower.includes('kdo vyhrává')) {
+            if (textLower.includes('pořadí') || textLower.includes('kdo vede') || textLower.includes('kdo vyhrává') || 
+                textLower.includes('výsledky') || textLower.includes('přečti') || textLower.includes('řekni skóre')) {
                 if (currentGame && currentGame.players) {
                     speakCurrentRanking();
                     showVoiceToast('📊 Čtu pořadí...');
+                    return;
+                }
+            }
+            
+            // End game command
+            if (textLower.includes('ukončit hru') || textLower.includes('konec hry') || textLower.includes('dohrát')) {
+                if (currentGame && document.querySelector('button[onclick="endGame()"]')) {
+                    endGame();
+                    showVoiceToast('🏁 Hra ukončena');
                     return;
                 }
             }
