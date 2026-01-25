@@ -2042,7 +2042,7 @@
                 return;
             }
             
-            // Check for sequence of ano/ne in results mode (e.g., "ano ano ne ano ne")
+            // Check for sequence of ano/ne OR 0/1 in results mode (e.g., "ano ano ne ano ne" or "1 1 0 1 0")
             if (voiceMode === 'results' && !detailedMode) {
                 // Find all ano/ne words in the text in order
                 const sequenceMatches = textLower.match(/\b(ano|ne|jo|jasně|splnil|nesplnil)\b/g);
@@ -2069,9 +2069,34 @@
                     }
                     return;
                 }
+                
+                // Also check for sequence of 0/1 digits (e.g., "1 1 0 1" or "1100" or "0 1 0")
+                const allDigits = textLower.match(/[01]/g);
+                if (allDigits && allDigits.length > 1) {
+                    let idx = currentResultsIndex;
+                    let applied = 0;
+                    
+                    for (const digit of allDigits) {
+                        if (idx >= orderedResultsPlayers.length) break;
+                        
+                        const player = orderedResultsPlayers[idx];
+                        const result = currentRound.results.find(r => r.position == player.position);
+                        const bid = result?.bid ?? 0;
+                        const success = (digit === '1');
+                        
+                        setResult(player.position, success, bid, idx);
+                        applied++;
+                        idx++;
+                    }
+                    
+                    if (applied > 0) {
+                        showVoiceToast(`✓ Zadáno ${applied}x výsledků`);
+                    }
+                    return;
+                }
             }
             
-            // Check for sequence of numbers in bids mode (e.g., "jedna dva nula tři")
+            // Check for sequence of numbers in bids mode (e.g., "jedna dva nula tři" or "0 1 0 2")
             if (voiceMode === 'bids') {
                 const numberWords = {
                     'nula': 0, 'nulu': 0,
@@ -2087,14 +2112,31 @@
                     'deset': 10
                 };
                 
-                // Try to find multiple numbers
+                // Try to find multiple numbers - split by spaces and also handle concatenated digits
                 const words = textLower.split(/[\s,]+/);
                 const numbers = [];
                 for (const word of words) {
                     if (numberWords[word] !== undefined) {
                         numbers.push(numberWords[word]);
                     } else if (/^\d+$/.test(word)) {
-                        numbers.push(parseInt(word));
+                        // If it's multiple digits like "012" or "0010", split into individual digits
+                        if (word.length > 1) {
+                            for (const digit of word) {
+                                numbers.push(parseInt(digit));
+                            }
+                        } else {
+                            numbers.push(parseInt(word));
+                        }
+                    }
+                }
+                
+                // Also extract all individual digits from the entire text as fallback
+                if (numbers.length === 0) {
+                    const allDigits = textLower.match(/\d/g);
+                    if (allDigits && allDigits.length > 0) {
+                        for (const d of allDigits) {
+                            numbers.push(parseInt(d));
+                        }
                     }
                 }
                 
