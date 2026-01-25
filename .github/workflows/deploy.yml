@@ -16,14 +16,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Deploy via SFTP
-        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
+      - name: Remove excluded files before deploy
+        run: |
+          rm -rf .git .github
+          rm -f config/database.php README.md .gitignore
+
+      - name: Deploy via lftp
+        uses: pressidium/lftp-mirror-action@v1
         with:
-          server: ${{ secrets.SFTP_SERVER }}
-          username: ${{ secrets.SFTP_USERNAME }}
-          password: ${{ secrets.SFTP_PASSWORD }}
+          host: ${{ secrets.SFTP_SERVER }}
           port: ${{ secrets.SFTP_PORT }}
-          local_path: './*'
-          remote_path: ${{ secrets.SFTP_REMOTE_PATH }}
-          sftpArgs: '-o StrictHostKeyChecking=no'
-          exclude: '.git*,.github/*,config/database.php,README.md,.gitignore'
+          user: ${{ secrets.SFTP_USERNAME }}
+          pass: ${{ secrets.SFTP_PASSWORD }}
+          remoteDir: ${{ secrets.SFTP_REMOTE_PATH }}
+          localDir: '.'
+          reverse: true
+          ignoreFile: '.lftp_ignore'
+          options: '--verbose --delete --exclude-glob=.git* --exclude-glob=.github/'
