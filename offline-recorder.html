@@ -136,6 +136,21 @@
             color: var(--bg-main);
             border-color: var(--accent);
         }
+        .mini-cards-row {
+            display: flex;
+            justify-content: center;
+            gap: 3px;
+            margin-bottom: 5px;
+        }
+        .mini-card {
+            width: 14px;
+            height: 20px;
+            background: linear-gradient(135deg, #1a5f7a, #2d8bb5);
+            border: 1px solid #4db8d8;
+            border-radius: 2px;
+            display: inline-block;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
 
         /* Screens */
         .screen {
@@ -2315,7 +2330,14 @@
 
             document.getElementById('new-round-number').textContent = nextRoundNumber;
             document.getElementById('dealer-name').textContent = dealer ? dealer.name : '?';
-            document.getElementById('cards-in-round').textContent = `${cardsCount} ${cardsCount === 1 ? 'karta' : (cardsCount < 5 ? 'karty' : 'karet')}`;
+            
+            // Generate card icons
+            let cardIconsHtml = '';
+            for (let i = 0; i < cardsCount; i++) {
+                cardIconsHtml += '<span class="mini-card"></span>';
+            }
+            const cardsText = `${cardsCount} ${cardsCount === 1 ? 'karta' : (cardsCount < 5 ? 'karty' : 'karet')}`;
+            document.getElementById('cards-in-round').innerHTML = `<div class="mini-cards-row">${cardIconsHtml}</div>${cardsText}`;
 
             // Reset trump selection
             selectedTrumpSuit = null;
