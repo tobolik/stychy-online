@@ -2361,6 +2361,10 @@
                 btn.classList.toggle('selected', btn.classList.contains(suit));
             });
             updateTrumpPreview();
+            
+            // Voice announcement when selecting trump suit
+            const suitName = getSuitNameCzech(suit);
+            speak(`Trumfy jsou ${suitName}.`);
         }
 
         function selectTrumpValue(value) {
@@ -2394,10 +2398,6 @@
                 return;
             }
 
-            // Save trump for announcement before clearing
-            const trumpSuitForAnnouncement = selectedTrumpSuit;
-            const trumpValueForAnnouncement = selectedTrumpValue;
-
             const result = await api('rounds.php', {
                 action: 'create',
                 game_id: currentGame.game.id,
@@ -2410,16 +2410,6 @@
                 selectedTrumpSuit = null;
                 selectedTrumpValue = null;
                 await openGame(currentGame.game.id);
-                
-                // Voice announcement: trump selection
-                const suitName = getSuitNameCzech(trumpSuitForAnnouncement);
-                if (trumpValueForAnnouncement) {
-                    const valueName = getCardValueNameCzech(trumpValueForAnnouncement);
-                    speak(`Trumfy jsou ${suitName}, ${valueName}.`);
-                } else {
-                    speak(`Trumfy jsou ${suitName}.`);
-                }
-                
                 openBiddingModal();
             } else {
                 alert(result.error);
