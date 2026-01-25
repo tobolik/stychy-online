@@ -825,6 +825,33 @@
             color: var(--accent);
             padding: 10px 20px;
             border-radius: 25px;
+        }
+        
+        /* Voice icon in modal headers */
+        .modal-voice-btn {
+            background: transparent;
+            border: 2px solid var(--text-muted);
+            color: var(--text-muted);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            margin-left: auto;
+            margin-right: 10px;
+        }
+        .modal-voice-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        .modal-voice-btn.active {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: white;
+            animation: pulse 1.5s infinite;
             cursor: pointer;
             font-weight: bold;
             display: inline-flex;
@@ -1113,6 +1140,9 @@
                     </button>
                 </h1>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                    <button id="voice-input-btn" class="btn-icon-lg" onclick="toggleGlobalVoiceInput()" title="Hlasové zadávání vypnuto">
+                        <i class="fa-solid fa-microphone-slash"></i>
+                    </button>
                     <button id="voice-toggle-btn" class="btn-icon-lg" onclick="toggleVoiceAnnouncements()" title="Zapnout hlasové povely">
                         <i class="fa-solid fa-volume-xmark"></i>
                     </button>
@@ -1291,6 +1321,9 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title">Hlášení - Kolo <span id="bidding-round-num">1</span></h2>
+                <button class="modal-voice-btn" onclick="toggleVoiceRecognition('bids')" title="Hlasové zadávání">
+                    <i class="fa-solid fa-microphone"></i>
+                </button>
                 <button class="close-btn" onclick="closeModal('modal-bidding')">&times;</button>
             </div>
 
@@ -1318,10 +1351,7 @@
             
             <div id="bids-status" style="margin-top: 15px; padding: 12px; border-radius: 8px; text-align: center; display: none;"></div>
 
-            <div style="display: flex; gap: 10px; margin-top: 20px;">
-                <button class="mic-btn" onclick="toggleVoiceRecognition('bids')">
-                    <i class="fa-solid fa-microphone"></i> Hlasem
-                </button>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
                 <button class="btn btn-primary" style="flex: 1;" onclick="saveBids()">
                     <i class="fa-solid fa-check"></i> Uložit hlášení
                 </button>
@@ -1334,6 +1364,9 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title"><span id="results-modal-title">Výsledky kola</span> <span id="results-round-num">1</span></h2>
+                <button class="modal-voice-btn" onclick="toggleVoiceRecognition('results')" title="Hlasové zadávání">
+                    <i class="fa-solid fa-microphone"></i>
+                </button>
                 <button class="close-btn" onclick="closeModal('modal-results')">&times;</button>
             </div>
 
@@ -1383,10 +1416,7 @@
                 </div>
             </div>
 
-            <div style="display: flex; gap: 10px; margin-top: 20px;">
-                <button class="mic-btn" onclick="toggleVoiceRecognition('results')">
-                    <i class="fa-solid fa-microphone"></i> Hlasem
-                </button>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
                 <button class="btn btn-primary" style="flex: 1;" onclick="saveResults()">
                     <i class="fa-solid fa-save"></i> Uložit výsledky
                 </button>
@@ -1471,6 +1501,9 @@
         
         // Voice announcements (Text-to-Speech)
         let voiceAnnouncementsEnabled = localStorage.getItem('voiceAnnouncements') === 'true';
+        
+        // Global voice input mode (persists across modals)
+        let voiceInputEnabled = localStorage.getItem('voiceInput') === 'true';
         
         function speak(text) {
             if (!voiceAnnouncementsEnabled) return;
@@ -1643,19 +1676,59 @@
         function toggleVoiceRecognition(mode) {
             if (isListening) {
                 stopVoiceRecognition();
+                voiceInputEnabled = false;
+                localStorage.setItem('voiceInput', 'false');
             } else {
                 startVoiceRecognition(mode);
+                voiceInputEnabled = true;
+                localStorage.setItem('voiceInput', 'true');
+            }
+            updateAllVoiceButtons();
+        }
+        
+        function toggleGlobalVoiceInput() {
+            voiceInputEnabled = !voiceInputEnabled;
+            localStorage.setItem('voiceInput', voiceInputEnabled);
+            
+            if (voiceInputEnabled) {
+                // Determine mode based on open modal
+                if (document.getElementById('modal-bidding').classList.contains('active')) {
+                    startVoiceRecognition('bids');
+                } else if (document.getElementById('modal-results').classList.contains('active')) {
+                    startVoiceRecognition('results');
+                }
+            } else {
+                stopVoiceRecognition();
+            }
+            updateAllVoiceButtons();
+        }
+        
+        function updateAllVoiceButtons() {
+            // Update all voice buttons in the app
+            document.querySelectorAll('.mic-btn, .modal-voice-btn').forEach(btn => {
+                btn.classList.toggle('active', isListening);
+            });
+            
+            // Update mic button text
+            document.querySelectorAll('.mic-btn').forEach(btn => {
+                btn.innerHTML = isListening 
+                    ? '<i class="fa-solid fa-microphone-slash"></i> Zastavit'
+                    : '<i class="fa-solid fa-microphone"></i> Hlasem';
+            });
+            
+            // Update global voice input button
+            const globalBtn = document.getElementById('voice-input-btn');
+            if (globalBtn) {
+                globalBtn.innerHTML = voiceInputEnabled 
+                    ? '<i class="fa-solid fa-microphone"></i>' 
+                    : '<i class="fa-solid fa-microphone-slash"></i>';
+                globalBtn.title = voiceInputEnabled ? 'Hlasové zadávání zapnuto' : 'Hlasové zadávání vypnuto';
+                globalBtn.classList.toggle('active', voiceInputEnabled);
             }
         }
 
         function updateMicButton(active) {
-            const btns = document.querySelectorAll('.mic-btn');
-            btns.forEach(btn => {
-                btn.classList.toggle('active', active);
-                btn.innerHTML = active 
-                    ? '<i class="fa-solid fa-microphone-slash"></i> Zastavit'
-                    : '<i class="fa-solid fa-microphone"></i> Hlasem';
-            });
+            updateAllVoiceButtons();
         }
 
         function showVoiceToast(message) {
@@ -3601,13 +3674,24 @@
             if (modalId === 'modal-new-round') {
                 document.addEventListener('keydown', handleNewRoundKeypress);
             }
+            
+            // Auto-start voice recognition if global voice input is enabled
+            if (voiceInputEnabled) {
+                if (modalId === 'modal-bidding') {
+                    startVoiceRecognition('bids');
+                } else if (modalId === 'modal-results') {
+                    startVoiceRecognition('results');
+                }
+            }
+            updateAllVoiceButtons();
         }
 
         function closeModal(modalId) {
             document.getElementById(modalId).classList.remove('active');
-            // Stop voice recognition when closing modal
+            // Stop voice recognition when closing modal (but keep voiceInputEnabled for next modal)
             if (isListening) {
                 stopVoiceRecognition();
+                // Keep voiceInputEnabled true so it auto-starts in next modal
             }
             // Remove keyboard listener for bidding
             if (modalId === 'modal-bidding') {
@@ -3625,6 +3709,7 @@
             if (modalId === 'modal-new-round') {
                 document.removeEventListener('keydown', handleNewRoundKeypress);
             }
+            updateAllVoiceButtons();
         }
 
         function handleNewGameKeypress(e) {
@@ -3751,6 +3836,10 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadKnownPlayers();
             checkAuth();
+            
+            // Initialize voice buttons state
+            updateAllVoiceButtons();
+            updateVoiceToggleButton();
             
             // Pre-load speech synthesis voices (required by some browsers)
             if ('speechSynthesis' in window) {
