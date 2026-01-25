@@ -1598,11 +1598,11 @@
                 const female = isFemale(player.name);
                 const ordinal = getOrdinalWithGender(currentRank, female);
                 const points = player.total_score;
-                // Use "má X bodů" format for correct accusative case
+                // Use "má X bodů" format so TTS reads cardinal number, not ordinal
                 const pointsText = points === 1 ? 'bod' : (points >= 2 && points <= 4 ? 'body' : 'bodů');
                 
-                // Format: "První Honza, 39" - simple, TTS reads number correctly
-                rankText.push(`${ordinal} ${player.name}, ${points}`);
+                // Format: "První Honza má 39 bodů" - explicit "má X bodů" forces cardinal reading
+                rankText.push(`${ordinal} ${player.name} má ${points} ${pointsText}`);
                 
                 previousScore = player.total_score;
             });
@@ -1851,17 +1851,9 @@
         function processVoiceCommand(text) {
             console.log('🎤 Voice input received:', text);
             
-            // Ignore voice input while TTS is speaking to prevent echo
-            if (ignoringVoiceInput) {
-                console.log('⏸️ Ignoring voice input (TTS speaking):', text);
-                return;
-            }
-            
             const textLower = text.toLowerCase();
             
-            // === GLOBAL COMMANDS (work anywhere) ===
-            
-            // Stop speech command
+            // Stop speech command - MUST be before ignoringVoiceInput check to allow interrupting TTS
             if (textLower.includes('stop') || textLower.includes('přestaň') || textLower.includes('ticho') || textLower.includes('dost') || textLower.includes('stačí')) {
                 if ('speechSynthesis' in window) {
                     window.speechSynthesis.cancel();
@@ -1870,6 +1862,14 @@
                 }
                 return;
             }
+            
+            // Ignore voice input while TTS is speaking to prevent echo
+            if (ignoringVoiceInput) {
+                console.log('⏸️ Ignoring voice input (TTS speaking):', text);
+                return;
+            }
+            
+            // === GLOBAL COMMANDS (work anywhere) ===
             
             // Close modal command
             if (textLower.includes('zavřít') || textLower.includes('zavři') || textLower.includes('zpět') || textLower.includes('zrušit')) {
