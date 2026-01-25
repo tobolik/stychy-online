@@ -1725,7 +1725,9 @@
                 }
 
                 if (number !== null && number >= 0 && number <= currentRound.cards_count) {
-                    selectBid(foundPlayer.position, number);
+                    // Find player index in orderedBiddingPlayers
+                    const playerIndex = orderedBiddingPlayers.findIndex(p => p.position == foundPlayer.position);
+                    selectBid(foundPlayer.position, number, playerIndex);
                     showVoiceToast(`✓ ${foundPlayer.name}: ${number}`);
                 } else {
                     showVoiceToast(`❓ ${foundPlayer.name} - jaké číslo?`);
@@ -1735,33 +1737,46 @@
                 const result = currentRound.results.find(r => r.position == foundPlayer.position);
                 const bid = result?.bid ?? 0;
 
-                if (textLower.includes('splnil') || textLower.includes('ano') || textLower.includes('ok') || textLower.includes('dobře') || textLower.includes('super')) {
-                    setResult(foundPlayer.position, true, bid);
-                    showVoiceToast(`✓ ${foundPlayer.name} splnil`);
-                } else if (textLower.includes('nesplnil') || textLower.includes('ne') || textLower.includes('špatně') || textLower.includes('nic')) {
-                    setResult(foundPlayer.position, false, bid);
-                    showVoiceToast(`✗ ${foundPlayer.name} nesplnil`);
+                // Find player index in orderedResultsPlayers
+                const playerIndex = orderedResultsPlayers.findIndex(p => p.position == foundPlayer.position);
+                
+                // Try to find a number first
+                let number = null;
+                const digitMatch = text.match(/\d+/);
+                if (digitMatch) {
+                    number = parseInt(digitMatch[0]);
                 } else {
-                    // Try to find a number for detailed mode
-                    let number = null;
-                    const digitMatch = text.match(/\d+/);
-                    if (digitMatch) {
-                        number = parseInt(digitMatch[0]);
-                    } else {
-                        for (const [word, num] of Object.entries(numberWords)) {
-                            if (textLower.includes(word)) {
-                                number = num;
-                                break;
-                            }
+                    for (const [word, num] of Object.entries(numberWords)) {
+                        if (textLower.includes(word)) {
+                            number = num;
+                            break;
                         }
                     }
-
-                    if (number !== null) {
-                        selectTricks(foundPlayer.position, number);
-                        showVoiceToast(`✓ ${foundPlayer.name}: ${number} štychů`);
-                    } else {
-                        showVoiceToast(`❓ ${foundPlayer.name} - splnil/nesplnil?`);
-                    }
+                }
+                
+                // Check for explicit success/fail words first
+                if (textLower.includes('splnil') || textLower.includes('ano') || textLower.includes('ok') || textLower.includes('dobře') || textLower.includes('super')) {
+                    setResult(foundPlayer.position, true, bid, playerIndex);
+                    showVoiceToast(`✓ ${foundPlayer.name} splnil`);
+                } else if (textLower.includes('nesplnil') || textLower.includes('špatně')) {
+                    setResult(foundPlayer.position, false, bid, playerIndex);
+                    showVoiceToast(`✗ ${foundPlayer.name} nesplnil`);
+                } else if (number === 1 || textLower.includes('jedna') || textLower.includes('jedničku')) {
+                    // "1" or "jedna" = splnil (like keyboard)
+                    setResult(foundPlayer.position, true, bid, playerIndex);
+                    showVoiceToast(`✓ ${foundPlayer.name} splnil`);
+                } else if (number === 0 || textLower.includes('nula') || textLower.includes('nulu') || textLower.includes('ne') || textLower.includes('nic')) {
+                    // "0" or "nula" or "ne" or "nic" = nesplnil (like keyboard)
+                    setResult(foundPlayer.position, false, bid, playerIndex);
+                    showVoiceToast(`✗ ${foundPlayer.name} nesplnil`);
+                } else if (detailedMode && number !== null) {
+                    // Only use detailed mode with specific numbers if detailed mode is active
+                    selectTricks(foundPlayer.position, number);
+                    moveToNextResultsPlayer(playerIndex);
+                    updateResultsEnteredCount();
+                    showVoiceToast(`✓ ${foundPlayer.name}: ${number} štychů`);
+                } else {
+                    showVoiceToast(`❓ ${foundPlayer.name} - splnil/nesplnil?`);
                 }
             }
         }
