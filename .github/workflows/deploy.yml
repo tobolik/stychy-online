@@ -16,20 +16,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Remove excluded files before deploy
+      - name: Remove files not for deployment
         run: |
           rm -rf .git .github
-          rm -f config/database.php README.md .gitignore
+          rm -f config/database.php .gitignore
 
-      - name: Deploy via lftp
-        uses: pressidium/lftp-mirror-action@v1
+      - name: Deploy via SFTP
+        uses: Dylan700/sftp-upload-action@latest
         with:
-          host: ${{ secrets.SFTP_SERVER }}
+          server: ${{ secrets.SFTP_SERVER }}
+          username: ${{ secrets.SFTP_USERNAME }}
+          password: ${{ secrets.SFTP_PASSWORD }}
           port: ${{ secrets.SFTP_PORT }}
-          user: ${{ secrets.SFTP_USERNAME }}
-          pass: ${{ secrets.SFTP_PASSWORD }}
-          remoteDir: ${{ secrets.SFTP_REMOTE_PATH }}
-          localDir: '.'
-          reverse: true
-          ignoreFile: '.lftp_ignore'
-          options: '--verbose --delete --exclude-glob=.git* --exclude-glob=.github/'
+          uploads: |
+            ./ => ${{ secrets.SFTP_REMOTE_PATH }}
+          ignore: |
+            .git*
+            .github
+            config/database.php
