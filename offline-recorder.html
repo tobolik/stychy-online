@@ -2606,10 +2606,15 @@
                     statusEl.innerHTML = `<i class="fa-solid fa-arrow-up"></i> Nahlášeno o <strong>${diff}</strong> více než je karet`;
                     statusEl.style.background = 'rgba(255, 204, 0, 0.2)';
                     statusEl.style.color = 'var(--warning)';
+                    // Voice announcement for přetlak
+                    speak(`Je přetlak o ${diff} ${diff === 1 ? 'kartu' : (diff < 5 ? 'karty' : 'karet')}.`);
                 } else {
                     statusEl.innerHTML = `<i class="fa-solid fa-arrow-down"></i> Nahlášeno o <strong>${Math.abs(diff)}</strong> méně než je karet`;
                     statusEl.style.background = 'rgba(0, 255, 204, 0.2)';
                     statusEl.style.color = 'var(--accent)';
+                    // Voice announcement for podtlak
+                    const absDiff = Math.abs(diff);
+                    speak(`Je podtlak o ${absDiff} ${absDiff === 1 ? 'kartu' : (absDiff < 5 ? 'karty' : 'karet')}.`);
                 }
                 statusEl.style.display = 'block';
             } else {
