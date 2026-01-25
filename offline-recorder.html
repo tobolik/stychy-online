@@ -1506,6 +1506,25 @@
             };
             return names[value] || value;
         }
+        
+        function getOrdinalCzech(num) {
+            const ordinals = {
+                1: 'První', 2: 'Druhé', 3: 'Třetí', 4: 'Čtvrté', 5: 'Páté',
+                6: 'Šesté', 7: 'Sedmé', 8: 'Osmé', 9: 'Deváté', 10: 'Desáté',
+                11: 'Jedenácté', 12: 'Dvanácté', 13: 'Třinácté', 14: 'Čtrnácté', 15: 'Patnácté',
+                16: 'Šestnácté', 17: 'Sedmnácté', 18: 'Osmnácté', 19: 'Devatenácté', 20: 'Dvacáté'
+            };
+            return ordinals[num] || `${num}.`;
+        }
+        
+        function getCardsTextCzech(count) {
+            const texts = {
+                1: 'jednu kartu', 2: 'dvě karty', 3: 'tři karty', 4: 'čtyři karty',
+                5: 'pět karet', 6: 'šest karet', 7: 'sedm karet', 8: 'osm karet',
+                9: 'devět karet', 10: 'deset karet'
+            };
+            return texts[count] || `${count} karet`;
+        }
 
         // State
         let currentUser = null;
@@ -2308,9 +2327,9 @@
             openModal('modal-new-round');
             
             // Voice announcement: who is dealing and how many cards
-            const cardsWord = cardsCount === 1 ? 'karta' : (cardsCount < 5 ? 'karty' : 'karet');
             const dealerName = dealer ? dealer.name : 'neznámý';
-            speak(`Kolo ${nextRoundNumber}. Rozdává ${dealerName}, ${cardsCount} ${cardsWord}.`);
+            const cardsText = getCardsTextCzech(cardsCount);
+            speak(`${getOrdinalCzech(nextRoundNumber)} kolo. ${dealerName} rozdává ${cardsText}.`);
         }
 
         // Trump selection
