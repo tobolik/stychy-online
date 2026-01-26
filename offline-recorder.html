@@ -1186,7 +1186,7 @@
         
         <!-- Footer -->
         <div class="app-footer">
-            <span>Štychy Záznamník v1.3.1</span>
+            <span>Štychy Záznamník v1.3.3</span>
             <span>•</span>
             <span id="build-date">2026-01-25</span>
         </div>
@@ -1510,10 +1510,16 @@
         
         // Flag to ignore voice input temporarily after TTS
         let ignoringVoiceInput = false;
+        let lastSpokenText = ''; // Store last spoken text for resume
+        let speechIsPaused = false;
         
         function speak(text) {
             if (!voiceAnnouncementsEnabled) return;
             if (!('speechSynthesis' in window)) return;
+            
+            // Store text for potential resume
+            lastSpokenText = text;
+            speechIsPaused = false;
             
             // Temporarily ignore voice input to prevent picking up TTS output
             ignoringVoiceInput = true;
@@ -1537,9 +1543,11 @@
             // Re-enable voice input after speech ends
             utterance.onend = () => {
                 setTimeout(() => { ignoringVoiceInput = false; }, 500);
+                speechIsPaused = false;
             };
             utterance.onerror = () => {
                 ignoringVoiceInput = false;
+                speechIsPaused = false;
             };
             
             window.speechSynthesis.speak(utterance);
@@ -1890,15 +1898,47 @@
             
             const textLower = text.toLowerCase();
             
+            // Pause speech command - MUST be before ignoringVoiceInput check
+            if (textLower.includes('pauza') || textLower.includes('pozastav') || textLower.includes('počkej')) {
+                if ('speechSynthesis' in window && window.speechSynthesis.speaking) {
+                    window.speechSynthesis.pause();
+                    speechIsPaused = true;
+                    ignoringVoiceInput = false; // Allow voice commands while paused
+                    showVoiceToast('⏸️ Pozastaveno');
+                }
+                return;
+            }
+            
+            // Resume speech command - MUST be before ignoringVoiceInput check
+            if (textLower.includes('pokračuj') || textLower.includes('dál') || textLower.includes('obnovit') || 
+                textLower.includes('spusť') || textLower.includes('pusť')) {
+                if ('speechSynthesis' in window) {
+                    if (speechIsPaused && window.speechSynthesis.paused) {
+                        window.speechSynthesis.resume();
+                        ignoringVoiceInput = true;
+                        showVoiceToast('▶️ Pokračuji');
+                    } else if (lastSpokenText) {
+                        // Restart from beginning if completely stopped
+                        const wasEnabled = voiceAnnouncementsEnabled;
+                        voiceAnnouncementsEnabled = true;
+                        speak(lastSpokenText);
+                        voiceAnnouncementsEnabled = wasEnabled;
+                        showVoiceToast('🔄 Opakuji');
+                    }
+                }
+                return;
+            }
+            
             // Stop speech command - MUST be before ignoringVoiceInput check to allow interrupting TTS
             // Extended list of stop words including partial matches
             if (textLower.includes('stop') || textLower.includes('přestaň') || textLower.includes('ticho') || 
                 textLower.includes('dost') || textLower.includes('stačí') || textLower.includes('ztiš') ||
-                textLower.includes('pauza') || textLower.includes('zastavit') || textLower.includes('zastav') ||
+                textLower.includes('zastavit') || textLower.includes('zastav') ||
                 textLower.includes('klid') || textLower.includes('hotovo')) {
                 if ('speechSynthesis' in window) {
                     window.speechSynthesis.cancel();
                     ignoringVoiceInput = false;
+                    speechIsPaused = false;
                     showVoiceToast('🔇 Zastaveno');
                 }
                 return;
@@ -1936,9 +1976,48 @@
             
             // End game command
             if (textLower.includes('ukončit hru') || textLower.includes('konec hry') || textLower.includes('dohrát')) {
-                if (currentGame && document.querySelector('button[onclick="endGame()"]')) {
+                if (currentGame) {
                     endGame();
                     showVoiceToast('🏁 Hra ukončena');
+                    return;
+                }
+            }
+            
+            // Copy game command
+            if (textLower.includes('kopírovat') || textLower.includes('kopíruj') || textLower.includes('zkopírovat') || 
+                textLower.includes('nová hra') || textLower.includes('kopie')) {
+                if (currentGame) {
+                    copyGame(currentGame.id);
+                    showVoiceToast('📋 Kopíruji hru');
+                    return;
+                }
+            }
+            
+            // Statistics command
+            if (textLower.includes('statistik') || textLower.includes('statistiky') || textLower.includes('přehled')) {
+                if (currentGame) {
+                    openStatsModal();
+                    showVoiceToast('📊 Statistiky');
+                    return;
+                }
+            }
+            
+            // Delete game command (with confirmation)
+            if (textLower.includes('smazat hru') || textLower.includes('vymazat hru') || textLower.includes('odstranit hru')) {
+                if (currentGame) {
+                    if (confirm('Opravdu chcete smazat tuto hru?')) {
+                        deleteGame(currentGame.id);
+                        showVoiceToast('🗑️ Hra smazána');
+                    }
+                    return;
+                }
+            }
+            
+            // Go back/home command
+            if (textLower.includes('domů') || textLower.includes('seznam her') || textLower.includes('hlavní menu')) {
+                if (currentGame) {
+                    showGamesList();
+                    showVoiceToast('🏠 Seznam her');
                     return;
                 }
             }
@@ -4273,6 +4352,23 @@
             if (e.key === 'Escape' && 'speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
                 ignoringVoiceInput = false;
+                speechIsPaused = false;
+            }
+            
+            // Space to pause/resume speech (only when not in input field)
+            if (e.key === ' ' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+                if ('speechSynthesis' in window && (window.speechSynthesis.speaking || window.speechSynthesis.paused)) {
+                    e.preventDefault();
+                    if (window.speechSynthesis.paused) {
+                        window.speechSynthesis.resume();
+                        speechIsPaused = false;
+                        ignoringVoiceInput = true;
+                    } else {
+                        window.speechSynthesis.pause();
+                        speechIsPaused = true;
+                        ignoringVoiceInput = false;
+                    }
+                }
             }
             
             // Enter to open results after bidding
