@@ -1186,7 +1186,7 @@
         
         <!-- Footer -->
         <div class="app-footer">
-            <span>Štychy Záznamník v1.3.3</span>
+            <span>Štychy Záznamník v1.3.4</span>
             <span>•</span>
             <span id="build-date">2026-01-25</span>
         </div>
@@ -1977,7 +1977,7 @@
             // End game command
             if (textLower.includes('ukončit hru') || textLower.includes('konec hry') || textLower.includes('dohrát')) {
                 if (currentGame) {
-                    endGame();
+                    finishGame();
                     showVoiceToast('🏁 Hra ukončena');
                     return;
                 }
@@ -1986,8 +1986,8 @@
             // Copy game command
             if (textLower.includes('kopírovat') || textLower.includes('kopíruj') || textLower.includes('zkopírovat') || 
                 textLower.includes('nová hra') || textLower.includes('kopie')) {
-                if (currentGame) {
-                    copyGame(currentGame.id);
+                if (currentGame && currentGame.game) {
+                    copyGameFromList(currentGame.game.id);
                     showVoiceToast('📋 Kopíruji hru');
                     return;
                 }
@@ -2005,21 +2005,18 @@
             // Delete game command (with confirmation)
             if (textLower.includes('smazat hru') || textLower.includes('vymazat hru') || textLower.includes('odstranit hru')) {
                 if (currentGame) {
-                    if (confirm('Opravdu chcete smazat tuto hru?')) {
-                        deleteGame(currentGame.id);
-                        showVoiceToast('🗑️ Hra smazána');
-                    }
+                    deleteGame();
+                    showVoiceToast('🗑️ Hra smazána');
                     return;
                 }
             }
             
             // Go back/home command
             if (textLower.includes('domů') || textLower.includes('seznam her') || textLower.includes('hlavní menu')) {
-                if (currentGame) {
-                    showGamesList();
-                    showVoiceToast('🏠 Seznam her');
-                    return;
-                }
+                showScreen('screen-games-list');
+                loadGames();
+                showVoiceToast('🏠 Seznam her');
+                return;
             }
             
             // Trump selection commands (when new round modal is open)
