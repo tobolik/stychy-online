@@ -52,9 +52,8 @@ switch ($action) {
             $db->beginTransaction();
             
             // Vytvoření hry
-            $totalRounds = count(getRoundSequence($maxCards));
-            $stmt = $db->prepare('INSERT INTO games (user_id, name, player_count, max_cards, total_rounds) VALUES (?, ?, ?, ?, ?)');
-            $stmt->execute([$userId, $name, $playerCount, $maxCards, $totalRounds]);
+            $stmt = $db->prepare('INSERT INTO games (user_id, name, player_count, max_cards) VALUES (?, ?, ?, ?)');
+            $stmt->execute([$userId, $name, $playerCount, $maxCards]);
             $gameId = $db->lastInsertId();
             
             // Vytvoření hráčů
