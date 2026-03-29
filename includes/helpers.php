@@ -51,7 +51,7 @@ function calculateScore(int $bid, int $tricks): int {
 }
 
 /**
- * Získání sekvence kol (7,6,5,4,3,2,1,1,2,3,4,5,6,7)
+ * Získání sekvence kol (7,6,5,4,3,2,1,2,3,4,5,6,7)
  */
 function getRoundSequence(int $maxCards = 7): array {
     $sequence = [];
@@ -59,8 +59,8 @@ function getRoundSequence(int $maxCards = 7): array {
     for ($i = $maxCards; $i >= 1; $i--) {
         $sequence[] = $i;
     }
-    // Vzestupně včetně opakování 1: 1, 2, 3, 4, 5, 6, 7
-    for ($i = 1; $i <= $maxCards; $i++) {
+    // Vzestupně: 2, 3, 4, 5, 6, 7 (1 se neopakuje)
+    for ($i = 2; $i <= $maxCards; $i++) {
         $sequence[] = $i;
     }
     return $sequence;
