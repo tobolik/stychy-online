@@ -1217,6 +1217,7 @@
                         <button class="player-count-btn selected" onclick="selectPlayerCount(8)">8</button>
                         <button class="player-count-btn" onclick="selectPlayerCount(9)">9</button>
                         <button class="player-count-btn" onclick="selectPlayerCount(10)">10</button>
+                        <button class="player-count-btn" onclick="selectPlayerCount(11)">11</button>
                     </div>
                 </div>
 
@@ -2759,7 +2760,7 @@
             }
 
             // Výpočet max. karet podle počtu hráčů (52 karet v balíčku)
-            const maxCardsMap = { 3: 10, 4: 10, 5: 10, 6: 8, 7: 7, 8: 6, 9: 5, 10: 5 };
+            const maxCardsMap = { 3: 10, 4: 10, 5: 10, 6: 8, 7: 7, 8: 6, 9: 5, 10: 5, 11: 4 };
             const maxCards = maxCardsMap[selectedPlayerCount] || 6;
 
             const result = await api('games.php', {
@@ -4325,6 +4326,13 @@
             if (e.ctrlKey && key === '0') {
                 e.preventDefault();
                 selectPlayerCount(10);
+                return;
+            }
+
+            // CTRL+- for 11 players
+            if (e.ctrlKey && (key === '-' || key === '_')) {
+                e.preventDefault();
+                selectPlayerCount(11);
                 return;
             }
             

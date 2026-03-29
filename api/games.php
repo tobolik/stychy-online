@@ -40,8 +40,8 @@ switch ($action) {
             jsonResponse(['success' => false, 'error' => 'Název hry je povinný'], 400);
         }
         
-        if ($playerCount < 3 || $playerCount > 10) {
-            jsonResponse(['success' => false, 'error' => 'Počet hráčů musí být 3-10'], 400);
+        if ($playerCount < 3 || $playerCount > 11) {
+            jsonResponse(['success' => false, 'error' => 'Počet hráčů musí být 3-11'], 400);
         }
         
         if (count($players) !== $playerCount) {
