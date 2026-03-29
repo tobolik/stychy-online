@@ -1207,6 +1207,14 @@
                 </div>
 
                 <div class="form-group">
+                    <label class="form-label">Počet balíčků</label>
+                    <div class="player-count-selector">
+                        <button class="player-count-btn selected" id="decks-btn-1" onclick="selectDecks(1)">1</button>
+                        <button class="player-count-btn" id="decks-btn-2" onclick="selectDecks(2)">2</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
                     <label class="form-label">Počet hráčů</label>
                     <div class="player-count-selector">
                         <button class="player-count-btn" onclick="selectPlayerCount(3)">3</button>
@@ -1728,6 +1736,14 @@
         let currentGame = null;
         let currentRound = null;
         let selectedPlayerCount = 8;
+        let selectedDecks = 1;
+
+        function selectDecks(count) {
+            selectedDecks = count;
+            document.querySelectorAll('#decks-btn-1, #decks-btn-2').forEach(btn => {
+                btn.classList.toggle('selected', parseInt(btn.textContent) === count);
+            });
+        }
         let selectedTrumpSuit = null;
         let selectedTrumpValue = null;
         let playerBids = {};
@@ -2641,10 +2657,12 @@
             // Clear prefilled data for fresh new game
             prefilledPlayers = [];
             selectedPlayerCount = 8;
+            selectedDecks = 1;
             document.getElementById('new-game-name').value = '';
             document.querySelectorAll('.player-count-btn').forEach(btn => {
                 btn.classList.toggle('selected', parseInt(btn.textContent) === 8);
             });
+            selectDecks(1);
             openModal('modal-new-game');
         }
 
@@ -2759,9 +2777,8 @@
                 players.push(playerName);
             }
 
-            // Výpočet max. karet podle počtu hráčů (52 karet v balíčku)
-            const maxCardsMap = { 3: 10, 4: 10, 5: 10, 6: 8, 7: 7, 8: 6, 9: 5, 10: 5, 11: 4 };
-            const maxCards = maxCardsMap[selectedPlayerCount] || 6;
+            // Výpočet max. karet podle počtu hráčů a balíčků
+            const maxCards = Math.floor(52 * selectedDecks / selectedPlayerCount);
 
             const result = await api('games.php', {
                 action: 'create',

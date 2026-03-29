@@ -52,9 +52,8 @@ switch ($action) {
             $db->beginTransaction();
             
             // Vytvoření hry
-            $totalRounds = count(getRoundSequence($maxCards));
-            $stmt = $db->prepare('INSERT INTO games (user_id, name, player_count, max_cards, total_rounds) VALUES (?, ?, ?, ?, ?)');
-            $stmt->execute([$userId, $name, $playerCount, $maxCards, $totalRounds]);
+            $stmt = $db->prepare('INSERT INTO games (user_id, name, player_count, max_cards) VALUES (?, ?, ?, ?)');
+            $stmt->execute([$userId, $name, $playerCount, $maxCards]);
             $gameId = $db->lastInsertId();
             
             // Vytvoření hráčů
@@ -139,6 +138,26 @@ switch ($action) {
             $stmt->execute([$round['id']]);
             $round['results'] = $stmt->fetchAll();
         }
+        unset($round);
+
+        // Přepočítat total_score ze skutečných výsledků kol (ochrana proti double-count)
+        $scoreMap = [];
+        foreach ($players as $p) {
+            $scoreMap[$p['position']] = 0;
+        }
+        foreach ($rounds as $round) {
+            if ($round['status'] === 'finished') {
+                foreach ($round['results'] as $result) {
+                    if ($result['score'] !== null) {
+                        $scoreMap[$result['position']] += $result['score'];
+                    }
+                }
+            }
+        }
+        foreach ($players as &$player) {
+            $player['total_score'] = $scoreMap[$player['position']] ?? $player['total_score'];
+        }
+        unset($player);
         
         jsonResponse([
             'success' => true,
