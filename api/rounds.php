@@ -57,13 +57,14 @@ switch ($action) {
         
         // Výpočet počtu karet a dealera
         $sequence = getRoundSequence($game['max_cards']);
-        $totalRounds = count($sequence);
-        
+        $totalRounds = getTotalRounds($game);
+
         if ($roundNumber > $totalRounds) {
             jsonResponse(['success' => false, 'error' => 'Všechna kola již byla odehrána'], 400);
         }
-        
-        $cardsCount = $sequence[$roundNumber - 1];
+
+        // Pro kola v rámci sekvence použijeme sekvenci, jinak (zpětná kompatibilita starých her) max_cards
+        $cardsCount = $sequence[$roundNumber - 1] ?? (int)$game['max_cards'];
         $dealerPosition = ($roundNumber - 1) % $game['player_count'];
         
         try {

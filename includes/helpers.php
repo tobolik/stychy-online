@@ -67,6 +67,18 @@ function getRoundSequence(int $maxCards = 7): array {
 }
 
 /**
+ * Celkový počet kol hry — používá uložené total_rounds (nové hry),
+ * nebo starý vzorec 2×max_cards (staré hry bez záznamu).
+ */
+function getTotalRounds(array $game): int {
+    if (!empty($game['total_rounds'])) {
+        return (int)$game['total_rounds'];
+    }
+    // Zpětná kompatibilita: staré hry nemají total_rounds, použijeme starý vzorec
+    return (int)$game['max_cards'] * 2;
+}
+
+/**
  * Kontrola validity sázky dealera
  */
 function isValidDealerBid(int $bid, int $currentSum, int $cardsCount): bool {
