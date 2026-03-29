@@ -180,7 +180,11 @@ switch ($action) {
         if (!$round || $round['user_id'] != $userId) {
             jsonResponse(['success' => false, 'error' => 'Kolo nenalezeno'], 404);
         }
-        
+
+        if ($round['status'] === 'finished') {
+            jsonResponse(['success' => false, 'error' => 'Výsledky tohoto kola již byly uloženy'], 400);
+        }
+
         // Kontrola součtu triků je volitelná (v jednoduchém režimu se nezadává přesný počet)
         // $totalTricks = array_sum($tricks);
         // if ($totalTricks !== $round['cards_count']) { ... }

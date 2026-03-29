@@ -4237,8 +4237,8 @@
             const sequence = [];
             // Sestupně: 7, 6, 5, 4, 3, 2, 1
             for (let i = maxCards; i >= 1; i--) sequence.push(i);
-            // Vzestupně: 2, 3, 4, 5, 6, 7 (1 se neopakuje)
-            for (let i = 2; i <= maxCards; i++) sequence.push(i);
+            // Vzestupně: 1, 2, 3, 4, 5, 6, 7
+            for (let i = 1; i <= maxCards; i++) sequence.push(i);
             return sequence;
         }
 
