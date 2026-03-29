@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS `games` (
     `name` VARCHAR(100) NOT NULL,
     `player_count` TINYINT NOT NULL,
     `max_cards` TINYINT DEFAULT 7,
+    `total_rounds` TINYINT DEFAULT NULL,
     `status` ENUM('active', 'finished', 'cancelled') DEFAULT 'active',
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `finished_at` TIMESTAMP NULL,

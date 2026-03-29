@@ -57,13 +57,14 @@ switch ($action) {
         
         // Výpočet počtu karet a dealera
         $sequence = getRoundSequence($game['max_cards']);
-        $totalRounds = count($sequence);
-        
+        $totalRounds = getTotalRounds($game);
+
         if ($roundNumber > $totalRounds) {
             jsonResponse(['success' => false, 'error' => 'Všechna kola již byla odehrána'], 400);
         }
-        
-        $cardsCount = $sequence[$roundNumber - 1];
+
+        // Pro kola v rámci sekvence použijeme sekvenci, jinak (zpětná kompatibilita starých her) max_cards
+        $cardsCount = $sequence[$roundNumber - 1] ?? (int)$game['max_cards'];
         $dealerPosition = ($roundNumber - 1) % $game['player_count'];
         
         try {
@@ -179,7 +180,11 @@ switch ($action) {
         if (!$round || $round['user_id'] != $userId) {
             jsonResponse(['success' => false, 'error' => 'Kolo nenalezeno'], 404);
         }
-        
+
+        if ($round['status'] === 'finished') {
+            jsonResponse(['success' => false, 'error' => 'Výsledky tohoto kola již byly uloženy'], 400);
+        }
+
         // Kontrola součtu triků je volitelná (v jednoduchém režimu se nezadává přesný počet)
         // $totalTricks = array_sum($tricks);
         // if ($totalTricks !== $round['cards_count']) { ... }

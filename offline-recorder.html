@@ -2802,8 +2802,8 @@
             // Round info bar
             const roundSequence = getRoundSequence(currentGame.game.max_cards);
             const currentRoundNum = currentGame.rounds.length;
-            const totalRounds = roundSequence.length;
-            const nextRoundCards = roundSequence[currentRoundNum] || '-';
+            const totalRounds = getGameTotalRounds(currentGame.game);
+            const nextRoundCards = getRoundCards(currentGame.game, currentRoundNum + 1);
             const lastRound = currentGame.rounds[currentGame.rounds.length - 1];
 
             let roundInfoHtml = `
@@ -2965,7 +2965,7 @@
                 html = '<p style="color: var(--success);"><i class="fa-solid fa-trophy"></i> Hra byla dokončena</p>';
             } else if (!lastRound || lastRound.status === 'finished') {
                 // Můžeme začít nové kolo
-                if (rounds.length < roundSequence.length) {
+                if (rounds.length < getGameTotalRounds(currentGame.game)) {
                     html += `<button class="btn btn-primary" onclick="openNewRoundModal()">
                         <i class="fa-solid fa-plus"></i> Nové kolo
                     </button>`;
@@ -3001,7 +3001,7 @@
             const container = document.getElementById('current-ranking');
             const players = [...currentGame.players].sort((a, b) => b.total_score - a.total_score);
             const finishedRounds = currentGame.rounds.filter(r => r.status === 'finished').length;
-            const totalRounds = getRoundSequence(currentGame.game.max_cards).length;
+            const totalRounds = getGameTotalRounds(currentGame.game);
 
             let html = `<div class="current-ranking-title">
                 <i class="fa-solid fa-chart-line"></i> Průběžné pořadí (po ${finishedRounds}. kole z ${totalRounds})
@@ -4066,7 +4066,7 @@
 
             return {
                 rounds: rounds.length,
-                totalRounds: getRoundSequence(currentGame.game.max_cards).length,
+                totalRounds: getGameTotalRounds(currentGame.game),
                 players: playerList,
                 totalOverbid,
                 totalUnderbid,
@@ -4237,9 +4237,22 @@
             const sequence = [];
             // Sestupně: 7, 6, 5, 4, 3, 2, 1
             for (let i = maxCards; i >= 1; i--) sequence.push(i);
-            // Vzestupně: 2, 3, 4, 5, 6, 7 (1 se neopakuje)
-            for (let i = 2; i <= maxCards; i++) sequence.push(i);
+            // Vzestupně: 1, 2, 3, 4, 5, 6, 7
+            for (let i = 1; i <= maxCards; i++) sequence.push(i);
             return sequence;
+        }
+
+        // Vrátí celkový počet kol hry — respektuje uložené total_rounds (nové hry),
+        // nebo starý vzorec 2×max_cards (staré hry bez záznamu).
+        function getGameTotalRounds(game) {
+            if (game.total_rounds) return game.total_rounds;
+            return game.max_cards * 2;
+        }
+
+        // Vrátí počet karet pro dané kolo (1-based) — pro extra kola starých her vrátí max_cards.
+        function getRoundCards(game, roundNumber) {
+            const seq = getRoundSequence(game.max_cards);
+            return seq[roundNumber - 1] ?? game.max_cards;
         }
 
         function getSuitSymbol(suit) {
@@ -4394,10 +4407,9 @@
                 const anyModalOpen = document.querySelector('.modal.active');
                 if (!anyModalOpen && currentGame) {
                     const rounds = currentGame.rounds;
-                    const roundSequence = getRoundSequence(currentGame.game.max_cards);
                     const lastRound = rounds[rounds.length - 1];
                     // Can start new round if no rounds or last round is finished
-                    if ((!lastRound || lastRound.status === 'finished') && rounds.length < roundSequence.length) {
+                    if ((!lastRound || lastRound.status === 'finished') && rounds.length < getGameTotalRounds(currentGame.game)) {
                         e.preventDefault();
                         awaitingNewRoundEntry = false;
                         openNewRoundModal();
