@@ -605,6 +605,12 @@
             transform: rotate(180deg);
         }
 
+        .cards-count-big {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
         .trump-value-selector {
             display: flex;
             flex-wrap: nowrap;
@@ -793,7 +799,7 @@
         .result-row {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            gap: 10px;
             padding: 6px 10px;
             background: rgba(0,0,0,0.2);
             border-radius: 6px;
@@ -806,22 +812,44 @@
         }
         .result-row .player-info {
             flex: 1;
+            min-width: 0;
         }
         .result-row .player-name {
             font-weight: bold;
             font-size: 1rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .result-row .player-bid {
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        /* Velké číslo nahlášených štychů v prázdném místě řádku (item 6c) */
+        .result-row .bid-badge {
+            flex: 0 0 auto;
+            min-width: 2.2em;
+            text-align: center;
+            font-size: 1.9rem;
+            font-weight: 800;
+            line-height: 1;
             color: var(--warning);
-            font-size: 0.8rem;
         }
         .result-buttons {
             display: flex;
-            gap: 8px;
+            gap: 6px;
+            flex: 0 0 auto;
         }
         .result-btn {
-            padding: 6px 12px;
-            font-size: 0.85rem;
+            width: 52px;
+            height: 44px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
         }
 
         /* Voice Recognition */
@@ -1118,6 +1146,40 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* === Mobilní optimalizace zápisu kola (item 4, 6, 6c, 13) === */
+        @media (max-width: 480px) {
+            .mobile-hide { display: none !important; }
+
+            .modal { padding: 6px; }
+            .modal-content { padding: 14px; max-height: 96vh; border-radius: 14px; }
+            .modal-title { font-size: 1.2rem; }
+
+            /* Výsledky - hutnější řádky, větší dotyk beze změny výšky */
+            .result-row { padding: 4px 8px; margin-bottom: 3px; gap: 8px; }
+            .result-row .bid-badge { font-size: 1.7rem; min-width: 1.6em; }
+            .result-btn { width: 50px; height: 42px; }
+            .result-buttons { gap: 6px; }
+
+            /* Hlášení - menší tlačítka, ať se 0..10 vejde na řádek */
+            .bid-input-grid { gap: 4px; }
+            .bid-input-row { padding: 5px 8px; gap: 8px; }
+            .bid-player-name { font-size: 0.95rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .bid-buttons { gap: 4px; flex-wrap: nowrap; overflow-x: auto; flex-shrink: 0; }
+            .bid-btn { width: 32px; height: 32px; font-size: 0.95rem; flex: 0 0 auto; }
+            /* Tabulka kol scrolluje horizontálně už přes .score-table-container (overflow-x:auto). */
+
+            /* Výběr trumfu - kompaktní karty se zachovaným tvarem karty (poměr 3/4) */
+            .trump-selector { grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
+            .trump-suit-btn { min-height: 120px; font-size: 1.9rem; border-radius: 8px; }
+            .trump-suit-btn .trump-val, .trump-suit-btn .trump-val-bottom { font-size: 0.7rem; top: 3px; left: 5px; bottom: 3px; right: 5px; }
+
+            /* Větší klíčové číslovky a hodnoty pro pohodlnější zadávání na mobilu */
+            .cards-count-big { font-size: 2rem; }
+            #bidding-cards-count { font-size: 1.7rem; }
+            .trump-value-selector { flex-wrap: wrap; gap: 6px; }
+            .trump-value-btn { width: 44px; height: 44px; font-size: 1.1rem; }
+        }
     </style>
 </head>
 <body>
@@ -1357,14 +1419,20 @@
                 <button class="close-btn" onclick="closeModal('modal-bidding')">&times;</button>
             </div>
 
-            <p style="margin-bottom: 10px; color: var(--text-muted); font-size: 0.85rem;">
+            <p class="mobile-hide" style="margin-bottom: 10px; color: var(--text-muted); font-size: 0.85rem;">
                 Zadejte hlášení klávesami <strong>0-9</strong>, potvrďte <strong>Enter</strong>.
             </p>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 12px;">
                 <div>
                     <span style="color: var(--text-muted);">Počet karet:</span>
                     <strong id="bidding-cards-count" style="color: var(--accent); font-size: 1.3rem; margin-left: 5px;">7</strong>
+                </div>
+                <div style="display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted);">
+                    Trumf: <span id="bidding-trump" class="trump-display trump-display-sm"></span>
+                </div>
+                <div style="color: var(--text-muted);">
+                    Rozdává: <strong id="bidding-dealer" style="color: var(--text-main); margin-left: 3px;"></strong>
                 </div>
                 <div>
                     <span style="color: var(--text-muted);">Součet hlášení:</span>
@@ -1400,7 +1468,7 @@
                 <button class="close-btn" onclick="closeModal('modal-results')">&times;</button>
             </div>
 
-            <p style="margin-bottom: 10px; color: var(--text-muted);">
+            <p class="mobile-hide" style="margin-bottom: 10px; color: var(--text-muted);">
                 Označte, kdo splnil svůj odhad.
             </p>
             <div id="results-trump-info" style="margin-bottom: 12px; display: none; align-items: center; flex-wrap: wrap; gap: 8px 16px; font-size: 0.95rem; color: var(--text-muted);">
@@ -1411,7 +1479,7 @@
                     Zadat přesný počet štychů
                 </label>
             </div>
-            <div style="margin-bottom: 15px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px; font-size: 0.85rem; color: var(--text-muted);">
+            <div class="mobile-hide" style="margin-bottom: 15px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px; font-size: 0.85rem; color: var(--text-muted);">
                 <strong>Klávesnice:</strong> <span style="color: #ff5e5e;">0 = Nesplnil</span> | <span style="color: #2ecc71;">1 = Splnil</span> | Enter = Uložit
             </div>
 
@@ -3185,7 +3253,7 @@
             for (let i = 0; i < cardsCount; i++) {
                 cardIconsHtml += '<span class="mini-card"></span>';
             }
-            const cardsText = `${cardsCount} ${cardsCount === 1 ? 'karta' : (cardsCount < 5 ? 'karty' : 'karet')}`;
+            const cardsText = `<span class="cards-count-big">${cardsCount}</span> ${cardsCount === 1 ? 'karta' : (cardsCount < 5 ? 'karty' : 'karet')}`;
             document.getElementById('cards-in-round').innerHTML = `<div class="mini-cards-row">${cardIconsHtml}</div>${cardsText}`;
 
             // Reset trump selection
@@ -3280,6 +3348,19 @@
 
             const dealerPosition = lastRound.dealer_position;
             const startPosition = (dealerPosition + 1) % currentGame.players.length;
+
+            // Trumf a rozdávající do info baru (item 8 / metaplán D)
+            const biddingTrump = document.getElementById('bidding-trump');
+            if (lastRound.trump_suit && lastRound.trump_suit !== 'none') {
+                biddingTrump.className = `trump-display trump-display-sm ${lastRound.trump_suit}`;
+                biddingTrump.textContent = `${lastRound.trump_value || ''} ${getSuitSymbol(lastRound.trump_suit)}`;
+            } else {
+                biddingTrump.className = 'trump-display trump-display-sm';
+                biddingTrump.textContent = 'bez trumfu';
+            }
+            biddingTrump.style.display = 'inline-flex';
+            const biddingDealer = currentGame.players.find(p => p.position == dealerPosition);
+            document.getElementById('bidding-dealer').textContent = biddingDealer ? biddingDealer.name : '';
 
             let html = '';
             orderedBiddingPlayers = [];
@@ -3632,14 +3713,15 @@
                         <div class="result-row ${idx === currentResultsIndex ? 'current-input' : ''}" data-position="${position}" data-index="${idx}" data-bid="${bid}">
                             <div class="player-info">
                                 <div class="player-name">${escapeHtml(player.name)}</div>
-                                <div class="player-bid">Hlásil: <strong>${bid}</strong> ${bid === 1 ? 'štych' : (bid >= 2 && bid <= 4 ? 'štychy' : 'štychů')}</div>
+                                <div class="player-bid">Hlásil</div>
                             </div>
+                            <div class="bid-badge" title="Nahlášené štychy">${bid}</div>
                             <div class="result-buttons">
-                                <button class="result-btn fail ${isFail ? 'selected' : ''}" onclick="setResult(${position}, false, ${bid}, ${idx})">
-                                    <i class="fa-solid fa-times"></i> 0
+                                <button class="result-btn fail ${isFail ? 'selected' : ''}" onclick="setResult(${position}, false, ${bid}, ${idx})" title="Nesplnil (0)" aria-label="Nesplnil">
+                                    <i class="fa-solid fa-times"></i>
                                 </button>
-                                <button class="result-btn success ${isSuccess ? 'selected' : ''}" onclick="setResult(${position}, true, ${bid}, ${idx})">
-                                    <i class="fa-solid fa-check"></i> 1
+                                <button class="result-btn success ${isSuccess ? 'selected' : ''}" onclick="setResult(${position}, true, ${bid}, ${idx})" title="Splnil (1)" aria-label="Splnil">
+                                    <i class="fa-solid fa-check"></i>
                                 </button>
                             </div>
                         </div>
