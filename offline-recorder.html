@@ -18,6 +18,11 @@
             --danger: #ff5e5e;
             --success: #2ecc71;
             --warning: #ffcc00;
+            /* Aliasy pro proměnné používané v kódu, ale dříve nedefinované */
+            --primary: var(--accent);
+            --card-bg: var(--surface);
+            --text: var(--text-main);
+            --bg-main: var(--bg-color);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -538,6 +543,7 @@
             overflow-y: auto;
             z-index: 1000;
             display: none;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
         }
         .autocomplete-list.show {
             display: block;
@@ -1048,6 +1054,18 @@
         }
         .trump-display.hearts, .trump-display.diamonds { color: #e74c3c; }
         .trump-display.clubs, .trump-display.spades { color: #2c3e50; }
+        /* Kompaktní varianta trumf pilulky (úspora místa na mobilu) */
+        .trump-display.trump-display-sm { padding: 3px 10px; font-size: 1rem; gap: 4px; }
+
+        /* Kompaktní trumf ve sloupci Karty */
+        .round-trump {
+            display: inline-block;
+            margin-left: 4px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        .round-trump.hearts, .round-trump.diamonds { color: #ff5e5e; }
+        .round-trump.clubs, .round-trump.spades { color: #d0d0d0; }
 
         /* Action Buttons */
         .action-buttons {
@@ -1216,7 +1234,7 @@
 
                 <div class="form-group">
                     <label class="form-label">Počet hráčů</label>
-                    <div class="player-count-selector">
+                    <div class="player-count-selector" id="player-count-buttons">
                         <button class="player-count-btn" onclick="selectPlayerCount(3)">3</button>
                         <button class="player-count-btn" onclick="selectPlayerCount(4)">4</button>
                         <button class="player-count-btn" onclick="selectPlayerCount(5)">5</button>
@@ -1385,6 +1403,14 @@
             <p style="margin-bottom: 10px; color: var(--text-muted);">
                 Označte, kdo splnil svůj odhad.
             </p>
+            <div id="results-trump-info" style="margin-bottom: 12px; display: none; align-items: center; flex-wrap: wrap; gap: 8px 16px; font-size: 0.95rem; color: var(--text-muted);">
+                <span><i class="fa-solid fa-cards"></i> Karet: <strong id="results-trump-cards" style="color: var(--text-main);"></strong></span>
+                <span style="display: inline-flex; align-items: center; gap: 6px;">Trumf: <span id="results-trump-card" class="trump-display trump-display-sm"></span></span>
+                <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; margin-left: auto;">
+                    <input type="checkbox" id="detailed-mode" onchange="toggleDetailedMode()" style="width: 18px; height: 18px;">
+                    Zadat přesný počet štychů
+                </label>
+            </div>
             <div style="margin-bottom: 15px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px; font-size: 0.85rem; color: var(--text-muted);">
                 <strong>Klávesnice:</strong> <span style="color: #ff5e5e;">0 = Nesplnil</span> | <span style="color: #2ecc71;">1 = Splnil</span> | Enter = Uložit
             </div>
@@ -1394,27 +1420,20 @@
                 <label style="display: flex; align-items: center; gap: 10px; color: var(--primary); font-size: 0.9rem;">
                     <i class="fa-solid fa-cards"></i> Počet karet v kole:
                     <select id="edit-cards-count" style="padding: 5px 10px; border-radius: 5px; background: var(--card-bg); color: var(--text); border: 1px solid var(--primary);">
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
-                        <option value="6">6</option>
-                        <option value="7">7</option>
-                        <option value="8">8</option>
-                        <option value="9">9</option>
-                        <option value="10">10</option>
+                        <option value="1" style="background: var(--surface); color: var(--text-main);">1</option>
+                        <option value="2" style="background: var(--surface); color: var(--text-main);">2</option>
+                        <option value="3" style="background: var(--surface); color: var(--text-main);">3</option>
+                        <option value="4" style="background: var(--surface); color: var(--text-main);">4</option>
+                        <option value="5" style="background: var(--surface); color: var(--text-main);">5</option>
+                        <option value="6" style="background: var(--surface); color: var(--text-main);">6</option>
+                        <option value="7" style="background: var(--surface); color: var(--text-main);">7</option>
+                        <option value="8" style="background: var(--surface); color: var(--text-main);">8</option>
+                        <option value="9" style="background: var(--surface); color: var(--text-main);">9</option>
+                        <option value="10" style="background: var(--surface); color: var(--text-main);">10</option>
                     </select>
                 </label>
             </div>
             
-            <div style="margin-bottom: 15px;">
-                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: var(--text-muted); font-size: 0.9rem;">
-                    <input type="checkbox" id="detailed-mode" onchange="toggleDetailedMode()" style="width: 18px; height: 18px;">
-                    Zadat přesný počet štychů
-                </label>
-            </div>
-
             <div class="bid-input-grid" id="tricks-inputs">
                 <!-- Dynamicky generováno -->
             </div>
@@ -2659,7 +2678,7 @@
             selectedPlayerCount = 8;
             selectedDecks = 1;
             document.getElementById('new-game-name').value = '';
-            document.querySelectorAll('.player-count-btn').forEach(btn => {
+            document.querySelectorAll('#player-count-buttons .player-count-btn').forEach(btn => {
                 btn.classList.toggle('selected', parseInt(btn.textContent) === 8);
             });
             selectDecks(1);
@@ -2680,7 +2699,7 @@
             prefilledPlayers = currentNames;
             
             selectedPlayerCount = count;
-            document.querySelectorAll('.player-count-btn').forEach(btn => {
+            document.querySelectorAll('#player-count-buttons .player-count-btn').forEach(btn => {
                 btn.classList.toggle('selected', parseInt(btn.textContent) === count);
             });
             renderPlayerNameInputs();
@@ -2892,7 +2911,10 @@
                 const isCurrentRound = round.status !== 'finished';
                 html += `<tr class="${isCurrentRound ? 'current-round-row' : ''}">`;
                 html += `<td class="round-num">${round.round_number}.</td>`;
-                html += `<td>${round.cards_count}</td>`;
+                const roundTrump = (round.trump_suit && round.trump_suit !== 'none')
+                    ? ` <span class="round-trump ${round.trump_suit}">${round.trump_value || ''}${getSuitSymbol(round.trump_suit)}</span>`
+                    : '';
+                html += `<td>${round.cards_count}${roundTrump}</td>`;
 
                 let sumBids = 0;
                 let sumTricks = 0;
@@ -3004,7 +3026,7 @@
             } else if (lastRound.status === 'playing') {
                 // Čekáme na výsledky
                 html += `<button class="btn btn-primary" onclick="openResultsModal()">
-                    <i class="fa-solid fa-calculator"></i> Zadat výsledky
+                    <i class="fa-solid fa-calculator"></i> Zadat výsledky kola
                 </button>`;
                 html += `<button class="btn btn-danger" onclick="deleteRound(${lastRound.id})" title="Smazat kolo">
                     <i class="fa-solid fa-trash"></i>
@@ -3512,6 +3534,20 @@
             document.getElementById('detailed-mode').checked = false;
             document.getElementById('tricks-sum-container').style.display = 'none';
 
+            // Trumf a počet karet kola (item 8)
+            const resultsTrumpInfo = document.getElementById('results-trump-info');
+            const resultsTrumpCard = document.getElementById('results-trump-card');
+            document.getElementById('results-trump-cards').textContent = round.cards_count;
+            if (round.trump_suit && round.trump_suit !== 'none') {
+                resultsTrumpCard.className = `trump-display trump-display-sm ${round.trump_suit}`;
+                resultsTrumpCard.textContent = `${round.trump_value || ''} ${getSuitSymbol(round.trump_suit)}`;
+            } else {
+                resultsTrumpCard.className = 'trump-display trump-display-sm';
+                resultsTrumpCard.textContent = 'bez trumfu';
+            }
+            resultsTrumpCard.style.display = 'inline-flex';
+            resultsTrumpInfo.style.display = 'flex';
+
             // Show/hide cards count edit field
             const cardsCountContainer = document.getElementById('edit-cards-count-container');
             if (isEditMode) {
@@ -3521,8 +3557,14 @@
                 cardsCountContainer.style.display = 'none';
             }
 
-            // Prepare ordered players list
-            orderedResultsPlayers = [...currentGame.players].sort((a, b) => a.position - b.position);
+            // Prepare ordered players list - podle aktuálního kola (rozdávající poslední)
+            const resultsDealerPosition = parseInt(round.dealer_position);
+            const resultsStartPosition = (resultsDealerPosition + 1) % currentGame.players.length;
+            orderedResultsPlayers = [];
+            for (let i = 0; i < currentGame.players.length; i++) {
+                const pos = (resultsStartPosition + i) % currentGame.players.length;
+                orderedResultsPlayers.push(currentGame.players.find(p => p.position == pos));
+            }
 
             renderResultsInputs();
             openModal('modal-results');
@@ -3932,8 +3974,17 @@
                 }
             }
             
-            const filtered = knownPlayers.filter(name => 
-                name.toLowerCase().includes(value) || value === ''
+            // Jména už zadaná v ostatních pozicích nenabízet
+            const takenNames = new Set();
+            document.querySelectorAll('#player-names-inputs input[type="text"]').forEach(inp => {
+                if (inp !== input && inp.value.trim()) {
+                    takenNames.add(inp.value.trim().toLowerCase());
+                }
+            });
+
+            const filtered = knownPlayers.filter(name =>
+                (name.toLowerCase().includes(value) || value === '') &&
+                !takenNames.has(name.toLowerCase())
             ).slice(0, 8);
             
             if (filtered.length === 0) {
@@ -4238,7 +4289,7 @@
             selectedPlayerCount = currentGame.players.length;
             
             // Update player count buttons
-            document.querySelectorAll('.player-count-btn').forEach(btn => {
+            document.querySelectorAll('#player-count-buttons .player-count-btn').forEach(btn => {
                 btn.classList.toggle('selected', parseInt(btn.textContent) === selectedPlayerCount);
             });
             
@@ -4388,6 +4439,15 @@
                 window.speechSynthesis.cancel();
                 ignoringVoiceInput = false;
                 speechIsPaused = false;
+            }
+
+            // Escape zavře libovolný otevřený modál (přes closeModal kvůi úklidu listenerů)
+            if (e.key === 'Escape') {
+                const openModals = document.querySelectorAll('.modal.active');
+                if (openModals.length > 0) {
+                    e.preventDefault();
+                    openModals.forEach(m => closeModal(m.id));
+                }
             }
             
             // Space to pause/resume speech (only when not in input field)
