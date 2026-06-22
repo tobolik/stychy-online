@@ -3,6 +3,12 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.5.8] – 2026-06-22
+
+### Změněno
+- Statistiky hry: mřížka přehledu i ocenění přepnuta ze 3 na **2 sloupce** – karty
+  (počet dělitelný 2/4) tak lícují do 2×2 a nezůstává „sirotek". Na úzkém mobilu (≤480px) 1 sloupec.
+
 ## [1.5.7] – 2026-06-22
 
 ### Bezpečnost (hardening po druhém auditu)
