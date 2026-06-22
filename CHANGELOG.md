@@ -14,6 +14,12 @@ verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji v
 - Drobné a11y/UX: kontrast `--text-muted`, tap target hamburgeru ≥44px, `:focus-visible`, `preconnect` na Font Awesome.
 - Oprava `selectPlayers` (předat `this` místo globálního `event`), meta/OG tagy.
 
+## [1.4.3] – 2026-06-22
+
+### Změněno
+- Statistiky: ocenění **Vabank** nově ukazuje i počet uhraných štychů v kole s nejvyšší sázkou
+  (např. „nejvyšší sázka 5 (uhrál 4)").
+
 ## [1.4.2] – 2026-06-22
 
 ### Přidáno
