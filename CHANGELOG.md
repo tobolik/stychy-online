@@ -3,6 +3,17 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.5.5] – 2026-06-22
+
+### Bezpečnost (audit OWASP)
+- Smazán `api/test.php` (vystavoval PHP verzi, db_host/db_name, seznam tabulek).
+- API už nevrací detail chyb klientovi (`$e->getMessage()`, soubor/řádek) – generická hláška, detail jen do logu (auth/games/rounds).
+- Deploy nenahrává na web `database/` (schéma + migrace), `config/database.example.php`, docs ani `.gitignore`.
+- XSS: hlasový toast přes `textContent`, našeptávač jmen přes `data-*` atributy + `escapeAttr` (ošetřen apostrof/uvozovky).
+- Odstraněny zbytečné CORS hlavičky (`Access-Control-Allow-Origin: *`) ze všech API (web je same-origin).
+- Login: základní ochrana proti brute-force (5 pokusů → 5 min lockout) + `session_regenerate_id()` (ochrana proti session fixation). Minimální heslo 6 → 8 znaků.
+- Odstraněn matoucí no-op `in_array($action, [])` v games.php (auth se vynucuje bezpodmínečně).
+
 ## [1.5.4] – 2026-06-22
 
 ### Změněno

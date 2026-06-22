@@ -18,8 +18,8 @@ jobs:
 
       - name: Remove files not for deployment
         run: |
-          rm -rf .git .github
-          rm -f config/database.php .gitignore
+          rm -rf .git .github database docs
+          rm -f config/database.php config/database.example.php .gitignore CHANGELOG.md README.md CLAUDE.md api/test.php
 
       - name: Deploy via lftp (SFTP mirror)
         run: |

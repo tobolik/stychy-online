@@ -53,8 +53,8 @@ class Auth {
             return ['success' => false, 'error' => 'Neplatný email'];
         }
         
-        if (strlen($password) < 6) {
-            return ['success' => false, 'error' => 'Heslo musí mít alespoň 6 znaků'];
+        if (strlen($password) < 8) {
+            return ['success' => false, 'error' => 'Heslo musí mít alespoň 8 znaků'];
         }
         
         // Kontrola duplicit
@@ -84,32 +84,53 @@ class Auth {
      * Přihlášení uživatele
      */
     public function login(string $username, string $password): array {
+        // Základní ochrana proti brute-force (session-based throttle)
+        $now = time();
+        if (!isset($_SESSION['login_fails'])) {
+            $_SESSION['login_fails'] = ['count' => 0, 'lock' => 0];
+        }
+        if ($_SESSION['login_fails']['lock'] > $now) {
+            return ['success' => false, 'error' => 'Příliš mnoho pokusů o přihlášení. Zkuste to prosím za chvíli.'];
+        }
+
         $stmt = $this->db->prepare('SELECT id, username, password_hash, is_active FROM users WHERE username = ? OR email = ?');
         $stmt->execute([$username, $username]);
         $user = $stmt->fetch();
-        
-        if (!$user) {
+
+        if (!$user || !password_verify($password, $user['password_hash'])) {
+            $this->registerFailedLogin();
             return ['success' => false, 'error' => 'Neplatné přihlašovací údaje'];
         }
-        
+
         if (!$user['is_active']) {
             return ['success' => false, 'error' => 'Účet je deaktivován'];
         }
-        
-        if (!password_verify($password, $user['password_hash'])) {
-            return ['success' => false, 'error' => 'Neplatné přihlašovací údaje'];
-        }
-        
+
+        // Úspěch - reset počítadla, ochrana proti session fixation
+        $_SESSION['login_fails'] = ['count' => 0, 'lock' => 0];
+        session_regenerate_id(true);
+
         // Aktualizace last_login
         $stmt = $this->db->prepare('UPDATE users SET last_login = NOW() WHERE id = ?');
         $stmt->execute([$user['id']]);
-        
+
         // Nastavení session
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['username'] = $user['username'];
         $_SESSION['logged_in'] = true;
-        
+
         return ['success' => true, 'user' => ['id' => $user['id'], 'username' => $user['username']]];
+    }
+
+    private function registerFailedLogin(): void {
+        $now = time();
+        $f = $_SESSION['login_fails'] ?? ['count' => 0, 'lock' => 0];
+        $f['count']++;
+        if ($f['count'] >= 5) {
+            $f['lock'] = $now + 300; // 5 minut lockout po 5 neúspěšných pokusech
+            $f['count'] = 0;
+        }
+        $_SESSION['login_fails'] = $f;
     }
     
     /**

@@ -1274,7 +1274,7 @@
         
         <!-- Footer -->
         <div class="app-footer">
-            <span>Štychy Záznamník v1.5.4</span>
+            <span>Štychy Záznamník v1.5.5</span>
             <span>•</span>
             <span id="build-date">2026-06-22</span>
         </div>
@@ -1999,7 +1999,7 @@
 
             const toast = document.createElement('div');
             toast.className = 'voice-toast';
-            toast.innerHTML = message;
+            toast.textContent = message;
             document.body.appendChild(toast);
 
             setTimeout(() => toast.remove(), 3000);
@@ -4082,8 +4082,8 @@
                 return;
             }
             
-            listEl.innerHTML = filtered.map(name => 
-                `<div class="autocomplete-item" onclick="selectAutocomplete('${escapeHtml(name)}', ${index})">${escapeHtml(name)}</div>`
+            listEl.innerHTML = filtered.map(name =>
+                `<div class="autocomplete-item" data-name="${escapeAttr(name)}" data-idx="${index}" onclick="selectAutocomplete(this.dataset.name, +this.dataset.idx)">${escapeHtml(name)}</div>`
             ).join('');
             listEl.classList.add('show');
         }
@@ -4510,6 +4510,13 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        // Escapování do hodnoty HTML atributu (vč. uvozovek a apostrofu)
+        function escapeAttr(text) {
+            return String(text == null ? '' : text)
+                .replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+                .replace(/</g, '&lt;').replace(/>/g, '&gt;');
         }
 
         function showScreen(screenId) {

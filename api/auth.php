@@ -7,43 +7,26 @@
 ini_set('display_errors', 0);
 error_reporting(E_ALL);
 
-// Error handler pro zachycení fatálních chyb
+// Error handler - klientovi jen generická hláška, detail do logu
 function handleError($errno, $errstr, $errfile, $errline) {
+    error_log("auth.php error: $errstr in $errfile:$errline");
     http_response_code(500);
     header('Content-Type: application/json; charset=utf-8');
-    echo json_encode([
-        'success' => false,
-        'error' => 'Server error: ' . $errstr,
-        'file' => basename($errfile),
-        'line' => $errline
-    ], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['success' => false, 'error' => 'Chyba serveru.'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 set_error_handler('handleError');
 
-// Shutdown handler pro fatální chyby
 function handleShutdown() {
     $error = error_get_last();
     if ($error !== null && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        error_log("auth.php fatal: {$error['message']} in {$error['file']}:{$error['line']}");
         http_response_code(500);
         header('Content-Type: application/json; charset=utf-8');
-        echo json_encode([
-            'success' => false,
-            'error' => 'Fatal error: ' . $error['message'],
-            'file' => basename($error['file']),
-            'line' => $error['line']
-        ], JSON_UNESCAPED_UNICODE);
+        echo json_encode(['success' => false, 'error' => 'Chyba serveru.'], JSON_UNESCAPED_UNICODE);
     }
 }
 register_shutdown_function('handleShutdown');
-
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    exit(0);
-}
 
 try {
     require_once __DIR__ . '/../includes/auth.php';
@@ -95,17 +78,13 @@ try {
             jsonResponse(['success' => false, 'error' => 'Neznámá akce'], 400);
     }
 } catch (PDOException $e) {
+    error_log('auth.php DB error: ' . $e->getMessage());
     http_response_code(500);
     header('Content-Type: application/json; charset=utf-8');
-    echo json_encode([
-        'success' => false,
-        'error' => 'Database error: ' . $e->getMessage()
-    ], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['success' => false, 'error' => 'Chyba serveru.'], JSON_UNESCAPED_UNICODE);
 } catch (Exception $e) {
+    error_log('auth.php error: ' . $e->getMessage());
     http_response_code(500);
     header('Content-Type: application/json; charset=utf-8');
-    echo json_encode([
-        'success' => false,
-        'error' => 'Error: ' . $e->getMessage()
-    ], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['success' => false, 'error' => 'Chyba serveru.'], JSON_UNESCAPED_UNICODE);
 }
