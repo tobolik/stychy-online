@@ -365,6 +365,24 @@
             }
             .nav-btn-highlight { justify-content: center; }
         }
+
+        /* --- KONTAKT --- */
+        .contact-wrap { max-width: 620px; margin: 0 auto; }
+        .contact-form { background: var(--surface); border: 1px solid var(--border-light); border-radius: 20px; padding: 35px; }
+        .contact-form .form-row { margin-bottom: 18px; text-align: left; }
+        .contact-form label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--accent); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
+        .contact-input { width: 100%; padding: 14px 16px; border: 1px solid var(--border-light); border-radius: 12px; background: rgba(0,0,0,0.3); color: #fff; font-size: 1rem; font-family: inherit; transition: border-color 0.2s, box-shadow 0.2s; }
+        .contact-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,255,204,0.12); }
+        .contact-input::placeholder { color: var(--text-muted); }
+        textarea.contact-input { min-height: 120px; resize: vertical; }
+        .contact-note { color: var(--text-muted); font-size: 0.8rem; margin-top: 14px; text-align: center; }
+        .contact-msg { padding: 12px 15px; border-radius: 10px; margin-bottom: 18px; font-size: 0.95rem; display: none; text-align: left; }
+        .contact-msg.show { display: block; }
+        .contact-msg.err { background: rgba(255,94,94,0.1); border: 1px solid #ff5e5e; color: #ff5e5e; }
+        .contact-msg.ok { background: rgba(46,204,113,0.1); border: 1px solid #2ecc71; color: #2ecc71; }
+        .hp-field { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+        .spin { display: none; animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -660,10 +678,52 @@
             </div>
         </section>
 
+        <!-- KONTAKT -->
+        <section id="kontakt" class="section-padding">
+            <div class="container">
+                <h2 class="section-title"><span>Napište nám</span></h2>
+                <div class="contact-wrap">
+                    <p style="text-align: center; color: var(--text-muted); margin-bottom: 30px;">
+                        Máte dotaz, nápad nebo jste narazili na chybu? Napište nám – ozveme se vám.
+                        Můžete i přímo na <a href="mailto:honza@tobolik.cz" style="color: var(--accent);">honza@tobolik.cz</a>.
+                    </p>
+
+                    <div class="contact-msg err" id="contact-error" role="alert" aria-live="assertive"></div>
+                    <div class="contact-msg ok" id="contact-success" role="status" aria-live="polite"></div>
+
+                    <form class="contact-form" id="contact-form" action="api/contact.php" method="post" onsubmit="handleContact(event)">
+                        <div class="form-row">
+                            <label for="contact-name">Jméno</label>
+                            <input type="text" class="contact-input" id="contact-name" name="name" maxlength="100" placeholder="Vaše jméno" required>
+                        </div>
+                        <div class="form-row">
+                            <label for="contact-email">E-mail</label>
+                            <input type="email" class="contact-input" id="contact-email" name="email" placeholder="vas@email.cz" required>
+                        </div>
+                        <div class="form-row">
+                            <label for="contact-message">Zpráva</label>
+                            <textarea class="contact-input" id="contact-message" name="message" maxlength="5000" placeholder="Napište nám…" required></textarea>
+                        </div>
+
+                        <div class="hp-field" aria-hidden="true">
+                            <label>Nevyplňujte<input type="text" id="contact-website" name="website" tabindex="-1" autocomplete="off"></label>
+                        </div>
+
+                        <button type="submit" class="cta-button" id="contact-submit" style="font-size: 1.1rem; padding: 16px;">
+                            <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+                            <span>Odeslat zprávu</span>
+                            <i class="fa-solid fa-spinner spin" id="contact-loading"></i>
+                        </button>
+                        <p class="contact-note">Vaše jméno a e-mail použijeme jen pro odpověď na zprávu.</p>
+                    </form>
+                </div>
+            </div>
+        </section>
+
         <footer>
             &copy; <span id="copyright-year">2025</span> – Štychy Online – stychy.cz. Vytvořeno pro zábavu by Juli &amp; Honza.
             <span style="display:block; margin-top:8px; font-family: var(--mono); font-size: 0.82rem; opacity: 0.7;">
-                v1.5.1 · <a href="login.html#kontakt" style="color: var(--text-muted); text-decoration: none;">Kontakt</a>
+                v1.5.2 · <a href="#kontakt" style="color: var(--text-muted); text-decoration: none;">Kontakt</a>
             </span>
         </footer>
     </div>
@@ -680,6 +740,47 @@
         function startGame() {
             // Přesměrování na hru s parametrem
             window.location.href = `game.html?players=${selectedPlayers}`;
+        }
+
+        // Kontaktní formulář (AJAX, bez reloadu)
+        async function handleContact(event) {
+            event.preventDefault();
+            const name = document.getElementById('contact-name').value.trim();
+            const email = document.getElementById('contact-email').value.trim();
+            const message = document.getElementById('contact-message').value.trim();
+            const website = document.getElementById('contact-website').value; // honeypot
+            const btn = document.getElementById('contact-submit');
+            const loading = document.getElementById('contact-loading');
+            const errorMsg = document.getElementById('contact-error');
+            const successMsg = document.getElementById('contact-success');
+
+            errorMsg.classList.remove('show');
+            successMsg.classList.remove('show');
+            btn.disabled = true;
+            loading.style.display = 'inline-block';
+
+            try {
+                const response = await fetch('api/contact.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, message, website })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    successMsg.textContent = result.message || 'Zpráva odeslána. Děkujeme!';
+                    successMsg.classList.add('show');
+                    document.getElementById('contact-form').reset();
+                } else {
+                    errorMsg.textContent = result.error || 'Zprávu se nepodařilo odeslat.';
+                    errorMsg.classList.add('show');
+                }
+            } catch (e) {
+                errorMsg.textContent = 'Chyba připojení. Napište prosím přímo na honza@tobolik.cz.';
+                errorMsg.classList.add('show');
+            } finally {
+                btn.disabled = false;
+                loading.style.display = 'none';
+            }
         }
 
         // Footer year logic
