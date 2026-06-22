@@ -1274,7 +1274,7 @@
         
         <!-- Footer -->
         <div class="app-footer">
-            <span>Štychy Záznamník v1.4.1</span>
+            <span>Štychy Záznamník v1.4.2</span>
             <span>•</span>
             <span id="build-date">2026-06-22</span>
         </div>
@@ -4137,14 +4137,19 @@
             const n = players.length;
 
             // Normalizovaná matice sil (0..1 per ocenění; plochá metrika -> 0)
+            // + evidence, kdo je na maximu metriky (kvůli značce "děleno")
             const S = {};
+            const poolMaxRaw = {};
+            const poolAtMax = {};
             pool.forEach(a => {
-                const raw = players.map(p => ({ pos: p.position, v: a.strength(p) }));
+                const raw = players.map(p => ({ pos: p.position, name: p.name, v: a.strength(p) }));
                 const vals = raw.map(r => r.v);
                 const min = Math.min(...vals), max = Math.max(...vals);
                 const m = {};
                 raw.forEach(r => { m[r.pos] = (max === min) ? 0 : (r.v - min) / (max - min); });
                 S[a.id] = m;
+                poolMaxRaw[a.id] = max;
+                poolAtMax[a.id] = raw.filter(r => r.v === max).map(r => ({ pos: r.pos, name: r.name }));
             });
 
             const usedAwards = new Set();
@@ -4183,7 +4188,12 @@
             const generic = { emoji: '🃏', label: 'Solidní průměr', kind: 'positive', value: () => '', desc: 'Nevyniká v žádné krajní statistice – solidní průměr.' };
             return players.map(p => {
                 const a = result[p.position] || generic;
-                return { position: p.position, name: p.name, emoji: a.emoji, label: a.label, kind: a.kind, value: a.value ? a.value(p) : '', desc: a.desc || '' };
+                // Shoda na vrcholu metriky -> spoluvítězové (kromě tohoto hráče)
+                let sharedWith = [];
+                if (a.strength && poolAtMax[a.id] && a.strength(p) === poolMaxRaw[a.id] && poolAtMax[a.id].length >= 2) {
+                    sharedWith = poolAtMax[a.id].filter(x => x.pos !== p.position).map(x => x.name);
+                }
+                return { position: p.position, name: p.name, emoji: a.emoji, label: a.label, kind: a.kind, value: a.value ? a.value(p) : '', desc: a.desc || '', sharedWith };
             });
         }
 
@@ -4357,15 +4367,19 @@
             `;
 
             // Section 2: Ocenění - karta na každého hráče (item 10)
-            const awardCards = stats.awards.map(a => `
-                <div class="stat-card tappable award-${a.kind}" title="${escapeHtml(a.desc)}" onclick="this.querySelector('.stat-detail').classList.toggle('show')">
+            const awardCards = stats.awards.map(a => {
+                const shared = a.sharedWith && a.sharedWith.length > 0;
+                const sharedDetail = shared ? ` Shodně i: ${a.sharedWith.map(escapeHtml).join(', ')}.` : '';
+                const titleFull = a.desc + (shared ? ` Děleno s: ${a.sharedWith.join(', ')}.` : '');
+                return `
+                <div class="stat-card tappable award-${a.kind}" title="${escapeHtml(titleFull)}" onclick="this.querySelector('.stat-detail').classList.toggle('show')">
                     <div class="stat-value">${a.emoji}</div>
                     <div class="stat-player" style="font-weight: bold;">${escapeHtml(a.name)}</div>
                     <div class="stat-label">${escapeHtml(a.label)}<i class="fa-solid fa-circle-info info-dot"></i></div>
-                    ${a.value ? `<div class="stat-label" style="opacity: 0.75;">${escapeHtml(a.value)}</div>` : ''}
-                    <div class="stat-detail">${escapeHtml(a.desc)}</div>
-                </div>
-            `).join('');
+                    ${a.value ? `<div class="stat-label" style="opacity: 0.75;">${escapeHtml(a.value)}${shared ? ' (děleno)' : ''}</div>` : ''}
+                    <div class="stat-detail">${escapeHtml(a.desc)}${sharedDetail}</div>
+                </div>`;
+            }).join('');
             html += `
                 <div class="stats-section">
                     <div class="stats-section-title"><i class="fa-solid fa-award"></i> Ocenění</div>
