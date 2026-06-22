@@ -26,6 +26,12 @@ Vizuální refresh úvodní stránky (`index.html`). Texty beze změny.
 ### Opraveno
 - `selectPlayers` už nespoléhá na deprecated globální `event` (předává `this`).
 
+## [1.4.3] – 2026-06-22
+
+### Změněno
+- Statistiky: ocenění **Vabank** nově ukazuje i počet uhraných štychů v kole s nejvyšší sázkou
+  (např. „nejvyšší sázka 5 (uhrál 4)").
+
 ## [1.4.2] – 2026-06-22
 
 ### Přidáno
