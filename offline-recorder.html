@@ -1274,7 +1274,7 @@
         
         <!-- Footer -->
         <div class="app-footer">
-            <span>Štychy Záznamník v1.4.3</span>
+            <span>Štychy Záznamník v1.4.4</span>
             <span>•</span>
             <span id="build-date">2026-06-22</span>
         </div>
@@ -4120,7 +4120,7 @@
                 { id: 'greedy_pig', emoji: '🐷', label: 'Hamoun', kind: 'roast', strength: p => p.totalBid - p.totalWon, value: p => `nahlásil o ${p.totalBid - p.totalWon} víc, než urval`, desc: 'Největší rozdíl mezi součtem hlášení a součtem uhraných štychů – přeceňuje se.' },
                 { id: 'coward', emoji: '🐔', label: 'Strašpytel', kind: 'roast', strength: p => p.zeroCount, value: p => `${p.zeroCount}× hlásil nulu`, desc: 'Nejvíckrát nahlásil nulu (na nic si netroufl).' },
                 { id: 'rollercoaster', emoji: '🎢', label: 'Horská dráha', kind: 'roast', strength: p => bs(p) - ws(p), value: p => `rozkmit ${bs(p) - ws(p)} bodů`, desc: 'Největší rozkmit skóre – rozdíl mezi nejlepším a nejhorším kolem.' },
-                { id: 'vabank', emoji: '🎲', label: 'Vabank', kind: 'roast', strength: p => p.maxBid, value: p => { const r = (p.roundScores || []).find(x => x.bid === p.maxBid); return `nejvyšší sázka ${p.maxBid}` + (r ? ` (uhrál ${r.won})` : ''); }, desc: 'Nejvyšší jednotlivé hlášení v celé hře.' },
+                { id: 'vabank', emoji: '🎲', label: 'Vabank', kind: 'roast', strength: p => p.maxBid, value: p => { const r = (p.roundScores || []).find(x => x.bid === p.maxBid); return `nejvyšší sázka ${p.maxBid}` + (r ? ` (${r.score > 0 ? '+' : ''}${r.score} b)` : ''); }, desc: 'Nejvyšší jednotlivé hlášení v celé hře.' },
                 // Pozitivní
                 { id: 'sniper', emoji: '🎯', label: 'Sniper', kind: 'positive', strength: p => p.successRate, value: p => `${p.successRate}% úspěšnost`, desc: 'Nejvyšší úspěšnost – největší podíl kol se splněným odhadem.' },
                 { id: 'iron', emoji: '🧊', label: 'Ledový klid', kind: 'positive', strength: p => p.successCount, value: p => `${p.successCount}× splnil`, desc: 'Nejvíc kol, ve kterých uhrál přesně svůj odhad.' },

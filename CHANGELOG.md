@@ -26,6 +26,12 @@ Vizuální refresh úvodní stránky (`index.html`). Texty beze změny.
 ### Opraveno
 - `selectPlayers` už nespoléhá na deprecated globální `event` (předává `this`).
 
+## [1.4.4] – 2026-06-22
+
+### Změněno
+- Statistiky: ocenění **Vabank** ukazuje, kolik **bodů** ta nejvyšší sázka přinesla
+  (např. „nejvyšší sázka 2 (+12 b)") – dává to víc smyslu než počet uhraných štychů.
+
 ## [1.4.3] – 2026-06-22
 
 ### Změněno
