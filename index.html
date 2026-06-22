@@ -8,16 +8,30 @@
     <style>
         :root {
             --bg-color: #1a1c2c;
-            --accent: #00ffcc; 
+            --accent: #00ffcc;
             --accent-hover: #00cca3;
+            --accent-2: #ffcc00;
+            --red: #ff6b6b;
             --text-main: #ffffff;
-            --text-muted: #a0a0a0;
+            --text-muted: #c2c6d6; /* zesvětleno z #a0a0a0 kvůli kontrastu (WCAG) */
             --surface: #23263a;
             --surface-hover: #2d314a;
             --border-light: rgba(255,255,255,0.1);
+            --mono: ui-monospace, "Cascadia Code", "SF Mono", Consolas, monospace;
         }
 
         * { box-sizing: border-box; }
+
+        /* viditelný focus pro klávesnici */
+        a:focus-visible, button:focus-visible {
+            outline: 3px solid var(--accent);
+            outline-offset: 3px;
+            border-radius: 6px;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            * { animation: none !important; transition: none !important; }
+            *:hover { transform: none !important; }
+        }
 
         body {
             background-color: var(--bg-color);
@@ -35,22 +49,45 @@
         }
 
         /* --- NAVIGACE --- */
+        .nav-shell {
+            position: sticky; top: 0; z-index: 50;
+            background: rgba(26,28,44,0.82);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-light);
+        }
         nav {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px 0;
+            flex-wrap: wrap;
+            padding: 14px 20px;
+            max-width: 1100px;
+            margin: 0 auto;
         }
 
         .logo {
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             font-weight: 800;
             letter-spacing: 2px;
             text-transform: uppercase;
+            display: flex; align-items: center; gap: 10px;
         }
         .logo span { color: var(--accent); }
+        .logo .pips { font-size: 0.95rem; letter-spacing: 1px; }
+        .logo .pips .r { color: var(--red); }
 
-        .nav-links { display: flex; gap: 25px; }
+        .nav-links { display: flex; gap: 25px; align-items: center; }
+        .nav-toggle {
+            display: none;
+            background: none;
+            border: 1px solid var(--border-light);
+            color: var(--text-main);
+            font-size: 1.4rem;
+            cursor: pointer;
+            min-width: 46px; min-height: 46px;
+            border-radius: 12px;
+            line-height: 1;
+        }
         .nav-btn {
             color: var(--text-muted);
             text-decoration: none;
@@ -77,43 +114,54 @@
 
         /* --- HERO --- */
         header.hero {
-            text-align: center;
-            padding: 100px 0 80px;
-            background: radial-gradient(circle at center, #2a2d45 0%, var(--bg-color) 70%);
+            padding: 60px 0 70px;
+            background: radial-gradient(circle at 30% 20%, #2a2d45 0%, var(--bg-color) 70%);
         }
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1.05fr 0.95fr;
+            gap: 44px;
+            align-items: center;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        .hero-copy { text-align: left; }
 
         h1.hero-title {
-            font-size: 4rem;
-            margin: 0 auto 20px auto;
-            max-width: 900px;
-            line-height: 1.1;
+            font-size: clamp(2.4rem, 5.5vw, 3.8rem);
+            margin: 0 0 18px 0;
+            line-height: 1.08;
             font-weight: 800;
             background: linear-gradient(to right, #fff, #b3b3b3);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        
+
         .hero-subtitle {
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             color: var(--text-main);
-            max-width: 800px;
-            margin: 0 auto 10px auto;
+            margin: 0 0 10px 0;
             font-weight: 600;
         }
 
         .hero-desc {
             font-size: 1.1rem;
             color: var(--text-muted);
-            margin: 0 auto 50px auto;
-            max-width: 600px;
+            margin: 0 0 28px 0;
+            max-width: 38em;
         }
+
+        /* animace karet */
+        .fan { position: relative; min-height: 380px; display: flex; align-items: center; justify-content: center; }
+        #fan { width: 100%; max-width: 480px; height: 380px; }
 
         /* --- HERNÍ SETUP --- */
         .game-setup {
             background: rgba(255,255,255,0.03);
-            padding: 40px;
-            border-radius: 24px;
-            display: inline-block;
+            padding: 28px;
+            border-radius: 20px;
+            display: block;
             border: 1px solid var(--border-light);
             backdrop-filter: blur(10px);
             box-shadow: 0 20px 50px rgba(0,0,0,0.3);
@@ -121,7 +169,7 @@
 
         .player-select-label {
             display: block;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             font-weight: bold;
             color: var(--accent);
             text-transform: uppercase;
@@ -131,9 +179,10 @@
 
         .player-count-options {
             display: flex;
-            gap: 12px;
-            justify-content: center;
-            margin-bottom: 30px;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+            margin-bottom: 22px;
         }
 
         .p-btn {
@@ -178,6 +227,16 @@
             box-shadow: 0 0 50px rgba(0, 255, 204, 0.6);
             background: var(--accent-hover);
         }
+
+        /* jemné sekundární tlačítko (méně výrazné než hlavní CTA) */
+        .btn-soft {
+            display: inline-flex; align-items: center; gap: 10px;
+            background: transparent; color: var(--accent);
+            border: 1px solid var(--border-light);
+            padding: 12px 26px; border-radius: 30px;
+            font-weight: 700; text-decoration: none; transition: all .2s;
+        }
+        .btn-soft:hover { border-color: var(--accent); transform: translateY(-2px); }
 
         /* --- SECTIONS --- */
         .section-padding { padding: 100px 0; }
@@ -276,49 +335,85 @@
         }
 
         @media (max-width: 768px) {
-            h1.hero-title { font-size: 2.8rem; }
             .hero-subtitle { font-size: 1.1rem; }
             .container { padding: 0 20px; }
             .detailed-rules { padding: 30px; }
+
+            /* hero na mobilu pod sebe, animace nad obsahem */
+            .hero-grid { grid-template-columns: 1fr; gap: 18px; }
+            .fan { order: -1; min-height: 280px; }
+            #fan { height: 280px; }
+
+            /* Standardní hamburger menu */
+            nav { flex-wrap: wrap; }
+            .logo { font-size: 1.4rem; }
+            .nav-toggle { display: block; }
+            .nav-links {
+                display: none;
+                flex-direction: column;
+                align-items: stretch;
+                width: 100%;
+                gap: 6px;
+                margin-top: 15px;
+                padding-top: 15px;
+                border-top: 1px solid var(--border-light);
+            }
+            nav.nav-open .nav-links { display: flex; }
+            .nav-links .nav-btn {
+                padding: 12px 6px;
+                font-size: 1.1rem;
+            }
+            .nav-btn-highlight { justify-content: center; }
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <nav>
-            <div class="logo">ŠTYCHY <span>ONLINE</span></div>
-            <div class="nav-links">
+    <div class="nav-shell">
+        <nav id="mainNav">
+            <div class="logo">ŠTYCHY <span>ONLINE</span> <span class="pips" aria-hidden="true"><span class="r">♥</span>♠<span class="r">♦</span>♣</span></div>
+            <button class="nav-toggle" id="navToggle" aria-label="Otevřít menu" aria-expanded="false" aria-controls="navLinks">
+                <i class="fa-solid fa-bars" aria-hidden="true"></i>
+            </button>
+            <div class="nav-links" id="navLinks">
                 <a href="#rules" class="nav-btn">Pravidla</a>
                 <a href="#about-us" class="nav-btn">O nás</a>
-                <a href="offline-recorder.html" class="nav-btn nav-btn-highlight">
-                    <i class="fa-solid fa-clipboard-list"></i> Záznamník her
+                <a href="offline-recorder.html" class="nav-btn">
+                    <i class="fa-solid fa-clipboard-list" aria-hidden="true"></i> Záznamník her
                 </a>
             </div>
         </nav>
+    </div>
+
+    <div class="container">
 
         <header class="hero">
-            <h1 class="hero-title">Ichtylně geniální karetní hra</h1>
-            <p class="hero-subtitle">
-                aneb hra, kde neplatí standardní logika, ale náhoda to taky není.
-            </p>
-            <p class="hero-desc">
-                Změřte své síly s naší AI v moderní verzi klasické karetní hry. Bez registrace, zdarma, ihned.
-            </p>
+            <div class="hero-grid">
+                <div class="hero-copy">
+                    <h1 class="hero-title">Ichtylně geniální karetní hra</h1>
+                    <p class="hero-subtitle">
+                        aneb hra, kde neplatí standardní logika, ale náhoda to taky není.
+                    </p>
+                    <p class="hero-desc">
+                        Změřte své síly s naší AI v moderní verzi klasické karetní hry. Bez registrace, zdarma, ihned.
+                    </p>
 
-            <div class="game-setup">
-                <span class="player-select-label">Kolik vás bude hrát? (s boty)</span>
-                <div class="player-count-options">
-                    <button class="p-btn" onclick="selectPlayers(3)">3</button>
-                    <button class="p-btn" onclick="selectPlayers(4)">4</button>
-                    <button class="p-btn" onclick="selectPlayers(5)">5</button>
-                    <button class="p-btn" onclick="selectPlayers(6)">6</button>
-                    <button class="p-btn" onclick="selectPlayers(7)">7</button>
-                    <button class="p-btn active" onclick="selectPlayers(8)">8</button>
+                    <div class="game-setup">
+                        <span class="player-select-label">Kolik vás bude hrát? (s boty)</span>
+                        <div class="player-count-options">
+                            <button class="p-btn" onclick="selectPlayers(3, this)">3</button>
+                            <button class="p-btn" onclick="selectPlayers(4, this)">4</button>
+                            <button class="p-btn" onclick="selectPlayers(5, this)">5</button>
+                            <button class="p-btn" onclick="selectPlayers(6, this)">6</button>
+                            <button class="p-btn" onclick="selectPlayers(7, this)">7</button>
+                            <button class="p-btn active" onclick="selectPlayers(8, this)">8</button>
+                        </div>
+                        <button class="cta-button" onclick="startGame()">
+                            <i class="fa-solid fa-play" aria-hidden="true"></i> SPUSTIT HRU
+                        </button>
+                    </div>
                 </div>
-                <button class="cta-button" onclick="startGame()">
-                    <i class="fa-solid fa-play"></i> SPUSTIT HRU
-                </button>
+                <div class="fan"><canvas id="fan" width="480" height="380" aria-hidden="true"></canvas></div>
             </div>
         </header>
 
@@ -336,19 +431,19 @@
                         </p>
                         <ul style="list-style: none; margin-bottom: 25px;">
                             <li style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
-                                <i class="fa-solid fa-check-circle" style="color: var(--accent);"></i>
+                                <i class="fa-solid fa-check-circle" style="color: var(--accent);" aria-hidden="true"></i>
                                 Automatický výpočet bodů
                             </li>
                             <li style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
-                                <i class="fa-solid fa-check-circle" style="color: var(--accent);"></i>
+                                <i class="fa-solid fa-check-circle" style="color: var(--accent);" aria-hidden="true"></i>
                                 Kontrola validních hlášení (zakázaná sázka dealera)
                             </li>
                             <li style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
-                                <i class="fa-solid fa-check-circle" style="color: var(--accent);"></i>
+                                <i class="fa-solid fa-check-circle" style="color: var(--accent);" aria-hidden="true"></i>
                                 Historie her a statistiky
                             </li>
                             <li style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
-                                <i class="fa-solid fa-check-circle" style="color: var(--accent);"></i>
+                                <i class="fa-solid fa-check-circle" style="color: var(--accent);" aria-hidden="true"></i>
                                 Přehledná tabulka s výsledky
                             </li>
                         </ul>
@@ -407,42 +502,42 @@
                 <div class="features-grid">
                     <!-- 1. Rozdání -->
                     <div class="feature-card">
-                        <i class="fa-solid fa-layer-group f-icon"></i>
+                        <i class="fa-solid fa-layer-group f-icon" aria-hidden="true"></i>
                         <h3 class="f-title">Rozdání karet</h3>
                         <p class="f-text">Na začátku se rozdají karty hráčům. Zbývající karty zůstanou v balíčku (ten už pro hru není důležitý). Ze zbylých karet se otočí jedna, která určí <strong>trumf</strong> (nejsilnější barvu kola).</p>
                     </div>
 
                     <!-- 2. Hlášení -->
                     <div class="feature-card">
-                        <i class="fa-solid fa-bullhorn f-icon"></i>
+                        <i class="fa-solid fa-bullhorn f-icon" aria-hidden="true"></i>
                         <h3 class="f-title">Hlášení</h3>
                         <p class="f-text">Musíš odhadnout počet zdvihů. <strong>Pozor:</strong> Rozdávající (poslední na řadě) nesmí nahlásit tak, aby součet sázek odpovídal počtu karet. Vždy tak někdo musí prohrát!</p>
                     </div>
 
                     <!-- 3. Hra -->
                     <div class="feature-card">
-                        <i class="fa-solid fa-hand-holding-heart f-icon"></i>
+                        <i class="fa-solid fa-hand-holding-heart f-icon" aria-hidden="true"></i>
                         <h3 class="f-title">Hra & Barva</h3>
                         <p class="f-text">Musíš ctít barvu. Nemáš-li barvu, <strong>musíš</strong> hrát trumf. Pokud nemáš ani trumf, hraj cokoliv. Přebíjí vyšší karta nebo trumf. Kdo vezme zdvih, vynáší další.</p>
                     </div>
 
                     <!-- 4. Bodování -->
                     <div class="feature-card">
-                        <i class="fa-solid fa-calculator f-icon"></i>
+                        <i class="fa-solid fa-calculator f-icon" aria-hidden="true"></i>
                         <h3 class="f-title">Bodování</h3>
                         <p class="f-text">Po skončení kola se sčítá. Za splněný plán bereš body. Za chybu (i když vezmeš <strong>víc</strong> zdvihů, než jsi chtěl) se body nemilosrdně odečítají.</p>
                     </div>
 
                     <!-- 5. Průběh (Kola) -->
                     <div class="feature-card">
-                        <i class="fa-solid fa-arrow-down-up-across-line f-icon"></i>
+                        <i class="fa-solid fa-arrow-down-up-across-line f-icon" aria-hidden="true"></i>
                         <h3 class="f-title">Průběh hry</h3>
                         <p class="f-text">V každém kole počet rozdaných karet klesá (např. 7, 6... 1) a poté opět stoupá (1, 2... 7). Celkově se odehraje dvojnásobný počet kol, než je maximální počet karet na začátku.</p>
                     </div>
 
                     <!-- 6. Cíl -->
                     <div class="feature-card">
-                        <i class="fa-solid fa-trophy f-icon"></i>
+                        <i class="fa-solid fa-trophy f-icon" aria-hidden="true"></i>
                         <h3 class="f-title">Cíl hry</h3>
                         <p class="f-text">Nejde o to vyhrát každou kartu, ale plnit své předpovědi. Cílem je získat největší počet bodů v rámci bodovací tabulky po odehrání všech kol.</p>
                     </div>
@@ -538,27 +633,27 @@
                 <h2 class="section-title"><span>Roadmapa aneb co už to umí a co ještě chystáme</span></h2>
                 <ul class="roadmap-list">
                     <li class="roadmap-item done">
-                        <i class="fa-solid fa-check-circle"></i>
+                        <i class="fa-solid fa-check-circle" aria-hidden="true"></i>
                         <span>Singleplayer verze s chytrou AI</span>
                     </li>
                     <li class="roadmap-item done">
-                        <i class="fa-solid fa-check-circle"></i>
+                        <i class="fa-solid fa-check-circle" aria-hidden="true"></i>
                         <span>Možnost nastavení počtu hráčů</span>
                     </li>
                     <li class="roadmap-item done">
-                        <i class="fa-solid fa-check-circle"></i>
+                        <i class="fa-solid fa-check-circle" aria-hidden="true"></i>
                         <span>Uživatelské účty a přihlašování</span>
                     </li>
                     <li class="roadmap-item done">
-                        <i class="fa-solid fa-check-circle"></i>
+                        <i class="fa-solid fa-check-circle" aria-hidden="true"></i>
                         <span>Záznamník offline her s ukládáním do databáze</span>
                     </li>
                     <li class="roadmap-item locked">
-                        <i class="fa-solid fa-lock"></i>
+                        <i class="fa-solid fa-lock" aria-hidden="true"></i>
                         <span>Chytřejší algoritmus botů</span>
                     </li>
                     <li class="roadmap-item locked">
-                        <i class="fa-solid fa-lock"></i>
+                        <i class="fa-solid fa-lock" aria-hidden="true"></i>
                         <span>Online Multiplayer (živí hráči proti sobě)</span>
                     </li>
                 </ul>
@@ -566,17 +661,20 @@
         </section>
 
         <footer>
-            &copy; <span id="copyright-year">2025</span> – Štychy Online – stychy.cz. Vytvořeno pro zábavu by Juli & Honza.
+            &copy; <span id="copyright-year">2025</span> – Štychy Online – stychy.cz. Vytvořeno pro zábavu by Juli &amp; Honza.
+            <span style="display:block; margin-top:8px; font-family: var(--mono); font-size: 0.82rem; opacity: 0.7;">
+                v1.5.0 · <a href="login.html#kontakt" style="color: var(--text-muted); text-decoration: none;">Kontakt</a>
+            </span>
         </footer>
     </div>
 
     <script>
         let selectedPlayers = 8;
 
-        function selectPlayers(num) {
+        function selectPlayers(num, el) {
             selectedPlayers = num;
             document.querySelectorAll('.p-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            (el || (typeof event !== 'undefined' && event.currentTarget)).classList.add('active');
         }
 
         function startGame() {
@@ -589,6 +687,144 @@
         const startYear = 2025;
         const yearDisplay = currentYear > startYear ? `${startYear}–${currentYear}` : startYear;
         document.getElementById('copyright-year').textContent = yearDisplay;
+
+        // --- Standardní hamburger menu ---
+        (function () {
+            const nav = document.getElementById('mainNav');
+            const toggle = document.getElementById('navToggle');
+            const icon = toggle.querySelector('i');
+
+            function setOpen(open) {
+                nav.classList.toggle('nav-open', open);
+                toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+                toggle.setAttribute('aria-label', open ? 'Zavřít menu' : 'Otevřít menu');
+                icon.className = open ? 'fa-solid fa-xmark' : 'fa-solid fa-bars';
+            }
+
+            toggle.addEventListener('click', function (e) {
+                e.stopPropagation();
+                setOpen(!nav.classList.contains('nav-open'));
+            });
+
+            // Zavřít po kliknutí na odkaz
+            nav.querySelectorAll('.nav-links a').forEach(a =>
+                a.addEventListener('click', () => setOpen(false))
+            );
+
+            // Zavřít klikem mimo menu
+            document.addEventListener('click', function (e) {
+                if (nav.classList.contains('nav-open') && !nav.contains(e.target)) setOpen(false);
+            });
+
+            // Zavřít klávesou Escape
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') setOpen(false);
+            });
+        })();
+
+        /* --- Ambientní karetní animace v hero (simulace hry dle pravidel + scéna vějíř) --- */
+        (function () {
+            const cv = document.getElementById('fan'); if(!cv) return; const ctx = cv.getContext('2d');
+            const dpr = Math.min(2, window.devicePixelRatio || 1);
+            const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const VALUES = ['A','K','Q','J','10','9','8','7'];
+            const RANK = ['7','8','9','10','J','Q','K','A'];
+            const rankOf = v => RANK.indexOf(v);
+            const SUITS = [['♠','#1a1c2c'],['♥','#d23b3b'],['♦','#d23b3b'],['♣','#1a1c2c']];
+            const rnd = a => a[Math.floor(Math.random()*a.length)];
+            const easeOut = p => 1-Math.pow(1-p,3);
+            const easeIn  = p => p*p*p;
+            const easeIO  = p => p<0.5 ? 4*p*p*p : 1-Math.pow(-2*p+2,3)/2;
+            const MONO = 'ui-monospace, Consolas, monospace';
+
+            let W,H,cx,cy,CW,CH,R, cards=[], trump=null, raf=null, last=0, lastScene=null;
+
+            function size(){
+                const r = cv.getBoundingClientRect();
+                cv.width = Math.max(1,r.width)*dpr; cv.height = Math.max(1,r.height)*dpr;
+                W=cv.width; H=cv.height; cx=W/2; cy=H*0.53;
+                CW=Math.min(W,H)*0.17; CH=CW*1.4; R=Math.min(W,H)*0.33;
+            }
+            function drawCard(c){
+                const w=CW, h=CH, r=CW*0.12;
+                ctx.save(); ctx.translate(c.x,c.y); ctx.rotate(c.ang); ctx.globalAlpha=Math.max(0,c.alpha); ctx.scale(c.scale*(c.sx==null?1:c.sx), c.scale);
+                ctx.shadowColor='rgba(0,0,0,0.4)'; ctx.shadowBlur=14*dpr; ctx.shadowOffsetY=6*dpr;
+                ctx.fillStyle='#f6f7fb'; ctx.beginPath();
+                ctx.moveTo(-w/2+r,-h/2); ctx.arcTo(w/2,-h/2,w/2,h/2,r); ctx.arcTo(w/2,h/2,-w/2,h/2,r); ctx.arcTo(-w/2,h/2,-w/2,-h/2,r); ctx.arcTo(-w/2,-h/2,w/2,-h/2,r);
+                ctx.closePath(); ctx.fill(); ctx.shadowColor='transparent';
+                ctx.strokeStyle = c.glow ? 'rgba(255,204,0,0.9)' : 'rgba(0,0,0,0.08)'; ctx.lineWidth=(c.glow?2:1)*dpr; ctx.stroke();
+                ctx.fillStyle=c.color; ctx.textAlign='left'; ctx.textBaseline='top';
+                ctx.font='700 '+(CW*0.27)+'px '+getComputedStyle(document.body).fontFamily; ctx.fillText(c.val,-w/2+w*0.12,-h/2+h*0.07);
+                ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.font='700 '+(CW*0.6)+'px serif'; ctx.fillText(c.suit,0,h*0.05);
+                ctx.restore();
+            }
+            function tweenTo(c,to,dur,ease,onDone){ c.tw={from:{x:c.x,y:c.y,ang:c.ang,alpha:c.alpha,scale:c.scale,sx:(c.sx==null?1:c.sx)},to,dur,t:0,ease:ease||easeIO,onDone}; }
+            function stepTween(c,dt){ if(!c.tw) return; c.tw.t=Math.min(1,c.tw.t+dt/c.tw.dur); const e=c.tw.ease(c.tw.t); for(const k in c.tw.to){ c[k]=c.tw.from[k]+(c.tw.to[k]-c.tw.from[k])*e; } if(c.tw.t>=1){ const d=c.tw.onDone; c.tw=null; if(d) d(c); } }
+            function ident(c){ c.val=rnd(VALUES); const s=rnd(SUITS); c.suit=s[0]; c.color=s[1]; c.rank=rankOf(c.val); }
+            const after = (ms,fn) => setTimeout(fn, ms);
+            function mk(extra){ return Object.assign({x:cx,y:-CH,ang:0,alpha:0,scale:1,sx:1,tw:null}, extra); }
+            function flip(c){ if(!c) return; tweenTo(c,{sx:0.001},220,easeIn,()=>{ ident(c); tweenTo(c,{sx:1},280,easeOut); }); }
+
+            function trickWinner(played, trumpSuit){
+                const led = played[0].suit; let best = played[0];
+                for(const c of played){ const cT=c.suit===trumpSuit, bT=best.suit===trumpSuit;
+                    if(cT&&!bT) best=c; else if(cT&&bT){ if(c.rank>best.rank) best=c; } else if(!cT&&!bT){ if(c.suit===led && best.suit===led && c.rank>best.rank) best=c; } }
+                return best.p;
+            }
+            function showTrump(){ const s=rnd(SUITS); trump=mk({x:CW*0.85,y:CH*0.72,ang:-0.1,alpha:0,val:rnd(VALUES),suit:s[0],color:s[1],glow:true}); tweenTo(trump,{alpha:1},520,easeOut); }
+            function hideTrump(){ if(!trump) return;
+                tweenTo(trump,{x:cx,y:CH*0.28,ang:trump.ang+Math.PI*3,scale:1.14},440,easeOut,()=>{ if(!trump) return;
+                    tweenTo(trump,{x:W+CW*1.8,y:cy*0.8,ang:trump.ang+Math.PI*4,alpha:0,scale:0.5},660,easeIn,()=>{ trump=null; }); }); }
+
+            function handPos(p,P,k,h){ const a=Math.PI/2+p*(2*Math.PI/P); const ax=cx+Math.cos(a)*R, ay=cy+Math.sin(a)*R; const tx=Math.cos(a+Math.PI/2), ty=Math.sin(a+Math.PI/2); const off=(k-(h-1)/2)*CW*0.5; return { x:ax+tx*off, y:ay+ty*off, ang:a-Math.PI/2+(k-(h-1)/2)*0.14 }; }
+            function trickPos(p,P){ const a=Math.PI/2+p*(2*Math.PI/P); return { x:cx+Math.cos(a)*CW*0.55, y:cy+Math.sin(a)*CW*0.55, ang:(Math.random()-0.5)*0.55 }; }
+            function fanSlot(i,n){ const t=i-(n-1)/2; return { x:cx+t*CW*0.62, y:cy-Math.cos(t*0.5)*CH*0.16, ang:t*0.12 }; }
+
+            function sceneGame(){
+                const P=rnd([3,4,4]); const h=3; cards=[];
+                for(let p=0;p<P;p++) for(let k=0;k<h;k++){ const c=mk({p,k}); ident(c); cards.push(c); }
+                showTrump(); const trumpSuit=trump.suit;
+                let d=0; cards.forEach(c=>{ const hp=handPos(c.p,P,c.k,h); after(280+(d++)*100,()=>{ c.x=cx;c.y=-CH;c.alpha=1; tweenTo(c,{x:hp.x,y:hp.y,ang:hp.ang,alpha:1},520,easeOut); }); });
+                let t=280+cards.length*100+560+450; let leader=Math.floor(Math.random()*P);
+                for(let round=0;round<h;round++){
+                    const order=[]; for(let i=0;i<P;i++) order.push((leader+i)%P);
+                    const played=order.map(p=>{ const c=cards.find(x=>x.p===p&&x.k===round); return {p,suit:c.suit,rank:c.rank}; });
+                    const winner=trickWinner(played,trumpSuit);
+                    order.forEach((p,idx)=>{ const c=cards.find(x=>x.p===p&&x.k===round); const tp=trickPos(p,P); after(t+idx*240,()=>tweenTo(c,{x:tp.x,y:tp.y,ang:tp.ang},420,easeOut)); });
+                    const trickIn=t+P*240+420;
+                    after(trickIn+260,()=>{ const wc=cards.find(x=>x.p===winner&&x.k===round); if(wc) wc.glow=true; });
+                    after(trickIn+780,()=>{ const wa=Math.PI/2+winner*(2*Math.PI/P); for(let p=0;p<P;p++){ const c=cards.find(x=>x.p===p&&x.k===round); if(!c) continue; c.glow=false; tweenTo(c,{x:cx+Math.cos(wa)*R*1.5,y:cy+Math.sin(wa)*R*1.5,alpha:0,scale:0.82},480,easeIn); } });
+                    t=trickIn+780+480+240; leader=winner;
+                }
+                after(t+200, hideTrump); after(t+200+1250, nextScene);
+            }
+            function sceneFan(){
+                const n=5; cards=[]; trump=null;
+                for(let i=0;i<n;i++){ const c=mk({i}); ident(c); cards.push(c); }
+                cards.forEach(c=>after(180+c.i*120,()=>{ const s=fanSlot(c.i,n); c.x=cx;c.y=-CH;c.alpha=1; tweenTo(c,{x:s.x,y:s.y,ang:s.ang,alpha:1},560,easeOut); }));
+                let t=180+n*120+720;
+                after(t,()=>flip(cards[2])); t+=850;
+                after(t,()=>{ const c=cards[0]; const s=fanSlot(c.i,n); const dir=-1; tweenTo(c,{x:c.x+dir*W*0.7,ang:c.ang+dir*0.9,alpha:0},480,easeIn,()=>{ ident(c); c.x=s.x-dir*W*0.7; c.ang=s.ang-dir*0.9; c.alpha=0; tweenTo(c,{x:s.x,ang:s.ang,alpha:1},580,easeOut); }); }); t+=1350;
+                after(t,()=>flip(cards[4]));
+                after(t+160,()=>{ const c=cards[1]; const s=fanSlot(c.i,n); tweenTo(c,{y:s.y-22*dpr,ang:s.ang+0.18},360,easeIO,()=>tweenTo(c,{y:s.y,ang:s.ang},460,easeIO)); }); t+=1150;
+                after(t,()=> cards.forEach(c=> after(c.i*80,()=> tweenTo(c,{y:c.y+H*0.7,alpha:0,ang:c.ang+0.3},480,easeIn))) ); t+=900;
+                after(t, nextScene);
+            }
+            function nextScene(){ const opts=['game','fan']; let s; do { s=rnd(opts); } while(s===lastScene); lastScene=s; (s==='game'?sceneGame:sceneFan)(); }
+            function staticTable(){ const P=4,h=3; cards=[]; for(let p=0;p<P;p++)for(let k=0;k<h;k++){ const c=mk({p,k,alpha:1}); ident(c); const hp=handPos(p,P,k,h); c.x=hp.x;c.y=hp.y;c.ang=hp.ang; cards.push(c); } showTrump(); if(trump) trump.alpha=1; ctx.clearRect(0,0,W,H); cards.forEach(drawCard); if(trump) drawCard(trump); }
+            function loop(ts){ if(!last) last=ts; const dt=Math.min(50,ts-last); last=ts;
+                ctx.clearRect(0,0,W,H);
+                cards.forEach(c=>stepTween(c,dt)); cards.forEach(drawCard);
+                if(trump) stepTween(trump,dt);
+                if(trump){ drawCard(trump); ctx.save(); ctx.globalAlpha=Math.max(0,trump.alpha)*0.7; ctx.fillStyle='#c2c6d6'; ctx.font='600 '+(CW*0.22)+'px '+MONO; ctx.textAlign='center'; ctx.fillText('trumf', trump.x, trump.y-CH*0.66); ctx.restore(); }
+                raf=requestAnimationFrame(loop);
+            }
+            size();
+            if(reduce){ staticTable(); return; }
+            raf=requestAnimationFrame(loop);
+            nextScene();
+            window.addEventListener('resize', size);
+        })();
     </script>
 </body>
 </html>

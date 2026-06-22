@@ -226,6 +226,18 @@
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
+
+        /* Kontaktní sekce */
+        .contact-card { margin-top: 22px; }
+        .contact-intro { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 22px; line-height: 1.6; }
+        .contact-intro a { color: var(--accent); text-decoration: none; }
+        .contact-intro a:hover { text-decoration: underline; }
+        textarea.form-input { padding: 14px 15px; min-height: 110px; resize: vertical; font-family: inherit; }
+        .hp-field { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+        .form-note { color: var(--text-muted); font-size: 0.78rem; margin-top: 14px; text-align: center; }
+        @media (prefers-reduced-motion: reduce) {
+            .btn-primary:hover { transform: none; }
+        }
     </style>
 </head>
 <body>
@@ -270,6 +282,49 @@
             <p class="auth-footer">
                 Nemáte účet? <a href="register.html">Zaregistrujte se</a>
             </p>
+        </div>
+
+        <div class="auth-card contact-card" id="kontakt">
+            <h2 class="auth-title">Zájem o přístup?</h2>
+            <p class="contact-intro">
+                Záznamník her je zatím soukromý. Pokud byste ho chtěli používat, napište mi pár řádků –
+                ozvu se vám. Můžete i přímo na <a href="mailto:honza@tobolik.cz">honza@tobolik.cz</a>.
+            </p>
+
+            <div class="error-message" id="contact-error" role="alert" aria-live="assertive"></div>
+            <div class="success-message" id="contact-success" role="status" aria-live="polite"></div>
+
+            <form id="contact-form" action="api/contact.php" method="post" onsubmit="handleContact(event)">
+                <div class="form-group">
+                    <label class="form-label" for="contact-name">Jméno</label>
+                    <div class="form-input-wrapper">
+                        <i class="fa-solid fa-user" aria-hidden="true"></i>
+                        <input type="text" class="form-input" id="contact-name" name="name" maxlength="100" placeholder="Vaše jméno" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="contact-email">E-mail</label>
+                    <div class="form-input-wrapper">
+                        <i class="fa-solid fa-envelope" aria-hidden="true"></i>
+                        <input type="email" class="form-input" id="contact-email" name="email" placeholder="vas@email.cz" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="contact-message">Zpráva</label>
+                    <textarea class="form-input" id="contact-message" name="message" maxlength="5000" placeholder="Krátce o co máte zájem…" required></textarea>
+                </div>
+
+                <div class="hp-field" aria-hidden="true">
+                    <label>Nevyplňujte<input type="text" id="contact-website" name="website" tabindex="-1" autocomplete="off"></label>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="contact-submit">
+                    <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+                    <span>Odeslat zprávu</span>
+                    <i class="fa-solid fa-spinner loading-spinner" id="contact-loading"></i>
+                </button>
+            </form>
+            <p class="form-note">Vaše jméno a e-mail použiju jen pro odpověď na zprávu.</p>
         </div>
 
         <a href="index.html" class="back-link">
@@ -340,6 +395,47 @@
                 errorMsg.classList.add('show');
             } finally {
                 submitBtn.disabled = false;
+                loading.style.display = 'none';
+            }
+        }
+
+        // Kontaktní formulář (AJAX, bez reloadu)
+        async function handleContact(event) {
+            event.preventDefault();
+            const name = document.getElementById('contact-name').value.trim();
+            const email = document.getElementById('contact-email').value.trim();
+            const message = document.getElementById('contact-message').value.trim();
+            const website = document.getElementById('contact-website').value; // honeypot
+            const btn = document.getElementById('contact-submit');
+            const loading = document.getElementById('contact-loading');
+            const errorMsg = document.getElementById('contact-error');
+            const successMsg = document.getElementById('contact-success');
+
+            errorMsg.classList.remove('show');
+            successMsg.classList.remove('show');
+            btn.disabled = true;
+            loading.style.display = 'inline-block';
+
+            try {
+                const response = await fetch('api/contact.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, message, website })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    successMsg.textContent = result.message || 'Zpráva odeslána. Děkujeme!';
+                    successMsg.classList.add('show');
+                    document.getElementById('contact-form').reset();
+                } else {
+                    errorMsg.textContent = result.error || 'Zprávu se nepodařilo odeslat.';
+                    errorMsg.classList.add('show');
+                }
+            } catch (e) {
+                errorMsg.textContent = 'Chyba připojení. Napište prosím přímo na honza@tobolik.cz.';
+                errorMsg.classList.add('show');
+            } finally {
+                btn.disabled = false;
                 loading.style.display = 'none';
             }
         }
