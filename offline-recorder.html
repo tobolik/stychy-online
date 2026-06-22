@@ -317,7 +317,7 @@
         }
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: repeat(2, 1fr);
             gap: 12px;
         }
         .stat-card {
@@ -1163,6 +1163,9 @@
             .modal-content { padding: 14px; max-height: 96vh; border-radius: 14px; }
             .modal-title { font-size: 1.2rem; }
 
+            /* Statistiky na úzkém mobilu pod sebe (2 sloupce by se tísnily) */
+            .stats-grid { grid-template-columns: 1fr; }
+
             /* Výsledky - hutnější řádky, větší dotyk beze změny výšky */
             .result-row { padding: 4px 8px; margin-bottom: 3px; gap: 8px; }
             .result-row .bid-badge { font-size: 1.7rem; min-width: 1.6em; }
@@ -1274,7 +1277,7 @@
         
         <!-- Footer -->
         <div class="app-footer">
-            <span>Štychy Záznamník v1.5.7</span>
+            <span>Štychy Záznamník v1.5.8</span>
             <span>•</span>
             <span id="build-date">2026-06-22</span>
         </div>
