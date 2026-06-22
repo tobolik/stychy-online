@@ -11,7 +11,7 @@ jobs:
   deploy:
     name: Deploy to SFTP Server
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -21,17 +21,13 @@ jobs:
           rm -rf .git .github
           rm -f config/database.php .gitignore
 
-      - name: Deploy via SFTP
-        uses: Dylan700/sftp-upload-action@v1.2.3
-        with:
-          server: ${{ secrets.SFTP_SERVER }}
-          username: ${{ secrets.SFTP_USERNAME }}
-          password: ${{ secrets.SFTP_PASSWORD }}
-          port: ${{ secrets.SFTP_PORT }}
-          dry-run: true
-          uploads: |
-            ./ => ${{ secrets.SFTP_REMOTE_PATH }}
-          ignore: |
-            .git*
-            .github
-            config/database.php
+      - name: Deploy via lftp (SFTP mirror)
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+          lftp -c "set sftp:auto-confirm yes; \
+            open -u '${{ secrets.SFTP_USERNAME }}','${{ secrets.SFTP_PASSWORD }}' sftp://${{ secrets.SFTP_SERVER }}:${{ secrets.SFTP_PORT }}; \
+            mirror -R --verbose --delete=false \
+              --exclude-glob .git* \
+              --exclude .github/ \
+              --exclude config/database.php \
+              ./ '${{ secrets.SFTP_REMOTE_PATH }}'"
