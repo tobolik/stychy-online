@@ -121,19 +121,31 @@ switch ($action) {
         $stmt->execute([$gameId]);
         $rounds = $stmt->fetchAll();
         
-        // Pro každé kolo načíst výsledky
+        // Výsledky všech kol jedním dotazem (místo N+1) a rozřazení v PHP.
+        // Reference do $rounds: zápis do $byId[id]['results'] mění přímo prvek $rounds.
+        // results=[] inicializujeme pro každé kolo předem, aby kolo bez výsledků nezmizelo.
+        $byId = [];
         foreach ($rounds as &$round) {
-            $stmt = $db->prepare('
-                SELECT rr.*, gp.name as player_name, gp.position
-                FROM round_results rr
-                JOIN game_players gp ON gp.id = rr.player_id
-                WHERE rr.round_id = ?
-                ORDER BY gp.position
-            ');
-            $stmt->execute([$round['id']]);
-            $round['results'] = $stmt->fetchAll();
+            $round['results'] = [];
+            $byId[$round['id']] = &$round;
         }
         unset($round);
+
+        $stmt = $db->prepare('
+            SELECT rr.*, gp.name as player_name, gp.position
+            FROM round_results rr
+            JOIN game_players gp ON gp.id = rr.player_id
+            JOIN rounds r ON r.id = rr.round_id
+            WHERE r.game_id = ?
+            ORDER BY r.round_number, gp.position
+        ');
+        $stmt->execute([$gameId]);
+        while ($row = $stmt->fetch()) {
+            if (isset($byId[$row['round_id']])) {
+                $byId[$row['round_id']]['results'][] = $row;
+            }
+        }
+        unset($byId);
 
         // Přepočítat total_score ze skutečných výsledků kol (ochrana proti double-count)
         $scoreMap = [];
