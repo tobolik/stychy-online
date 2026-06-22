@@ -3,13 +3,6 @@
  * API endpoint pro správu kol
  */
 
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    exit(0);
-}
 
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';
@@ -100,7 +93,7 @@ switch ($action) {
             ]);
         } catch (Exception $e) {
             $db->rollBack();
-            jsonResponse(['success' => false, 'error' => 'Chyba: ' . $e->getMessage()], 500);
+            error_log('rounds.php: ' . $e->getMessage()); jsonResponse(['success' => false, 'error' => 'Chyba serveru.'], 500);
         }
         break;
         
@@ -156,7 +149,7 @@ switch ($action) {
                 'warning' => $warning
             ]);
         } catch (Exception $e) {
-            jsonResponse(['success' => false, 'error' => 'Chyba: ' . $e->getMessage()], 500);
+            error_log('rounds.php: ' . $e->getMessage()); jsonResponse(['success' => false, 'error' => 'Chyba serveru.'], 500);
         }
         break;
         
@@ -232,7 +225,7 @@ switch ($action) {
             ]);
         } catch (Exception $e) {
             $db->rollBack();
-            jsonResponse(['success' => false, 'error' => 'Chyba: ' . $e->getMessage()], 500);
+            error_log('rounds.php: ' . $e->getMessage()); jsonResponse(['success' => false, 'error' => 'Chyba serveru.'], 500);
         }
         break;
         
@@ -341,7 +334,7 @@ switch ($action) {
             ]);
         } catch (Exception $e) {
             $db->rollBack();
-            jsonResponse(['success' => false, 'error' => 'Chyba: ' . $e->getMessage()], 500);
+            error_log('rounds.php: ' . $e->getMessage()); jsonResponse(['success' => false, 'error' => 'Chyba serveru.'], 500);
         }
         break;
         
@@ -415,7 +408,7 @@ switch ($action) {
             ]);
         } catch (Exception $e) {
             $db->rollBack();
-            jsonResponse(['success' => false, 'error' => 'Chyba: ' . $e->getMessage()], 500);
+            error_log('rounds.php: ' . $e->getMessage()); jsonResponse(['success' => false, 'error' => 'Chyba serveru.'], 500);
         }
         break;
         

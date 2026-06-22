@@ -3,14 +3,6 @@
  * API endpoint pro správu her
  */
 
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    exit(0);
-}
-
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';
 
@@ -19,10 +11,8 @@ $db = getDB();
 $input = getJsonInput();
 $action = $input['action'] ?? $_GET['action'] ?? '';
 
-// Pro většinu akcí vyžadujeme přihlášení
-if (!in_array($action, [])) {
-    requireAuth($auth);
-}
+// Všechny akce vyžadují přihlášení
+requireAuth($auth);
 
 $userId = $auth->getUserId();
 
@@ -71,7 +61,7 @@ switch ($action) {
             ]);
         } catch (Exception $e) {
             $db->rollBack();
-            jsonResponse(['success' => false, 'error' => 'Chyba při vytváření hry: ' . $e->getMessage()], 500);
+            error_log('games.php create: ' . $e->getMessage()); jsonResponse(['success' => false, 'error' => 'Chyba serveru.'], 500);
         }
         break;
         
@@ -230,7 +220,7 @@ switch ($action) {
             jsonResponse(['success' => true, 'message' => 'Hra byla ukončena']);
         } catch (Exception $e) {
             $db->rollBack();
-            jsonResponse(['success' => false, 'error' => 'Chyba: ' . $e->getMessage()], 500);
+            error_log('games.php: ' . $e->getMessage()); jsonResponse(['success' => false, 'error' => 'Chyba serveru.'], 500);
         }
         break;
         
