@@ -61,7 +61,7 @@ try {
     if (mb_strlen($message) > 5000) {
         jsonResponse(['success' => false, 'error' => 'Zpráva je příliš dlouhá.'], 400);
     }
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL) || preg_match('/[\r\n]/', $email)) {
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL) || preg_match('/[\r\n<>]/', $email)) {
         jsonResponse(['success' => false, 'error' => 'Neplatný e-mail.'], 400);
     }
 

@@ -7,10 +7,15 @@
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';
 
+// Stavové operace jen přes POST (frontend volá vše přes POST; CSRF defense-in-depth k SameSite=Strict)
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    jsonResponse(['success' => false, 'error' => 'Metoda není povolena'], 405);
+}
+
 $auth = new Auth();
 $db = getDB();
 $input = getJsonInput();
-$action = $input['action'] ?? $_GET['action'] ?? '';
+$action = $input['action'] ?? '';
 
 requireAuth($auth);
 $userId = $auth->getUserId();
@@ -114,7 +119,7 @@ switch ($action) {
         $stmt->execute([$roundId]);
         $round = $stmt->fetch();
         
-        if (!$round || $round['user_id'] != $userId) {
+        if (!$round || (int)$round['user_id'] !== $userId) {
             jsonResponse(['success' => false, 'error' => 'Kolo nenalezeno'], 404);
         }
         
@@ -170,7 +175,7 @@ switch ($action) {
         $stmt->execute([$roundId]);
         $round = $stmt->fetch();
         
-        if (!$round || $round['user_id'] != $userId) {
+        if (!$round || (int)$round['user_id'] !== $userId) {
             jsonResponse(['success' => false, 'error' => 'Kolo nenalezeno'], 404);
         }
 
@@ -233,7 +238,7 @@ switch ($action) {
      * Detail kola
      */
     case 'get':
-        $roundId = intval($input['round_id'] ?? $_GET['round_id'] ?? 0);
+        $roundId = intval($input['round_id'] ?? 0);
         
         $stmt = $db->prepare('
             SELECT r.*, g.user_id
@@ -244,7 +249,7 @@ switch ($action) {
         $stmt->execute([$roundId]);
         $round = $stmt->fetch();
         
-        if (!$round || $round['user_id'] != $userId) {
+        if (!$round || (int)$round['user_id'] !== $userId) {
             jsonResponse(['success' => false, 'error' => 'Kolo nenalezeno'], 404);
         }
         
@@ -284,7 +289,7 @@ switch ($action) {
         $stmt->execute([$roundId]);
         $round = $stmt->fetch();
         
-        if (!$round || $round['user_id'] != $userId) {
+        if (!$round || (int)$round['user_id'] !== $userId) {
             jsonResponse(['success' => false, 'error' => 'Kolo nenalezeno'], 404);
         }
         
@@ -354,7 +359,7 @@ switch ($action) {
         $stmt->execute([$roundId]);
         $round = $stmt->fetch();
         
-        if (!$round || $round['user_id'] != $userId) {
+        if (!$round || (int)$round['user_id'] !== $userId) {
             jsonResponse(['success' => false, 'error' => 'Kolo nenalezeno'], 404);
         }
         

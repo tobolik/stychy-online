@@ -6,10 +6,15 @@
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';
 
+// Stavové operace jen přes POST (frontend volá vše přes POST; CSRF defense-in-depth k SameSite=Strict)
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    jsonResponse(['success' => false, 'error' => 'Metoda není povolena'], 405);
+}
+
 $auth = new Auth();
 $db = getDB();
 $input = getJsonInput();
-$action = $input['action'] ?? $_GET['action'] ?? '';
+$action = $input['action'] ?? '';
 
 // Všechny akce vyžadují přihlášení
 requireAuth($auth);
@@ -69,7 +74,7 @@ switch ($action) {
      * Seznam her uživatele
      */
     case 'list':
-        $status = $input['status'] ?? $_GET['status'] ?? null;
+        $status = $input['status'] ?? null;
         
         $sql = 'SELECT g.*, 
                 (SELECT COUNT(*) FROM rounds WHERE game_id = g.id) as rounds_played
@@ -95,7 +100,7 @@ switch ($action) {
      * Detail hry
      */
     case 'get':
-        $gameId = intval($input['game_id'] ?? $_GET['game_id'] ?? 0);
+        $gameId = intval($input['game_id'] ?? 0);
         
         // Ověření vlastnictví (vyloučit smazané hry - valid_to IS NULL)
         $stmt = $db->prepare('SELECT * FROM games WHERE id = ? AND user_id = ? AND valid_to IS NULL');
