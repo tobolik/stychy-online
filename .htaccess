@@ -1,0 +1,25 @@
+# Bezpečnostní hlavičky (aplikuje se, pokud hosting používá Apache/LiteSpeed;
+# čistý nginx .htaccess ignoruje - pak nastavit ekvivalent v konfiguraci serveru).
+<IfModule mod_headers.c>
+    # Clickjacking
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Content-Security-Policy "frame-ancestors 'self'"
+    # MIME sniffing
+    Header always set X-Content-Type-Options "nosniff"
+    # Referrer
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    # Oprávnění prohlížeče (mikrofon povolen kvůli hlasovému ovládání záznamníku)
+    Header always set Permissions-Policy "geolocation=(), camera=(), microphone=(self)"
+    # HSTS (web běží na HTTPS)
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+</IfModule>
+
+# Zákaz výpisu adresářů
+Options -Indexes
+
+# Blokace přístupu k citlivým souborům (pokud by se na server dostaly)
+<IfModule mod_authz_core.c>
+    <FilesMatch "(^\.|\.(sql|md|example\.php|yml|yaml)$|database\.php)">
+        Require all denied
+    </FilesMatch>
+</IfModule>

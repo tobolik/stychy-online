@@ -3,6 +3,16 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.5.6] – 2026-06-22
+
+### Bezpečnost
+- Přidán `.htaccess` s bezpečnostními hlavičkami (X-Frame-Options, CSP frame-ancestors,
+  X-Content-Type-Options, Referrer-Policy, Permissions-Policy, HSTS), zákaz výpisu adresářů
+  a blokace citlivých souborů. Aplikuje se na Apache/LiteSpeed; na čistém nginxu nutno
+  nastavit ekvivalent v konfiguraci serveru.
+- Pozn.: CSRF je krytý `SameSite=Strict` cookie; plná CSP politika (script/style-src) by
+  vyžadovala refaktor inline kódu – ponecháno jako vědomé rozhodnutí.
+
 ## [1.5.5] – 2026-06-22
 
 ### Bezpečnost (audit OWASP)
