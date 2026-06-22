@@ -3,6 +3,12 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.5.2] – 2026-06-22
+
+### Změněno
+- Kontaktní formulář přesunut z login.html na **úvodní stránku** (index.html, sekce „Napište nám"),
+  oslovení změněno na množné „Napište nám". Odkaz „Kontakt" ve footeru vede na `#kontakt`.
+
 ## [1.5.1] – 2026-06-22
 
 ### Změněno
