@@ -326,6 +326,9 @@
             padding: 15px;
             text-align: center;
         }
+        /* Roast vs pozitivní ocenění - jemné barevné odlišení */
+        .stat-card.award-positive { border-top: 3px solid var(--success); }
+        .stat-card.award-roast { border-top: 3px solid var(--warning); }
         .stat-value {
             font-size: 1.8rem;
             font-weight: bold;
@@ -1266,9 +1269,9 @@
         
         <!-- Footer -->
         <div class="app-footer">
-            <span>Štychy Záznamník v1.3.4</span>
+            <span>Štychy Záznamník v1.4.0</span>
             <span>•</span>
-            <span id="build-date">2026-01-25</span>
+            <span id="build-date">2026-06-22</span>
         </div>
     </div>
 
@@ -4098,6 +4101,87 @@
             }
         }
 
+        // Roast ocenění - definice poolu (8 roast + 6 pozitivních)
+        // Každé: strength(p) vrací surové číslo (vyšší = víc si zaslouží), value(p) je zobrazený údaj.
+        function getAwardPool() {
+            const ws = (p) => (p.worstScore ?? 0);
+            const bs = (p) => (p.bestScore ?? 0);
+            return [
+                // Roast
+                { id: 'wooden_spoon', emoji: '🥄', label: 'Dřevěná vařečka', kind: 'roast', strength: p => -p.total_score, value: p => `${p.total_score} b` },
+                { id: 'black_hole', emoji: '🕳️', label: 'Černá díra', kind: 'roast', strength: p => -ws(p), value: p => `${ws(p)} v jednom kole` },
+                { id: 'brick', emoji: '🧱', label: 'Cihla', kind: 'roast', strength: p => 100 - p.successRate, value: p => `${p.successRate}% úspěšnost` },
+                { id: 'heartbreaker', emoji: '💔', label: 'Zklamání', kind: 'roast', strength: p => p.failCount, value: p => `${p.failCount}× nesplnil` },
+                { id: 'greedy_pig', emoji: '🐷', label: 'Hamoun', kind: 'roast', strength: p => p.totalBid - p.totalWon, value: p => `nahlásil o ${p.totalBid - p.totalWon} víc, než urval` },
+                { id: 'coward', emoji: '🐔', label: 'Strašpytel', kind: 'roast', strength: p => p.zeroCount, value: p => `${p.zeroCount}× hlásil nulu` },
+                { id: 'rollercoaster', emoji: '🎢', label: 'Horská dráha', kind: 'roast', strength: p => bs(p) - ws(p), value: p => `rozkmit ${bs(p) - ws(p)} bodů` },
+                { id: 'vabank', emoji: '🎲', label: 'Vabank', kind: 'roast', strength: p => p.maxBid, value: p => `nejvyšší sázka ${p.maxBid}` },
+                // Pozitivní
+                { id: 'sniper', emoji: '🎯', label: 'Odstřelovač', kind: 'positive', strength: p => p.successRate, value: p => `${p.successRate}% úspěšnost` },
+                { id: 'iron', emoji: '🧊', label: 'Ledový klid', kind: 'positive', strength: p => p.successCount, value: p => `${p.successCount}× splnil` },
+                { id: 'high_roller', emoji: '🎰', label: 'Vysoká hra', kind: 'positive', strength: p => p.totalBid, value: p => `nahlásil celkem ${p.totalBid}` },
+                { id: 'harvester', emoji: '🌾', label: 'Sklízeč', kind: 'positive', strength: p => p.totalWon, value: p => `urval ${p.totalWon} štychů` },
+                { id: 'champion', emoji: '👑', label: 'Šampion', kind: 'positive', strength: p => p.total_score, value: p => `${p.total_score} bodů` },
+                { id: 'comeback', emoji: '📈', label: 'Hvězda večera', kind: 'positive', strength: p => bs(p), value: p => `+${bs(p)} v jednom kole` }
+            ];
+        }
+
+        // Greedy unikátní přiřazení: každý hráč právě 1 ocenění, poražený dostane roast.
+        function assignAwards(players) {
+            const pool = getAwardPool();
+            const n = players.length;
+
+            // Normalizovaná matice sil (0..1 per ocenění; plochá metrika -> 0)
+            const S = {};
+            pool.forEach(a => {
+                const raw = players.map(p => ({ pos: p.position, v: a.strength(p) }));
+                const vals = raw.map(r => r.v);
+                const min = Math.min(...vals), max = Math.max(...vals);
+                const m = {};
+                raw.forEach(r => { m[r.pos] = (max === min) ? 0 : (r.v - min) / (max - min); });
+                S[a.id] = m;
+            });
+
+            const usedAwards = new Set();
+            const usedPos = new Set();
+            const result = {};
+
+            // 1) Poražený první -> nejsilnější roast (deterministický tiebreak)
+            const loser = [...players].sort((a, b) =>
+                a.total_score - b.total_score || b.failCount - a.failCount || a.position - b.position
+            )[0];
+            let bestRoast = null, bestS = -Infinity;
+            pool.filter(a => a.kind === 'roast').forEach(a => {
+                const s = S[a.id][loser.position];
+                if (s > bestS) { bestS = s; bestRoast = a; }
+            });
+            if (!bestRoast) bestRoast = pool.find(a => a.id === 'wooden_spoon');
+            result[loser.position] = bestRoast;
+            usedAwards.add(bestRoast.id);
+            usedPos.add(loser.position);
+
+            // 2) Greedy: nejsilnější dvojice (hráč x ocenění), deterministický tiebreak
+            const cand = [];
+            pool.forEach(a => players.forEach(p => {
+                cand.push({ s: S[a.id][p.position], aid: a.id, award: a, pos: p.position });
+            }));
+            cand.sort((x, y) => y.s - x.s || (x.aid < y.aid ? -1 : x.aid > y.aid ? 1 : 0) || x.pos - y.pos);
+            for (const c of cand) {
+                if (usedPos.size === n) break;
+                if (usedAwards.has(c.aid) || usedPos.has(c.pos)) continue;
+                result[c.pos] = c.award;
+                usedAwards.add(c.aid);
+                usedPos.add(c.pos);
+            }
+
+            // 3) Pojistka (pool >= hráči -> nedosažitelné)
+            const generic = { emoji: '🃏', label: 'Solidní průměr', kind: 'positive', value: () => '' };
+            return players.map(p => {
+                const a = result[p.position] || generic;
+                return { position: p.position, name: p.name, emoji: a.emoji, label: a.label, kind: a.kind, value: a.value ? a.value(p) : '' };
+            });
+        }
+
         // Statistics
         function openStatsModal() {
             if (!currentGame || !currentGame.rounds || currentGame.rounds.length === 0) {
@@ -4120,7 +4204,9 @@
             const playerStats = {};
             players.forEach(p => {
                 playerStats[p.position] = {
+                    position: p.position,
                     name: p.name,
+                    total_score: parseInt(p.total_score) || 0,
                     totalBid: 0,
                     totalWon: 0,
                     successCount: 0,
@@ -4135,8 +4221,8 @@
             // Calculate per-round and per-player stats
             let totalOverbid = 0;
             let totalUnderbid = 0;
-            let perfectRounds = 0;
             let disasterRounds = 0;
+            let maxOverbid = { num: 0, delta: 0 };
             let bestRound = { num: 0, successRate: 0 };
             let worstRound = { num: 0, successRate: 100 };
 
@@ -4173,9 +4259,11 @@
                 const cardsCount = round.cards_count;
                 if (roundBidSum > cardsCount) totalOverbid++;
                 if (roundBidSum < cardsCount) totalUnderbid++;
-                
+
+                const overbidDelta = roundBidSum - cardsCount;
+                if (overbidDelta > maxOverbid.delta) maxOverbid = { num: round.round_number, delta: overbidDelta };
+
                 const successRate = (roundSuccesses / players.length) * 100;
-                if (successRate === 100) perfectRounds++;
                 if (successRate === 0) disasterRounds++;
                 
                 if (successRate > bestRound.successRate) {
@@ -4203,13 +4291,9 @@
                 }
             });
 
-            // Find award winners
-            const sniper = [...playerList].sort((a, b) => b.successRate - a.successRate)[0];
-            const gambler = [...playerList].sort((a, b) => b.totalBid - a.totalBid)[0];
-            const cautious = [...playerList].sort((a, b) => b.zeroCount - a.zeroCount)[0];
-            const lucky = [...playerList].sort((a, b) => b.totalWon - a.totalWon)[0];
-            const ambitious = [...playerList].sort((a, b) => parseFloat(b.avgBid) - parseFloat(a.avgBid))[0];
-            
+            // Roast ocenění - každý hráč dostane právě 1 unikátní titul
+            const awards = assignAwards(playerList);
+
             // Score spread
             const sortedByScore = [...players].sort((a, b) => b.total_score - a.total_score);
             const scoreSpread = sortedByScore[0].total_score - sortedByScore[sortedByScore.length - 1].total_score;
@@ -4220,12 +4304,12 @@
                 players: playerList,
                 totalOverbid,
                 totalUnderbid,
-                perfectRounds,
+                maxOverbid,
                 disasterRounds,
                 bestRound,
                 worstRound,
                 scoreSpread,
-                awards: { sniper, gambler, cautious, lucky, ambitious }
+                awards
             };
         }
 
@@ -4247,8 +4331,9 @@
                             <div class="stat-label">Odehraná kola</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-value">${stats.perfectRounds}</div>
-                            <div class="stat-label">Kol, kde všichni splnili</div>
+                            <div class="stat-value">${stats.maxOverbid.delta > 0 ? 'Kolo ' + stats.maxOverbid.num : '–'}</div>
+                            <div class="stat-label">Nejvíc přehlášené kolo</div>
+                            ${stats.maxOverbid.delta > 0 ? `<div class="stat-player">+${stats.maxOverbid.delta} přes počet karet</div>` : ''}
                         </div>
                         <div class="stat-card">
                             <div class="stat-value">${stats.disasterRounds}</div>
@@ -4262,32 +4347,19 @@
                 </div>
             `;
 
-            // Section 2: Ocenění
+            // Section 2: Ocenění - karta na každého hráče (item 10)
+            const awardCards = stats.awards.map(a => `
+                <div class="stat-card award-${a.kind}">
+                    <div class="stat-value">${a.emoji}</div>
+                    <div class="stat-player" style="font-weight: bold;">${escapeHtml(a.name)}</div>
+                    <div class="stat-label">${escapeHtml(a.label)}</div>
+                    ${a.value ? `<div class="stat-label" style="opacity: 0.75;">${escapeHtml(a.value)}</div>` : ''}
+                </div>
+            `).join('');
             html += `
                 <div class="stats-section">
                     <div class="stats-section-title"><i class="fa-solid fa-award"></i> Ocenění</div>
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-value">🎯</div>
-                            <div class="stat-label">Sniper (nejvyšší úspěšnost)</div>
-                            <div class="stat-player">${stats.awards.sniper.name} (${stats.awards.sniper.successRate}%)</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">🎰</div>
-                            <div class="stat-label">Gambler (nejvíce hlášeno)</div>
-                            <div class="stat-player">${stats.awards.gambler.name} (${stats.awards.gambler.totalBid})</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">🛡️</div>
-                            <div class="stat-label">Opatrný (nejvíce nul)</div>
-                            <div class="stat-player">${stats.awards.cautious.name} (${stats.awards.cautious.zeroCount}×)</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">🍀</div>
-                            <div class="stat-label">Šťastlivec (nejvíce uhrál)</div>
-                            <div class="stat-player">${stats.awards.lucky.name} (${stats.awards.lucky.totalWon})</div>
-                        </div>
-                    </div>
+                    <div class="stats-grid">${awardCards}</div>
                 </div>
             `;
 
