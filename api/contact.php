@@ -92,7 +92,7 @@ try {
 
     if (@mail($to, $encodedSubject, $body, $headers)) {
         $_SESSION[$rateKey] = time();
-        jsonResponse(['success' => true, 'message' => 'Zpráva odeslána. Děkujeme, ozvu se vám.']);
+        jsonResponse(['success' => true, 'message' => 'Zpráva odeslána. Děkujeme, ozveme se vám.']);
     } else {
         error_log('contact.php: mail() selhal pro ' . $email);
         jsonResponse(['success' => false, 'error' => 'Zprávu se nepodařilo odeslat. Zkuste to prosím později nebo napište přímo na honza@tobolik.cz.'], 500);
