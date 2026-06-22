@@ -3,6 +3,15 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.5.1] – 2026-06-22
+
+### Změněno
+- **Sjednocené verzování:** footer ukazuje stejnou verzi na všech stránkách
+  (úvodní i záznamník), místo dřívějších rozdílných čísel (1.5.0 vs 1.4.4).
+- Kontaktní sekce na login.html přejmenována ze „Zájem o přístup?" na neutrální
+  „Napište mi" (registrace je otevřená, zápisy jsou soukromé per uživatel –
+  žádost o přístup není potřeba).
+
 ## [1.5.0] – 2026-06-22
 
 Vizuální refresh úvodní stránky (`index.html`). Texty beze změny.
