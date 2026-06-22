@@ -13,6 +13,10 @@ Vizuální refresh úvodní stránky (`index.html`). Texty beze změny.
   se scénou „vějíř" (otočení karty, odlet/přílet, zhoupnutí), trumf na konci hry
   efektně odletí obloukem. Respektuje `prefers-reduced-motion`.
 - Sticky horní lišta s **hamburger menu** pro mobil (☰↔✕, zavírání link/mimo/Escape, aria).
+- **Kontaktní formulář** na login.html (sekce „Zájem o přístup") + `api/contact.php` –
+  AJAX bez reloadu, e-maily na honza@tobolik.cz, honeypot anti-spam, rate-limit,
+  bezpečné hlavičky (pevné From, Reply-To, ochrana proti header injection).
+  Diskrétní odkaz „Kontakt" ve footeru index.html.
 
 ### Změněno
 - Mobilní optimalizace úvodní stránky (hero pod sebe, animace nad obsahem).
