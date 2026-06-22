@@ -3,6 +3,11 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.5.4] – 2026-06-22
+
+### Změněno
+- Kontaktní formulář: zprávy chodí i na **julie@tobolikova.cz** (vedle honza@tobolik.cz).
+
 ## [1.5.3] – 2026-06-22
 
 ### Změněno

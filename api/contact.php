@@ -73,7 +73,7 @@ try {
     }
 
     // Sestavení e-mailu — From pevné (SPF/doručitelnost), Reply-To = odesílatel
-    $to      = 'honza@tobolik.cz';
+    $to      = 'honza@tobolik.cz, julie@tobolikova.cz';
     $subject = 'Stychy.cz – kontakt: ' . mb_substr(strip_tags($name), 0, 60);
     $body  = "Nová zpráva z kontaktního formuláře na stychy.cz\n\n";
     $body .= 'Jméno: ' . strip_tags($name) . "\n";
