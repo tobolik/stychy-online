@@ -3,6 +3,15 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.5.9] – 2026-06-23
+
+### Výkon
+- Font Awesome se načítá **neblokujícím způsobem** (preload → stylesheet swap + `<noscript>`
+  fallback, SRI zachován) na všech stránkách – nečeká se na 102KB icon font před vykreslením.
+- `api/games.php` detail hry: výsledky všech kol staženy **jedním dotazem** místo N+1
+  (1 hra ≈ 3 dotazy místo ~17), seskupení v PHP. Odpověď beze změny, kolo bez výsledků
+  se neztratí (defenzivní inicializace).
+
 ## [1.5.8] – 2026-06-22
 
 ### Změněno
