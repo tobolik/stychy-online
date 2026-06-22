@@ -24,10 +24,13 @@ jobs:
       - name: Deploy via lftp (SFTP mirror)
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+          # POZOR: deploy je VÝHRADNĚ upload-only. NIKDY nepřidávat --delete ani remote rm –
+          # smazalo by to soubory existující jen na serveru (zejm. config/database.php) a shodilo web.
+          # Celý config/ je z mirroru vyloučen, aby se serverová konfigurace nikdy nepřepsala/nesmazala.
           {
             echo "set sftp:auto-confirm yes"
             echo "open -u \"${{ secrets.SFTP_USERNAME }}\",\"${{ secrets.SFTP_PASSWORD }}\" sftp://${{ secrets.SFTP_SERVER }}:${{ secrets.SFTP_PORT }}"
-            echo "mirror -R --verbose --exclude-glob .git* --exclude .github/ --exclude config/database.php ./ ${{ secrets.SFTP_REMOTE_PATH }}"
+            echo "mirror -R --verbose --exclude-glob .git* --exclude .github/ --exclude config/ ./ ${{ secrets.SFTP_REMOTE_PATH }}"
             echo "bye"
           } > /tmp/lftp_script.txt
           lftp -f /tmp/lftp_script.txt
