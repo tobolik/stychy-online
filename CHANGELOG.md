@@ -3,6 +3,17 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.5.7] – 2026-06-22
+
+### Bezpečnost (hardening po druhém auditu)
+- **SRI** integrity + `crossorigin` na Font Awesome CDN (index/login/register/záznamník) –
+  ochrana proti kompromitaci/MITM externího zdroje.
+- **API jen přes POST**: `auth.php`, `games.php`, `rounds.php` odmítnou ne-POST (405) a už
+  nečtou `action`/`game_id`/`status` z querystringu – CSRF defense-in-depth k `SameSite=Strict`.
+- `game.html`: jména hráčů escapována (`escapeHtml`) před vložením do `innerHTML` (self-XSS hygiena).
+- Ownership check v `rounds.php` na striktní porovnání `(int) !==` (místo volného `!=`).
+- Kontaktní formulář: do anti-injection regexu e-mailu přidány znaky `<>`.
+
 ## [1.5.6] – 2026-06-22
 
 ### Bezpečnost

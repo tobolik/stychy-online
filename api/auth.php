@@ -32,9 +32,14 @@ try {
     require_once __DIR__ . '/../includes/auth.php';
     require_once __DIR__ . '/../includes/helpers.php';
 
+    // Stavové operace jen přes POST (frontend volá vše přes POST; CSRF defense-in-depth k SameSite=Strict)
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        jsonResponse(['success' => false, 'error' => 'Metoda není povolena'], 405);
+    }
+
     $auth = new Auth();
     $input = getJsonInput();
-    $action = $input['action'] ?? $_GET['action'] ?? '';
+    $action = $input['action'] ?? '';
 
     switch ($action) {
         case 'register':

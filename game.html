@@ -840,10 +840,16 @@
         document.getElementById('results-modal').classList.remove('hidden');
     }
 
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text == null ? '' : String(text);
+        return div.innerHTML;
+    }
+
     function renderScoreTable() {
         const body = document.getElementById('score-body');
         const foot = document.getElementById('score-foot');
-        document.getElementById('score-head').innerHTML = '<tr><th>#</th>' + game.players.map(p => `<th>${p.name.substring(0,3)}</th>`).join('') + '</tr>';
+        document.getElementById('score-head').innerHTML = '<tr><th>#</th>' + game.players.map(p => `<th>${escapeHtml(p.name.substring(0,3))}</th>`).join('') + '</tr>';
         body.innerHTML = game.scoreHistory.map((r, i) => 
             `<tr><td>${i+1}.</td>` + r.map(s => `<td class="${s>=0?'plus':'minus'}">${s}</td>`).join('') + '</tr>'
         ).join('');
@@ -890,7 +896,7 @@
             let bidHtml = p.hasBid ? `<span class="bid-highlight">${p.bid}</span>` : '?';
             
             div.innerHTML = `<div class="player-info">
-                <div>${dealerHtml}<strong>${p.name}</strong></div>
+                <div>${dealerHtml}<strong>${escapeHtml(p.name)}</strong></div>
                 <div class="status-line">Štychy: ${p.won} / ${bidHtml}</div>
                 <div style="font-size:0.8em; opacity:0.7">Body: ${p.score}</div>
             </div>`;
