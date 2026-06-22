@@ -17,8 +17,8 @@ verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji v
 ## [1.4.3] – 2026-06-22
 
 ### Změněno
-- Statistiky: ocenění **Vabank** nově ukazuje i počet uhraných štychů v kole s nejvyšší sázkou
-  (např. „nejvyšší sázka 5 (uhrál 4)").
+- Statistiky: ocenění **Vabank** nově ukazuje i kolik bodů ta nejvyšší sázka přinesla
+  (např. „nejvyšší sázka 2 (+12 b)").
 
 ## [1.4.2] – 2026-06-22
 
