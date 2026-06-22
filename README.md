@@ -1,15 +1,21 @@
 # Štychy Online
 
-Online verze klasické české karetní hry Štychy.
+Online verze klasické české karetní hry Štychy (trick-taking, varianta „Oh Hell").
 
-🎮 **Demo:** [stychy.cz](https://stychy.cz)
+🎮 **Demo:** [stychy.cz](https://stychy.cz) · 📋 [CHANGELOG](CHANGELOG.md)
+
+> Tenhle projekt je zároveň **ukázka**, jak může 16letá studentka (Juli) postavit
+> funkční webovou appku s pomocí AI. Není to komerční produkt, ale showcase procesu.
 
 ## Funkce
 
-- 🃏 **Hra proti AI** - Singleplayer verze s chytrými boty (3-7 hráčů)
-- 📝 **Záznamník offline her** - Zapisujte výsledky her s přáteli
-- 👤 **Uživatelské účty** - Registrace a přihlášení
-- 📊 **Historie her** - Ukládání výsledků do databáze
+- 🃏 **Hra proti AI** – singleplayer s boty (3–11 hráčů, 1–2 balíčky)
+- 📝 **Záznamník offline her** – zapisování sázek a štychů po kolech s přáteli
+- 🏆 **Roast statistiky** – po hře dostane každý hráč vtipné ocenění (poslední vždy „roast")
+- 🎙️ **Hlasové ovládání** – zadávání hlášení a výsledků českými povely
+- 📱 **Mobilní optimalizace** – zápis kola se vejde na jednu obrazovku telefonu
+- 👤 **Uživatelské účty** – registrace a přihlášení
+- 📊 **Historie her** – ukládání výsledků do databáze
 
 ## Instalace
 
@@ -42,6 +48,26 @@ Online verze klasické české karetní hry Štychy.
 4. **Nahrajte na server**
    - FTP/SFTP upload na váš hosting
 
+## Lokální vývoj (Docker)
+
+Pro rychlé lokální prostředí (PHP + MySQL) bez instalace:
+
+```bash
+docker compose -f docker-compose.dev.yml up -d --build
+# web: http://localhost:8088
+```
+
+Docker soubory jsou v `.gitignore` a nikdy se nedeployují.
+
+## Nasazení
+
+Produkce (**stychy.cz**) se nasazuje automaticky přes GitHub Actions
+([.github/workflows/deploy.yml](.github/workflows/deploy.yml)) při **push/merge do `master`**
+– SFTP upload přes `lftp`. Žádné staging prostředí; merge do `master` jde rovnou živě.
+
+Verze je ve footeru aplikace (`vX.Y.Z`); při releasu se zapisuje do [CHANGELOG.md](CHANGELOG.md).
+Detailní pokyny pro vývoj viz [CLAUDE.md](CLAUDE.md).
+
 ## Struktura projektu
 
 ```
@@ -59,11 +85,15 @@ stychy/
 │   ├── auth.php           # Auth třída
 │   ├── db.php             # DB připojení
 │   └── helpers.php        # Pomocné funkce
-├── index.html             # Hlavní stránka
+├── database/migrations/    # DB migrace
+├── docs/                   # Plány, audity, handoffy
+├── index.html             # Úvodní stránka
 ├── game.html              # Hra proti AI
 ├── login.html             # Přihlášení
 ├── register.html          # Registrace
-└── offline-recorder.html  # Záznamník her
+├── offline-recorder.html  # Záznamník her (hlavní appka)
+├── CHANGELOG.md           # Historie verzí
+└── CLAUDE.md              # Pokyny pro vývoj (AI/dev)
 ```
 
 ## Pravidla hry
@@ -78,10 +108,10 @@ stychy/
 
 ## Autoři
 
-Vytvořeno s ❤️ pomocí AI
+Vytvořeno s ❤️ a pomocí AI – jako ukázka, co dnes zvládne junior s dobrými nástroji.
 
-- **Honza** - AI konzultant a školitel
-- **Juli** - Studentka gymnázia
+- **Juli** – studentka gymnázia, herní logika a design
+- **Honza** – AI konzultant a školitel, příběh a nasazení
 
 ## Licence
 
