@@ -26,8 +26,13 @@ jobs:
           sudo apt-get update -qq && sudo apt-get install -y -qq lftp
           {
             echo "set sftp:auto-confirm yes"
+            echo "set cmd:fail-exit no"
             echo "open -u \"${{ secrets.SFTP_USERNAME }}\",\"${{ secrets.SFTP_PASSWORD }}\" sftp://${{ secrets.SFTP_SERVER }}:${{ secrets.SFTP_PORT }}"
             echo "mirror -R --verbose --exclude-glob .git* --exclude .github/ --exclude config/database.php ./ ${{ secrets.SFTP_REMOTE_PATH }}"
+            # úklid starých citlivých souborů z dřívějších deployů (mirror je sám nemaže)
+            echo "rm -f ${{ secrets.SFTP_REMOTE_PATH }}/api/test.php"
+            echo "rm -rf ${{ secrets.SFTP_REMOTE_PATH }}/database"
+            echo "rm -f ${{ secrets.SFTP_REMOTE_PATH }}/config/database.example.php"
             echo "bye"
           } > /tmp/lftp_script.txt
           lftp -f /tmp/lftp_script.txt
