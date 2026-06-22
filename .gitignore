@@ -1,6 +1,11 @@
 # Konfigurace s hesly - NIKDY necommitovat!
 config/database.php
 
+# Lokální testovací Docker prostředí (NE produkce)
+docker-compose.dev.yml
+Dockerfile.dev
+config/database.docker.php
+
 # Zálohy
 *.bak
 *.backup

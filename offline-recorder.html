@@ -18,6 +18,11 @@
             --danger: #ff5e5e;
             --success: #2ecc71;
             --warning: #ffcc00;
+            /* Aliasy pro proměnné používané v kódu, ale dříve nedefinované */
+            --primary: var(--accent);
+            --card-bg: var(--surface);
+            --text: var(--text-main);
+            --bg-main: var(--bg-color);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -321,6 +326,9 @@
             padding: 15px;
             text-align: center;
         }
+        /* Roast vs pozitivní ocenění - jemné barevné odlišení */
+        .stat-card.award-positive { border-top: 3px solid var(--success); }
+        .stat-card.award-roast { border-top: 3px solid var(--warning); }
         .stat-value {
             font-size: 1.8rem;
             font-weight: bold;
@@ -538,6 +546,7 @@
             overflow-y: auto;
             z-index: 1000;
             display: none;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
         }
         .autocomplete-list.show {
             display: block;
@@ -597,6 +606,12 @@
             font-size: 1.1rem;
             font-weight: bold;
             transform: rotate(180deg);
+        }
+
+        .cards-count-big {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--accent);
         }
 
         .trump-value-selector {
@@ -787,7 +802,7 @@
         .result-row {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            gap: 10px;
             padding: 6px 10px;
             background: rgba(0,0,0,0.2);
             border-radius: 6px;
@@ -800,22 +815,44 @@
         }
         .result-row .player-info {
             flex: 1;
+            min-width: 0;
         }
         .result-row .player-name {
             font-weight: bold;
             font-size: 1rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .result-row .player-bid {
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        /* Velké číslo nahlášených štychů v prázdném místě řádku (item 6c) */
+        .result-row .bid-badge {
+            flex: 0 0 auto;
+            min-width: 2.2em;
+            text-align: center;
+            font-size: 1.9rem;
+            font-weight: 800;
+            line-height: 1;
             color: var(--warning);
-            font-size: 0.8rem;
         }
         .result-buttons {
             display: flex;
-            gap: 8px;
+            gap: 6px;
+            flex: 0 0 auto;
         }
         .result-btn {
-            padding: 6px 12px;
-            font-size: 0.85rem;
+            width: 52px;
+            height: 44px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
         }
 
         /* Voice Recognition */
@@ -1048,6 +1085,18 @@
         }
         .trump-display.hearts, .trump-display.diamonds { color: #e74c3c; }
         .trump-display.clubs, .trump-display.spades { color: #2c3e50; }
+        /* Kompaktní varianta trumf pilulky (úspora místa na mobilu) */
+        .trump-display.trump-display-sm { padding: 3px 10px; font-size: 1rem; gap: 4px; }
+
+        /* Kompaktní trumf ve sloupci Karty */
+        .round-trump {
+            display: inline-block;
+            margin-left: 4px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        .round-trump.hearts, .round-trump.diamonds { color: #ff5e5e; }
+        .round-trump.clubs, .round-trump.spades { color: #d0d0d0; }
 
         /* Action Buttons */
         .action-buttons {
@@ -1099,6 +1148,40 @@
             .games-grid {
                 grid-template-columns: 1fr;
             }
+        }
+
+        /* === Mobilní optimalizace zápisu kola (item 4, 6, 6c, 13) === */
+        @media (max-width: 480px) {
+            .mobile-hide { display: none !important; }
+
+            .modal { padding: 6px; }
+            .modal-content { padding: 14px; max-height: 96vh; border-radius: 14px; }
+            .modal-title { font-size: 1.2rem; }
+
+            /* Výsledky - hutnější řádky, větší dotyk beze změny výšky */
+            .result-row { padding: 4px 8px; margin-bottom: 3px; gap: 8px; }
+            .result-row .bid-badge { font-size: 1.7rem; min-width: 1.6em; }
+            .result-btn { width: 50px; height: 42px; }
+            .result-buttons { gap: 6px; }
+
+            /* Hlášení - menší tlačítka, ať se 0..10 vejde na řádek */
+            .bid-input-grid { gap: 4px; }
+            .bid-input-row { padding: 5px 8px; gap: 8px; }
+            .bid-player-name { font-size: 0.95rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .bid-buttons { gap: 4px; flex-wrap: nowrap; overflow-x: auto; flex-shrink: 0; }
+            .bid-btn { width: 32px; height: 32px; font-size: 0.95rem; flex: 0 0 auto; }
+            /* Tabulka kol scrolluje horizontálně už přes .score-table-container (overflow-x:auto). */
+
+            /* Výběr trumfu - kompaktní karty se zachovaným tvarem karty (poměr 3/4) */
+            .trump-selector { grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
+            .trump-suit-btn { min-height: 120px; font-size: 1.9rem; border-radius: 8px; }
+            .trump-suit-btn .trump-val, .trump-suit-btn .trump-val-bottom { font-size: 0.7rem; top: 3px; left: 5px; bottom: 3px; right: 5px; }
+
+            /* Větší klíčové číslovky a hodnoty pro pohodlnější zadávání na mobilu */
+            .cards-count-big { font-size: 2rem; }
+            #bidding-cards-count { font-size: 1.7rem; }
+            .trump-value-selector { flex-wrap: wrap; gap: 6px; }
+            .trump-value-btn { width: 44px; height: 44px; font-size: 1.1rem; }
         }
     </style>
 </head>
@@ -1186,9 +1269,9 @@
         
         <!-- Footer -->
         <div class="app-footer">
-            <span>Štychy Záznamník v1.3.4</span>
+            <span>Štychy Záznamník v1.4.0</span>
             <span>•</span>
-            <span id="build-date">2026-01-25</span>
+            <span id="build-date">2026-06-22</span>
         </div>
     </div>
 
@@ -1216,7 +1299,7 @@
 
                 <div class="form-group">
                     <label class="form-label">Počet hráčů</label>
-                    <div class="player-count-selector">
+                    <div class="player-count-selector" id="player-count-buttons">
                         <button class="player-count-btn" onclick="selectPlayerCount(3)">3</button>
                         <button class="player-count-btn" onclick="selectPlayerCount(4)">4</button>
                         <button class="player-count-btn" onclick="selectPlayerCount(5)">5</button>
@@ -1339,14 +1422,20 @@
                 <button class="close-btn" onclick="closeModal('modal-bidding')">&times;</button>
             </div>
 
-            <p style="margin-bottom: 10px; color: var(--text-muted); font-size: 0.85rem;">
+            <p class="mobile-hide" style="margin-bottom: 10px; color: var(--text-muted); font-size: 0.85rem;">
                 Zadejte hlášení klávesami <strong>0-9</strong>, potvrďte <strong>Enter</strong>.
             </p>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 12px;">
                 <div>
                     <span style="color: var(--text-muted);">Počet karet:</span>
                     <strong id="bidding-cards-count" style="color: var(--accent); font-size: 1.3rem; margin-left: 5px;">7</strong>
+                </div>
+                <div style="display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted);">
+                    Trumf: <span id="bidding-trump" class="trump-display trump-display-sm"></span>
+                </div>
+                <div style="color: var(--text-muted);">
+                    Rozdává: <strong id="bidding-dealer" style="color: var(--text-main); margin-left: 3px;"></strong>
                 </div>
                 <div>
                     <span style="color: var(--text-muted);">Součet hlášení:</span>
@@ -1382,10 +1471,18 @@
                 <button class="close-btn" onclick="closeModal('modal-results')">&times;</button>
             </div>
 
-            <p style="margin-bottom: 10px; color: var(--text-muted);">
+            <p class="mobile-hide" style="margin-bottom: 10px; color: var(--text-muted);">
                 Označte, kdo splnil svůj odhad.
             </p>
-            <div style="margin-bottom: 15px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px; font-size: 0.85rem; color: var(--text-muted);">
+            <div id="results-trump-info" style="margin-bottom: 12px; display: none; align-items: center; flex-wrap: wrap; gap: 8px 16px; font-size: 0.95rem; color: var(--text-muted);">
+                <span><i class="fa-solid fa-cards"></i> Karet: <strong id="results-trump-cards" style="color: var(--text-main);"></strong></span>
+                <span style="display: inline-flex; align-items: center; gap: 6px;">Trumf: <span id="results-trump-card" class="trump-display trump-display-sm"></span></span>
+                <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; margin-left: auto;">
+                    <input type="checkbox" id="detailed-mode" onchange="toggleDetailedMode()" style="width: 18px; height: 18px;">
+                    Zadat přesný počet štychů
+                </label>
+            </div>
+            <div class="mobile-hide" style="margin-bottom: 15px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px; font-size: 0.85rem; color: var(--text-muted);">
                 <strong>Klávesnice:</strong> <span style="color: #ff5e5e;">0 = Nesplnil</span> | <span style="color: #2ecc71;">1 = Splnil</span> | Enter = Uložit
             </div>
 
@@ -1394,27 +1491,20 @@
                 <label style="display: flex; align-items: center; gap: 10px; color: var(--primary); font-size: 0.9rem;">
                     <i class="fa-solid fa-cards"></i> Počet karet v kole:
                     <select id="edit-cards-count" style="padding: 5px 10px; border-radius: 5px; background: var(--card-bg); color: var(--text); border: 1px solid var(--primary);">
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
-                        <option value="6">6</option>
-                        <option value="7">7</option>
-                        <option value="8">8</option>
-                        <option value="9">9</option>
-                        <option value="10">10</option>
+                        <option value="1" style="background: var(--surface); color: var(--text-main);">1</option>
+                        <option value="2" style="background: var(--surface); color: var(--text-main);">2</option>
+                        <option value="3" style="background: var(--surface); color: var(--text-main);">3</option>
+                        <option value="4" style="background: var(--surface); color: var(--text-main);">4</option>
+                        <option value="5" style="background: var(--surface); color: var(--text-main);">5</option>
+                        <option value="6" style="background: var(--surface); color: var(--text-main);">6</option>
+                        <option value="7" style="background: var(--surface); color: var(--text-main);">7</option>
+                        <option value="8" style="background: var(--surface); color: var(--text-main);">8</option>
+                        <option value="9" style="background: var(--surface); color: var(--text-main);">9</option>
+                        <option value="10" style="background: var(--surface); color: var(--text-main);">10</option>
                     </select>
                 </label>
             </div>
             
-            <div style="margin-bottom: 15px;">
-                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: var(--text-muted); font-size: 0.9rem;">
-                    <input type="checkbox" id="detailed-mode" onchange="toggleDetailedMode()" style="width: 18px; height: 18px;">
-                    Zadat přesný počet štychů
-                </label>
-            </div>
-
             <div class="bid-input-grid" id="tricks-inputs">
                 <!-- Dynamicky generováno -->
             </div>
@@ -2659,7 +2749,7 @@
             selectedPlayerCount = 8;
             selectedDecks = 1;
             document.getElementById('new-game-name').value = '';
-            document.querySelectorAll('.player-count-btn').forEach(btn => {
+            document.querySelectorAll('#player-count-buttons .player-count-btn').forEach(btn => {
                 btn.classList.toggle('selected', parseInt(btn.textContent) === 8);
             });
             selectDecks(1);
@@ -2680,7 +2770,7 @@
             prefilledPlayers = currentNames;
             
             selectedPlayerCount = count;
-            document.querySelectorAll('.player-count-btn').forEach(btn => {
+            document.querySelectorAll('#player-count-buttons .player-count-btn').forEach(btn => {
                 btn.classList.toggle('selected', parseInt(btn.textContent) === count);
             });
             renderPlayerNameInputs();
@@ -2892,7 +2982,10 @@
                 const isCurrentRound = round.status !== 'finished';
                 html += `<tr class="${isCurrentRound ? 'current-round-row' : ''}">`;
                 html += `<td class="round-num">${round.round_number}.</td>`;
-                html += `<td>${round.cards_count}</td>`;
+                const roundTrump = (round.trump_suit && round.trump_suit !== 'none')
+                    ? ` <span class="round-trump ${round.trump_suit}">${round.trump_value || ''}${getSuitSymbol(round.trump_suit)}</span>`
+                    : '';
+                html += `<td>${round.cards_count}${roundTrump}</td>`;
 
                 let sumBids = 0;
                 let sumTricks = 0;
@@ -3004,7 +3097,7 @@
             } else if (lastRound.status === 'playing') {
                 // Čekáme na výsledky
                 html += `<button class="btn btn-primary" onclick="openResultsModal()">
-                    <i class="fa-solid fa-calculator"></i> Zadat výsledky
+                    <i class="fa-solid fa-calculator"></i> Zadat výsledky kola
                 </button>`;
                 html += `<button class="btn btn-danger" onclick="deleteRound(${lastRound.id})" title="Smazat kolo">
                     <i class="fa-solid fa-trash"></i>
@@ -3163,7 +3256,7 @@
             for (let i = 0; i < cardsCount; i++) {
                 cardIconsHtml += '<span class="mini-card"></span>';
             }
-            const cardsText = `${cardsCount} ${cardsCount === 1 ? 'karta' : (cardsCount < 5 ? 'karty' : 'karet')}`;
+            const cardsText = `<span class="cards-count-big">${cardsCount}</span> ${cardsCount === 1 ? 'karta' : (cardsCount < 5 ? 'karty' : 'karet')}`;
             document.getElementById('cards-in-round').innerHTML = `<div class="mini-cards-row">${cardIconsHtml}</div>${cardsText}`;
 
             // Reset trump selection
@@ -3258,6 +3351,19 @@
 
             const dealerPosition = lastRound.dealer_position;
             const startPosition = (dealerPosition + 1) % currentGame.players.length;
+
+            // Trumf a rozdávající do info baru (item 8 / metaplán D)
+            const biddingTrump = document.getElementById('bidding-trump');
+            if (lastRound.trump_suit && lastRound.trump_suit !== 'none') {
+                biddingTrump.className = `trump-display trump-display-sm ${lastRound.trump_suit}`;
+                biddingTrump.textContent = `${lastRound.trump_value || ''} ${getSuitSymbol(lastRound.trump_suit)}`;
+            } else {
+                biddingTrump.className = 'trump-display trump-display-sm';
+                biddingTrump.textContent = 'bez trumfu';
+            }
+            biddingTrump.style.display = 'inline-flex';
+            const biddingDealer = currentGame.players.find(p => p.position == dealerPosition);
+            document.getElementById('bidding-dealer').textContent = biddingDealer ? biddingDealer.name : '';
 
             let html = '';
             orderedBiddingPlayers = [];
@@ -3512,6 +3618,20 @@
             document.getElementById('detailed-mode').checked = false;
             document.getElementById('tricks-sum-container').style.display = 'none';
 
+            // Trumf a počet karet kola (item 8)
+            const resultsTrumpInfo = document.getElementById('results-trump-info');
+            const resultsTrumpCard = document.getElementById('results-trump-card');
+            document.getElementById('results-trump-cards').textContent = round.cards_count;
+            if (round.trump_suit && round.trump_suit !== 'none') {
+                resultsTrumpCard.className = `trump-display trump-display-sm ${round.trump_suit}`;
+                resultsTrumpCard.textContent = `${round.trump_value || ''} ${getSuitSymbol(round.trump_suit)}`;
+            } else {
+                resultsTrumpCard.className = 'trump-display trump-display-sm';
+                resultsTrumpCard.textContent = 'bez trumfu';
+            }
+            resultsTrumpCard.style.display = 'inline-flex';
+            resultsTrumpInfo.style.display = 'flex';
+
             // Show/hide cards count edit field
             const cardsCountContainer = document.getElementById('edit-cards-count-container');
             if (isEditMode) {
@@ -3521,8 +3641,14 @@
                 cardsCountContainer.style.display = 'none';
             }
 
-            // Prepare ordered players list
-            orderedResultsPlayers = [...currentGame.players].sort((a, b) => a.position - b.position);
+            // Prepare ordered players list - podle aktuálního kola (rozdávající poslední)
+            const resultsDealerPosition = parseInt(round.dealer_position);
+            const resultsStartPosition = (resultsDealerPosition + 1) % currentGame.players.length;
+            orderedResultsPlayers = [];
+            for (let i = 0; i < currentGame.players.length; i++) {
+                const pos = (resultsStartPosition + i) % currentGame.players.length;
+                orderedResultsPlayers.push(currentGame.players.find(p => p.position == pos));
+            }
 
             renderResultsInputs();
             openModal('modal-results');
@@ -3590,14 +3716,15 @@
                         <div class="result-row ${idx === currentResultsIndex ? 'current-input' : ''}" data-position="${position}" data-index="${idx}" data-bid="${bid}">
                             <div class="player-info">
                                 <div class="player-name">${escapeHtml(player.name)}</div>
-                                <div class="player-bid">Hlásil: <strong>${bid}</strong> ${bid === 1 ? 'štych' : (bid >= 2 && bid <= 4 ? 'štychy' : 'štychů')}</div>
+                                <div class="player-bid">Hlásil</div>
                             </div>
+                            <div class="bid-badge" title="Nahlášené štychy">${bid}</div>
                             <div class="result-buttons">
-                                <button class="result-btn fail ${isFail ? 'selected' : ''}" onclick="setResult(${position}, false, ${bid}, ${idx})">
-                                    <i class="fa-solid fa-times"></i> 0
+                                <button class="result-btn fail ${isFail ? 'selected' : ''}" onclick="setResult(${position}, false, ${bid}, ${idx})" title="Nesplnil (0)" aria-label="Nesplnil">
+                                    <i class="fa-solid fa-times"></i>
                                 </button>
-                                <button class="result-btn success ${isSuccess ? 'selected' : ''}" onclick="setResult(${position}, true, ${bid}, ${idx})">
-                                    <i class="fa-solid fa-check"></i> 1
+                                <button class="result-btn success ${isSuccess ? 'selected' : ''}" onclick="setResult(${position}, true, ${bid}, ${idx})" title="Splnil (1)" aria-label="Splnil">
+                                    <i class="fa-solid fa-check"></i>
                                 </button>
                             </div>
                         </div>
@@ -3932,8 +4059,17 @@
                 }
             }
             
-            const filtered = knownPlayers.filter(name => 
-                name.toLowerCase().includes(value) || value === ''
+            // Jména už zadaná v ostatních pozicích nenabízet
+            const takenNames = new Set();
+            document.querySelectorAll('#player-names-inputs input[type="text"]').forEach(inp => {
+                if (inp !== input && inp.value.trim()) {
+                    takenNames.add(inp.value.trim().toLowerCase());
+                }
+            });
+
+            const filtered = knownPlayers.filter(name =>
+                (name.toLowerCase().includes(value) || value === '') &&
+                !takenNames.has(name.toLowerCase())
             ).slice(0, 8);
             
             if (filtered.length === 0) {
@@ -3965,6 +4101,87 @@
             }
         }
 
+        // Roast ocenění - definice poolu (8 roast + 6 pozitivních)
+        // Každé: strength(p) vrací surové číslo (vyšší = víc si zaslouží), value(p) je zobrazený údaj.
+        function getAwardPool() {
+            const ws = (p) => (p.worstScore ?? 0);
+            const bs = (p) => (p.bestScore ?? 0);
+            return [
+                // Roast
+                { id: 'wooden_spoon', emoji: '🥄', label: 'Dřevěná vařečka', kind: 'roast', strength: p => -p.total_score, value: p => `${p.total_score} b` },
+                { id: 'black_hole', emoji: '🕳️', label: 'Černá díra', kind: 'roast', strength: p => -ws(p), value: p => `${ws(p)} v jednom kole` },
+                { id: 'brick', emoji: '🧱', label: 'Cihla', kind: 'roast', strength: p => 100 - p.successRate, value: p => `${p.successRate}% úspěšnost` },
+                { id: 'heartbreaker', emoji: '💔', label: 'Zklamání', kind: 'roast', strength: p => p.failCount, value: p => `${p.failCount}× nesplnil` },
+                { id: 'greedy_pig', emoji: '🐷', label: 'Hamoun', kind: 'roast', strength: p => p.totalBid - p.totalWon, value: p => `nahlásil o ${p.totalBid - p.totalWon} víc, než urval` },
+                { id: 'coward', emoji: '🐔', label: 'Strašpytel', kind: 'roast', strength: p => p.zeroCount, value: p => `${p.zeroCount}× hlásil nulu` },
+                { id: 'rollercoaster', emoji: '🎢', label: 'Horská dráha', kind: 'roast', strength: p => bs(p) - ws(p), value: p => `rozkmit ${bs(p) - ws(p)} bodů` },
+                { id: 'vabank', emoji: '🎲', label: 'Vabank', kind: 'roast', strength: p => p.maxBid, value: p => `nejvyšší sázka ${p.maxBid}` },
+                // Pozitivní
+                { id: 'sniper', emoji: '🎯', label: 'Odstřelovač', kind: 'positive', strength: p => p.successRate, value: p => `${p.successRate}% úspěšnost` },
+                { id: 'iron', emoji: '🧊', label: 'Ledový klid', kind: 'positive', strength: p => p.successCount, value: p => `${p.successCount}× splnil` },
+                { id: 'high_roller', emoji: '🎰', label: 'Vysoká hra', kind: 'positive', strength: p => p.totalBid, value: p => `nahlásil celkem ${p.totalBid}` },
+                { id: 'harvester', emoji: '🌾', label: 'Sklízeč', kind: 'positive', strength: p => p.totalWon, value: p => `urval ${p.totalWon} štychů` },
+                { id: 'champion', emoji: '👑', label: 'Šampion', kind: 'positive', strength: p => p.total_score, value: p => `${p.total_score} bodů` },
+                { id: 'comeback', emoji: '📈', label: 'Hvězda večera', kind: 'positive', strength: p => bs(p), value: p => `+${bs(p)} v jednom kole` }
+            ];
+        }
+
+        // Greedy unikátní přiřazení: každý hráč právě 1 ocenění, poražený dostane roast.
+        function assignAwards(players) {
+            const pool = getAwardPool();
+            const n = players.length;
+
+            // Normalizovaná matice sil (0..1 per ocenění; plochá metrika -> 0)
+            const S = {};
+            pool.forEach(a => {
+                const raw = players.map(p => ({ pos: p.position, v: a.strength(p) }));
+                const vals = raw.map(r => r.v);
+                const min = Math.min(...vals), max = Math.max(...vals);
+                const m = {};
+                raw.forEach(r => { m[r.pos] = (max === min) ? 0 : (r.v - min) / (max - min); });
+                S[a.id] = m;
+            });
+
+            const usedAwards = new Set();
+            const usedPos = new Set();
+            const result = {};
+
+            // 1) Poražený první -> nejsilnější roast (deterministický tiebreak)
+            const loser = [...players].sort((a, b) =>
+                a.total_score - b.total_score || b.failCount - a.failCount || a.position - b.position
+            )[0];
+            let bestRoast = null, bestS = -Infinity;
+            pool.filter(a => a.kind === 'roast').forEach(a => {
+                const s = S[a.id][loser.position];
+                if (s > bestS) { bestS = s; bestRoast = a; }
+            });
+            if (!bestRoast) bestRoast = pool.find(a => a.id === 'wooden_spoon');
+            result[loser.position] = bestRoast;
+            usedAwards.add(bestRoast.id);
+            usedPos.add(loser.position);
+
+            // 2) Greedy: nejsilnější dvojice (hráč x ocenění), deterministický tiebreak
+            const cand = [];
+            pool.forEach(a => players.forEach(p => {
+                cand.push({ s: S[a.id][p.position], aid: a.id, award: a, pos: p.position });
+            }));
+            cand.sort((x, y) => y.s - x.s || (x.aid < y.aid ? -1 : x.aid > y.aid ? 1 : 0) || x.pos - y.pos);
+            for (const c of cand) {
+                if (usedPos.size === n) break;
+                if (usedAwards.has(c.aid) || usedPos.has(c.pos)) continue;
+                result[c.pos] = c.award;
+                usedAwards.add(c.aid);
+                usedPos.add(c.pos);
+            }
+
+            // 3) Pojistka (pool >= hráči -> nedosažitelné)
+            const generic = { emoji: '🃏', label: 'Solidní průměr', kind: 'positive', value: () => '' };
+            return players.map(p => {
+                const a = result[p.position] || generic;
+                return { position: p.position, name: p.name, emoji: a.emoji, label: a.label, kind: a.kind, value: a.value ? a.value(p) : '' };
+            });
+        }
+
         // Statistics
         function openStatsModal() {
             if (!currentGame || !currentGame.rounds || currentGame.rounds.length === 0) {
@@ -3987,7 +4204,9 @@
             const playerStats = {};
             players.forEach(p => {
                 playerStats[p.position] = {
+                    position: p.position,
                     name: p.name,
+                    total_score: parseInt(p.total_score) || 0,
                     totalBid: 0,
                     totalWon: 0,
                     successCount: 0,
@@ -4002,8 +4221,8 @@
             // Calculate per-round and per-player stats
             let totalOverbid = 0;
             let totalUnderbid = 0;
-            let perfectRounds = 0;
             let disasterRounds = 0;
+            let maxOverbid = { num: 0, delta: 0 };
             let bestRound = { num: 0, successRate: 0 };
             let worstRound = { num: 0, successRate: 100 };
 
@@ -4040,9 +4259,11 @@
                 const cardsCount = round.cards_count;
                 if (roundBidSum > cardsCount) totalOverbid++;
                 if (roundBidSum < cardsCount) totalUnderbid++;
-                
+
+                const overbidDelta = roundBidSum - cardsCount;
+                if (overbidDelta > maxOverbid.delta) maxOverbid = { num: round.round_number, delta: overbidDelta };
+
                 const successRate = (roundSuccesses / players.length) * 100;
-                if (successRate === 100) perfectRounds++;
                 if (successRate === 0) disasterRounds++;
                 
                 if (successRate > bestRound.successRate) {
@@ -4070,13 +4291,9 @@
                 }
             });
 
-            // Find award winners
-            const sniper = [...playerList].sort((a, b) => b.successRate - a.successRate)[0];
-            const gambler = [...playerList].sort((a, b) => b.totalBid - a.totalBid)[0];
-            const cautious = [...playerList].sort((a, b) => b.zeroCount - a.zeroCount)[0];
-            const lucky = [...playerList].sort((a, b) => b.totalWon - a.totalWon)[0];
-            const ambitious = [...playerList].sort((a, b) => parseFloat(b.avgBid) - parseFloat(a.avgBid))[0];
-            
+            // Roast ocenění - každý hráč dostane právě 1 unikátní titul
+            const awards = assignAwards(playerList);
+
             // Score spread
             const sortedByScore = [...players].sort((a, b) => b.total_score - a.total_score);
             const scoreSpread = sortedByScore[0].total_score - sortedByScore[sortedByScore.length - 1].total_score;
@@ -4087,12 +4304,12 @@
                 players: playerList,
                 totalOverbid,
                 totalUnderbid,
-                perfectRounds,
+                maxOverbid,
                 disasterRounds,
                 bestRound,
                 worstRound,
                 scoreSpread,
-                awards: { sniper, gambler, cautious, lucky, ambitious }
+                awards
             };
         }
 
@@ -4114,8 +4331,9 @@
                             <div class="stat-label">Odehraná kola</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-value">${stats.perfectRounds}</div>
-                            <div class="stat-label">Kol, kde všichni splnili</div>
+                            <div class="stat-value">${stats.maxOverbid.delta > 0 ? 'Kolo ' + stats.maxOverbid.num : '–'}</div>
+                            <div class="stat-label">Nejvíc přehlášené kolo</div>
+                            ${stats.maxOverbid.delta > 0 ? `<div class="stat-player">+${stats.maxOverbid.delta} přes počet karet</div>` : ''}
                         </div>
                         <div class="stat-card">
                             <div class="stat-value">${stats.disasterRounds}</div>
@@ -4129,32 +4347,19 @@
                 </div>
             `;
 
-            // Section 2: Ocenění
+            // Section 2: Ocenění - karta na každého hráče (item 10)
+            const awardCards = stats.awards.map(a => `
+                <div class="stat-card award-${a.kind}">
+                    <div class="stat-value">${a.emoji}</div>
+                    <div class="stat-player" style="font-weight: bold;">${escapeHtml(a.name)}</div>
+                    <div class="stat-label">${escapeHtml(a.label)}</div>
+                    ${a.value ? `<div class="stat-label" style="opacity: 0.75;">${escapeHtml(a.value)}</div>` : ''}
+                </div>
+            `).join('');
             html += `
                 <div class="stats-section">
                     <div class="stats-section-title"><i class="fa-solid fa-award"></i> Ocenění</div>
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-value">🎯</div>
-                            <div class="stat-label">Sniper (nejvyšší úspěšnost)</div>
-                            <div class="stat-player">${stats.awards.sniper.name} (${stats.awards.sniper.successRate}%)</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">🎰</div>
-                            <div class="stat-label">Gambler (nejvíce hlášeno)</div>
-                            <div class="stat-player">${stats.awards.gambler.name} (${stats.awards.gambler.totalBid})</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">🛡️</div>
-                            <div class="stat-label">Opatrný (nejvíce nul)</div>
-                            <div class="stat-player">${stats.awards.cautious.name} (${stats.awards.cautious.zeroCount}×)</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">🍀</div>
-                            <div class="stat-label">Šťastlivec (nejvíce uhrál)</div>
-                            <div class="stat-player">${stats.awards.lucky.name} (${stats.awards.lucky.totalWon})</div>
-                        </div>
-                    </div>
+                    <div class="stats-grid">${awardCards}</div>
                 </div>
             `;
 
@@ -4238,7 +4443,7 @@
             selectedPlayerCount = currentGame.players.length;
             
             // Update player count buttons
-            document.querySelectorAll('.player-count-btn').forEach(btn => {
+            document.querySelectorAll('#player-count-buttons .player-count-btn').forEach(btn => {
                 btn.classList.toggle('selected', parseInt(btn.textContent) === selectedPlayerCount);
             });
             
@@ -4388,6 +4593,15 @@
                 window.speechSynthesis.cancel();
                 ignoringVoiceInput = false;
                 speechIsPaused = false;
+            }
+
+            // Escape zavře libovolný otevřený modál (přes closeModal kvůi úklidu listenerů)
+            if (e.key === 'Escape') {
+                const openModals = document.querySelectorAll('.modal.active');
+                if (openModals.length > 0) {
+                    e.preventDefault();
+                    openModals.forEach(m => closeModal(m.id));
+                }
             }
             
             // Space to pause/resume speech (only when not in input field)
