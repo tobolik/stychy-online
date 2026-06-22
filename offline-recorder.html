@@ -329,6 +329,11 @@
         /* Roast vs pozitivní ocenění - jemné barevné odlišení */
         .stat-card.award-positive { border-top: 3px solid var(--success); }
         .stat-card.award-roast { border-top: 3px solid var(--warning); }
+        /* Detail kritéria (hover přes title, tap přes toggle) */
+        .stat-card.tappable { cursor: pointer; }
+        .info-dot { opacity: 0.5; font-size: 0.72em; margin-left: 4px; }
+        .stat-detail { display: none; margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--border-light); font-size: 0.78rem; color: var(--text-muted); line-height: 1.35; }
+        .stat-detail.show { display: block; }
         .stat-value {
             font-size: 1.8rem;
             font-weight: bold;
@@ -1269,7 +1274,7 @@
         
         <!-- Footer -->
         <div class="app-footer">
-            <span>Štychy Záznamník v1.4.0</span>
+            <span>Štychy Záznamník v1.4.1</span>
             <span>•</span>
             <span id="build-date">2026-06-22</span>
         </div>
@@ -4108,21 +4113,21 @@
             const bs = (p) => (p.bestScore ?? 0);
             return [
                 // Roast
-                { id: 'wooden_spoon', emoji: '🥄', label: 'Dřevěná vařečka', kind: 'roast', strength: p => -p.total_score, value: p => `${p.total_score} b` },
-                { id: 'black_hole', emoji: '🕳️', label: 'Černá díra', kind: 'roast', strength: p => -ws(p), value: p => `${ws(p)} v jednom kole` },
-                { id: 'brick', emoji: '🧱', label: 'Cihla', kind: 'roast', strength: p => 100 - p.successRate, value: p => `${p.successRate}% úspěšnost` },
-                { id: 'heartbreaker', emoji: '💔', label: 'Zklamání', kind: 'roast', strength: p => p.failCount, value: p => `${p.failCount}× nesplnil` },
-                { id: 'greedy_pig', emoji: '🐷', label: 'Hamoun', kind: 'roast', strength: p => p.totalBid - p.totalWon, value: p => `nahlásil o ${p.totalBid - p.totalWon} víc, než urval` },
-                { id: 'coward', emoji: '🐔', label: 'Strašpytel', kind: 'roast', strength: p => p.zeroCount, value: p => `${p.zeroCount}× hlásil nulu` },
-                { id: 'rollercoaster', emoji: '🎢', label: 'Horská dráha', kind: 'roast', strength: p => bs(p) - ws(p), value: p => `rozkmit ${bs(p) - ws(p)} bodů` },
-                { id: 'vabank', emoji: '🎲', label: 'Vabank', kind: 'roast', strength: p => p.maxBid, value: p => `nejvyšší sázka ${p.maxBid}` },
+                { id: 'wooden_spoon', emoji: '🥄', label: 'Dřevěná vařečka', kind: 'roast', strength: p => -p.total_score, value: p => `${p.total_score} b`, desc: 'Nejnižší celkové skóre ze všech hráčů – suverénně poslední.' },
+                { id: 'black_hole', emoji: '🕳️', label: 'Černá díra', kind: 'roast', strength: p => -ws(p), value: p => `${ws(p)} v jednom kole`, desc: 'Nejhorší skóre, jaké kdokoli v jednom kole uhrál.' },
+                { id: 'brick', emoji: '🧱', label: 'Cihla', kind: 'roast', strength: p => 100 - p.successRate, value: p => `${p.successRate}% úspěšnost`, desc: 'Nejnižší úspěšnost – nejmenší podíl splněných odhadů.' },
+                { id: 'heartbreaker', emoji: '💔', label: 'Zklamání', kind: 'roast', strength: p => p.failCount, value: p => `${p.failCount}× nesplnil`, desc: 'Nejvíc kol, ve kterých neuhrál přesně svůj odhad.' },
+                { id: 'greedy_pig', emoji: '🐷', label: 'Hamoun', kind: 'roast', strength: p => p.totalBid - p.totalWon, value: p => `nahlásil o ${p.totalBid - p.totalWon} víc, než urval`, desc: 'Největší rozdíl mezi součtem hlášení a součtem uhraných štychů – přeceňuje se.' },
+                { id: 'coward', emoji: '🐔', label: 'Strašpytel', kind: 'roast', strength: p => p.zeroCount, value: p => `${p.zeroCount}× hlásil nulu`, desc: 'Nejvíckrát nahlásil nulu (na nic si netroufl).' },
+                { id: 'rollercoaster', emoji: '🎢', label: 'Horská dráha', kind: 'roast', strength: p => bs(p) - ws(p), value: p => `rozkmit ${bs(p) - ws(p)} bodů`, desc: 'Největší rozkmit skóre – rozdíl mezi nejlepším a nejhorším kolem.' },
+                { id: 'vabank', emoji: '🎲', label: 'Vabank', kind: 'roast', strength: p => p.maxBid, value: p => `nejvyšší sázka ${p.maxBid}`, desc: 'Nejvyšší jednotlivé hlášení v celé hře.' },
                 // Pozitivní
-                { id: 'sniper', emoji: '🎯', label: 'Odstřelovač', kind: 'positive', strength: p => p.successRate, value: p => `${p.successRate}% úspěšnost` },
-                { id: 'iron', emoji: '🧊', label: 'Ledový klid', kind: 'positive', strength: p => p.successCount, value: p => `${p.successCount}× splnil` },
-                { id: 'high_roller', emoji: '🎰', label: 'Vysoká hra', kind: 'positive', strength: p => p.totalBid, value: p => `nahlásil celkem ${p.totalBid}` },
-                { id: 'harvester', emoji: '🌾', label: 'Sklízeč', kind: 'positive', strength: p => p.totalWon, value: p => `urval ${p.totalWon} štychů` },
-                { id: 'champion', emoji: '👑', label: 'Šampion', kind: 'positive', strength: p => p.total_score, value: p => `${p.total_score} bodů` },
-                { id: 'comeback', emoji: '📈', label: 'Hvězda večera', kind: 'positive', strength: p => bs(p), value: p => `+${bs(p)} v jednom kole` }
+                { id: 'sniper', emoji: '🎯', label: 'Sniper', kind: 'positive', strength: p => p.successRate, value: p => `${p.successRate}% úspěšnost`, desc: 'Nejvyšší úspěšnost – největší podíl kol se splněným odhadem.' },
+                { id: 'iron', emoji: '🧊', label: 'Ledový klid', kind: 'positive', strength: p => p.successCount, value: p => `${p.successCount}× splnil`, desc: 'Nejvíc kol, ve kterých uhrál přesně svůj odhad.' },
+                { id: 'high_roller', emoji: '🎰', label: 'Gambler', kind: 'positive', strength: p => p.totalBid, value: p => `nahlásil celkem ${p.totalBid}`, desc: 'Nejvyšší součet všech hlášení za celou hru.' },
+                { id: 'harvester', emoji: '🌾', label: 'Sklízeč', kind: 'positive', strength: p => p.totalWon, value: p => `urval ${p.totalWon} štychů`, desc: 'Nejvíc uhraných štychů celkem za celou hru.' },
+                { id: 'champion', emoji: '👑', label: 'Šampion', kind: 'positive', strength: p => p.total_score, value: p => `${p.total_score} bodů`, desc: 'Nejvyšší celkové skóre – vítěz hry.' },
+                { id: 'comeback', emoji: '📈', label: 'Hvězda večera', kind: 'positive', strength: p => bs(p), value: p => `+${bs(p)} v jednom kole`, desc: 'Nejlepší skóre, jaké kdokoli v jednom kole uhrál.' }
             ];
         }
 
@@ -4175,10 +4180,10 @@
             }
 
             // 3) Pojistka (pool >= hráči -> nedosažitelné)
-            const generic = { emoji: '🃏', label: 'Solidní průměr', kind: 'positive', value: () => '' };
+            const generic = { emoji: '🃏', label: 'Solidní průměr', kind: 'positive', value: () => '', desc: 'Nevyniká v žádné krajní statistice – solidní průměr.' };
             return players.map(p => {
                 const a = result[p.position] || generic;
-                return { position: p.position, name: p.name, emoji: a.emoji, label: a.label, kind: a.kind, value: a.value ? a.value(p) : '' };
+                return { position: p.position, name: p.name, emoji: a.emoji, label: a.label, kind: a.kind, value: a.value ? a.value(p) : '', desc: a.desc || '' };
             });
         }
 
@@ -4326,22 +4331,26 @@
                 <div class="stats-section">
                     <div class="stats-section-title"><i class="fa-solid fa-gamepad"></i> Přehled hry</div>
                     <div class="stats-grid">
-                        <div class="stat-card">
+                        <div class="stat-card tappable" title="Počet dohraných kol z plánovaného počtu kol v této hře." onclick="this.querySelector('.stat-detail').classList.toggle('show')">
                             <div class="stat-value">${stats.rounds} / ${stats.totalRounds}</div>
-                            <div class="stat-label">Odehraná kola</div>
+                            <div class="stat-label">Odehraná kola<i class="fa-solid fa-circle-info info-dot"></i></div>
+                            <div class="stat-detail">Počet dohraných kol z celkového plánovaného počtu kol v této hře.</div>
                         </div>
-                        <div class="stat-card">
+                        <div class="stat-card tappable" title="Kolo s největším přehlášením – kde součet všech sázek nejvíc převýšil počet karet." onclick="this.querySelector('.stat-detail').classList.toggle('show')">
                             <div class="stat-value">${stats.maxOverbid.delta > 0 ? 'Kolo ' + stats.maxOverbid.num : '–'}</div>
-                            <div class="stat-label">Nejvíc přehlášené kolo</div>
+                            <div class="stat-label">Nejvíc přehlášené kolo<i class="fa-solid fa-circle-info info-dot"></i></div>
                             ${stats.maxOverbid.delta > 0 ? `<div class="stat-player">+${stats.maxOverbid.delta} přes počet karet</div>` : ''}
+                            <div class="stat-detail">Kolo, kde součet všech hlášení nejvíc převýšil počet rozdaných karet (hráči si celkově nejvíc věřili).</div>
                         </div>
-                        <div class="stat-card">
+                        <div class="stat-card tappable" title="Počet kol, ve kterých svůj odhad nesplnil ani jeden hráč." onclick="this.querySelector('.stat-detail').classList.toggle('show')">
                             <div class="stat-value">${stats.disasterRounds}</div>
-                            <div class="stat-label">Kol, kde nikdo nesplnil</div>
+                            <div class="stat-label">Kol, kde nikdo nesplnil<i class="fa-solid fa-circle-info info-dot"></i></div>
+                            <div class="stat-detail">Počet kol, ve kterých svůj odhad neuhrál vůbec nikdo z hráčů.</div>
                         </div>
-                        <div class="stat-card">
+                        <div class="stat-card tappable" title="Rozdíl celkového skóre mezi prvním a posledním hráčem v tabulce." onclick="this.querySelector('.stat-detail').classList.toggle('show')">
                             <div class="stat-value">${stats.scoreSpread}</div>
-                            <div class="stat-label">Rozdíl 1. a posl. místa</div>
+                            <div class="stat-label">Rozdíl 1. a posl. místa<i class="fa-solid fa-circle-info info-dot"></i></div>
+                            <div class="stat-detail">O kolik bodů je vedoucí hráč před posledním v celkovém skóre.</div>
                         </div>
                     </div>
                 </div>
@@ -4349,11 +4358,12 @@
 
             // Section 2: Ocenění - karta na každého hráče (item 10)
             const awardCards = stats.awards.map(a => `
-                <div class="stat-card award-${a.kind}">
+                <div class="stat-card tappable award-${a.kind}" title="${escapeHtml(a.desc)}" onclick="this.querySelector('.stat-detail').classList.toggle('show')">
                     <div class="stat-value">${a.emoji}</div>
                     <div class="stat-player" style="font-weight: bold;">${escapeHtml(a.name)}</div>
-                    <div class="stat-label">${escapeHtml(a.label)}</div>
+                    <div class="stat-label">${escapeHtml(a.label)}<i class="fa-solid fa-circle-info info-dot"></i></div>
                     ${a.value ? `<div class="stat-label" style="opacity: 0.75;">${escapeHtml(a.value)}</div>` : ''}
+                    <div class="stat-detail">${escapeHtml(a.desc)}</div>
                 </div>
             `).join('');
             html += `
