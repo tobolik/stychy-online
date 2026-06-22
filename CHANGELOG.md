@@ -3,16 +3,24 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
-## [Nepublikováno]
+## [1.5.0] – 2026-06-22
+
+Vizuální refresh úvodní stránky (`index.html`). Texty beze změny.
 
 ### Přidáno
-- Standardní hamburger menu na úvodní stránce (`index.html`) pro mobil – ikona ☰↔✕,
-  zavírání klikem na odkaz / mimo / klávesou Escape, `aria-expanded`.
+- Nový vzhled hero: dvousloupcový layout + **ambientní Canvas animace karet** –
+  simulace hry dle pravidel štychů (trumf v rohu, štych bere správná karta) střídaná
+  se scénou „vějíř" (otočení karty, odlet/přílet, zhoupnutí), trumf na konci hry
+  efektně odletí obloukem. Respektuje `prefers-reduced-motion`.
+- Sticky horní lišta s **hamburger menu** pro mobil (☰↔✕, zavírání link/mimo/Escape, aria).
 
-### Plánováno (z review)
-- Přerámování messagingu úvodní stránky na showcase „vytvořeno 16letou s AI", odkaz na zdrojový kód.
-- Drobné a11y/UX: kontrast `--text-muted`, tap target hamburgeru ≥44px, `:focus-visible`, `preconnect` na Font Awesome.
-- Oprava `selectPlayers` (předat `this` místo globálního `event`), meta/OG tagy.
+### Změněno
+- Mobilní optimalizace úvodní stránky (hero pod sebe, animace nad obsahem).
+- a11y: zesvětlen kontrast `--text-muted`, `:focus-visible` stavy, hamburger tap target ≥44px,
+  `aria-hidden` na dekorativní ikony.
+
+### Opraveno
+- `selectPlayers` už nespoléhá na deprecated globální `event` (předává `this`).
 
 ## [1.4.2] – 2026-06-22
 
