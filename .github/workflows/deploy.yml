@@ -22,7 +22,7 @@ jobs:
           rm -f config/database.php .gitignore
 
       - name: Deploy via SFTP
-        uses: Dylan700/sftp-upload-action@latest
+        uses: Dylan700/sftp-upload-action@v1.2.3
         with:
           server: ${{ secrets.SFTP_SERVER }}
           username: ${{ secrets.SFTP_USERNAME }}
