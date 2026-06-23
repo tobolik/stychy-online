@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS `games` (
     `finished_at` TIMESTAMP NULL,
     `valid_from` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `valid_to` TIMESTAMP NULL,
+    `valid_to_user_id` INT UNSIGNED NULL,
     PRIMARY KEY (`id`),
     KEY `user_games` (`user_id`),
     KEY `valid_to_idx` (`valid_to`),
@@ -51,8 +52,11 @@ CREATE TABLE IF NOT EXISTS `game_players` (
     `name` VARCHAR(50) NOT NULL,
     `total_score` INT DEFAULT 0,
     `final_rank` TINYINT NULL,
+    `valid_to` TIMESTAMP NULL DEFAULT NULL,
+    `valid_to_user_id` INT UNSIGNED NULL,
     PRIMARY KEY (`id`),
     KEY `game_players_idx` (`game_id`),
+    KEY `valid_to_idx` (`valid_to`),
     UNIQUE KEY `game_position_unique` (`game_id`, `position`),
     CONSTRAINT `fk_players_game` FOREIGN KEY (`game_id`) REFERENCES `games` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_czech_ci;
@@ -70,8 +74,11 @@ CREATE TABLE IF NOT EXISTS `rounds` (
     `dealer_position` TINYINT NOT NULL,
     `status` ENUM('bidding', 'playing', 'finished') DEFAULT 'bidding',
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `valid_to` TIMESTAMP NULL DEFAULT NULL,
+    `valid_to_user_id` INT UNSIGNED NULL,
     PRIMARY KEY (`id`),
     KEY `game_rounds_idx` (`game_id`),
+    KEY `valid_to_idx` (`valid_to`),
     UNIQUE KEY `game_round_unique` (`game_id`, `round_number`),
     CONSTRAINT `fk_rounds_game` FOREIGN KEY (`game_id`) REFERENCES `games` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_czech_ci;
@@ -86,9 +93,12 @@ CREATE TABLE IF NOT EXISTS `round_results` (
     `bid` TINYINT NULL,
     `tricks_won` TINYINT NULL,
     `score` INT NULL,
+    `valid_to` TIMESTAMP NULL DEFAULT NULL,
+    `valid_to_user_id` INT UNSIGNED NULL,
     PRIMARY KEY (`id`),
     KEY `round_results_idx` (`round_id`),
     KEY `player_results_idx` (`player_id`),
+    KEY `valid_to_idx` (`valid_to`),
     UNIQUE KEY `round_player_unique` (`round_id`, `player_id`),
     CONSTRAINT `fk_results_round` FOREIGN KEY (`round_id`) REFERENCES `rounds` (`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_results_player` FOREIGN KEY (`player_id`) REFERENCES `game_players` (`id`) ON DELETE CASCADE

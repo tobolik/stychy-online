@@ -3,6 +3,19 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.6.0] – 2026-06-23
+
+### Bezpečnost / data (soft-delete, Fáze 1)
+- Mazání hry nově **soft-deletuje celý strom** (hra + hráči + kola + výsledky) v jedné
+  transakci s audit stopou (`valid_to` + `valid_to_user_id`). Nic se fyzicky nemaže.
+- Opraveny dva živé bugy: smazaná hra už nešla editovat přes rounds.php (přidán filtr
+  `valid_to IS NULL` do `verifyGameOwnership`); podstrom smazané hry se dříve nestampoval.
+- **Mazání kola zakázáno** (princip „nikdy hard-delete"; kola se v praxi jen upravují přes
+  Upravit výsledky). Odebráno tlačítko i endpoint hard-delete kola (+ přečíslování).
+- Read dotazy filtrují soft-smazané podzáznamy (gated flagem `SOFT_DELETE_SUBTREE`).
+- Migrace `003a` (aditivní sloupce + backfill už smazaných her). Ověřeno na MariaDB 11.8
+  s kopií produkčních dat. Pozn.: zrušení `ON DELETE CASCADE` přijde ve Fázi 2 (samostatně).
+
 ## [1.5.9] – 2026-06-23
 
 ### Výkon

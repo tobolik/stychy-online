@@ -76,9 +76,10 @@ switch ($action) {
     case 'list':
         $status = $input['status'] ?? null;
         
-        $sql = 'SELECT g.*, 
-                (SELECT COUNT(*) FROM rounds WHERE game_id = g.id) as rounds_played
-                FROM games g 
+        $vf = SOFT_DELETE_SUBTREE ? ' AND valid_to IS NULL' : '';
+        $sql = 'SELECT g.*,
+                (SELECT COUNT(*) FROM rounds WHERE game_id = g.id' . $vf . ') as rounds_played
+                FROM games g
                 WHERE g.user_id = ? AND g.valid_to IS NULL';
         $params = [$userId];
         
@@ -111,13 +112,16 @@ switch ($action) {
             jsonResponse(['success' => false, 'error' => 'Hra nenalezena'], 404);
         }
         
+        // Soft-delete filtr na podtabulky (gated flagem – bezpečné i bez sloupců)
+        $vf = SOFT_DELETE_SUBTREE ? ' AND valid_to IS NULL' : '';
+
         // Načtení hráčů
-        $stmt = $db->prepare('SELECT * FROM game_players WHERE game_id = ? ORDER BY position');
+        $stmt = $db->prepare('SELECT * FROM game_players WHERE game_id = ?' . $vf . ' ORDER BY position');
         $stmt->execute([$gameId]);
         $players = $stmt->fetchAll();
-        
+
         // Načtení kol
-        $stmt = $db->prepare('SELECT * FROM rounds WHERE game_id = ? ORDER BY round_number');
+        $stmt = $db->prepare('SELECT * FROM rounds WHERE game_id = ?' . $vf . ' ORDER BY round_number');
         $stmt->execute([$gameId]);
         $rounds = $stmt->fetchAll();
         
@@ -136,7 +140,7 @@ switch ($action) {
             FROM round_results rr
             JOIN game_players gp ON gp.id = rr.player_id
             JOIN rounds r ON r.id = rr.round_id
-            WHERE r.game_id = ?
+            WHERE r.game_id = ?' . (SOFT_DELETE_SUBTREE ? ' AND rr.valid_to IS NULL' : '') . '
             ORDER BY r.round_number, gp.position
         ');
         $stmt->execute([$gameId]);
@@ -286,11 +290,31 @@ switch ($action) {
         if (!$game) {
             jsonResponse(['success' => false, 'error' => 'Hra nenalezena'], 404);
         }
-        
-        // Soft-delete - nastavení valid_to na aktuální čas
-        $stmt = $db->prepare('UPDATE games SET valid_to = NOW() WHERE id = ?');
-        $stmt->execute([$gameId]);
-        
+
+        // Soft-delete: propagace na celý strom hry v jedné transakci.
+        // Flag OFF (před migrací 003a) = chování jako dřív (jen games). Stampujeme jen
+        // řádky valid_to IS NULL (nepřepisujeme dřívější audit).
+        try {
+            $db->beginTransaction();
+            if (SOFT_DELETE_SUBTREE) {
+                $db->prepare('UPDATE games SET valid_to = NOW(), valid_to_user_id = ? WHERE id = ? AND valid_to IS NULL')
+                   ->execute([$userId, $gameId]);
+                $db->prepare('UPDATE game_players SET valid_to = NOW(), valid_to_user_id = ? WHERE game_id = ? AND valid_to IS NULL')
+                   ->execute([$userId, $gameId]);
+                $db->prepare('UPDATE rounds SET valid_to = NOW(), valid_to_user_id = ? WHERE game_id = ? AND valid_to IS NULL')
+                   ->execute([$userId, $gameId]);
+                $db->prepare('UPDATE round_results SET valid_to = NOW(), valid_to_user_id = ? WHERE round_id IN (SELECT id FROM rounds WHERE game_id = ?) AND valid_to IS NULL')
+                   ->execute([$userId, $gameId]);
+            } else {
+                $db->prepare('UPDATE games SET valid_to = NOW() WHERE id = ?')->execute([$gameId]);
+            }
+            $db->commit();
+        } catch (Exception $e) {
+            $db->rollBack();
+            error_log('games.php delete: ' . $e->getMessage());
+            jsonResponse(['success' => false, 'error' => 'Chyba serveru.'], 500);
+        }
+
         jsonResponse([
             'success' => true,
             'message' => 'Hra byla smazána'

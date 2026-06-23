@@ -24,7 +24,8 @@ $userId = $auth->getUserId();
  * Pomocná funkce pro ověření vlastnictví hry
  */
 function verifyGameOwnership(PDO $db, int $gameId, int $userId): ?array {
-    $stmt = $db->prepare('SELECT * FROM games WHERE id = ? AND user_id = ?');
+    // valid_to IS NULL: na soft-smazané hře nelze pracovat (oprava živého bugu).
+    $stmt = $db->prepare('SELECT * FROM games WHERE id = ? AND user_id = ? AND valid_to IS NULL');
     $stmt->execute([$gameId, $userId]);
     return $stmt->fetch() ?: null;
 }
@@ -347,74 +348,13 @@ switch ($action) {
      * Smazání kola
      */
     case 'delete':
-        $roundId = intval($input['round_id'] ?? 0);
-        
-        // Načtení kola
-        $stmt = $db->prepare('
-            SELECT r.*, g.user_id, g.id as game_id
-            FROM rounds r 
-            JOIN games g ON g.id = r.game_id 
-            WHERE r.id = ?
-        ');
-        $stmt->execute([$roundId]);
-        $round = $stmt->fetch();
-        
-        if (!$round || (int)$round['user_id'] !== $userId) {
-            jsonResponse(['success' => false, 'error' => 'Kolo nenalezeno'], 404);
-        }
-        
-        try {
-            $db->beginTransaction();
-            
-            // Pokud kolo má výsledky, odečíst body od hráčů
-            $stmt = $db->prepare('
-                SELECT rr.score, gp.id as player_id
-                FROM round_results rr
-                JOIN game_players gp ON gp.id = rr.player_id
-                WHERE rr.round_id = ? AND rr.score IS NOT NULL
-            ');
-            $stmt->execute([$roundId]);
-            $results = $stmt->fetchAll();
-            
-            $updatePlayerStmt = $db->prepare('UPDATE game_players SET total_score = total_score - ? WHERE id = ?');
-            foreach ($results as $result) {
-                if ($result['score']) {
-                    $updatePlayerStmt->execute([$result['score'], $result['player_id']]);
-                }
-            }
-            
-            // Smazat výsledky kola
-            $stmt = $db->prepare('DELETE FROM round_results WHERE round_id = ?');
-            $stmt->execute([$roundId]);
-            
-            // Smazat kolo
-            $stmt = $db->prepare('DELETE FROM rounds WHERE id = ?');
-            $stmt->execute([$roundId]);
-            
-            // Přečíslovat zbývající kola
-            $stmt = $db->prepare('
-                SELECT id FROM rounds WHERE game_id = ? ORDER BY round_number
-            ');
-            $stmt->execute([$round['game_id']]);
-            $rounds = $stmt->fetchAll();
-            
-            $updateRoundStmt = $db->prepare('UPDATE rounds SET round_number = ? WHERE id = ?');
-            $newNumber = 1;
-            foreach ($rounds as $r) {
-                $updateRoundStmt->execute([$newNumber, $r['id']]);
-                $newNumber++;
-            }
-            
-            $db->commit();
-            
-            jsonResponse([
-                'success' => true,
-                'message' => 'Kolo bylo smazáno'
-            ]);
-        } catch (Exception $e) {
-            $db->rollBack();
-            error_log('rounds.php: ' . $e->getMessage()); jsonResponse(['success' => false, 'error' => 'Chyba serveru.'], 500);
-        }
+        // Mazání kola je ZAKÁZÁNO (princip: nikdy hard-delete; v praxi se kola jen
+        // upravují přes update_results, mazání se nepoužívá). Žádné fyzické mazání
+        // řádků ani přečíslování kol. Pro opravu chyby slouží úprava výsledků.
+        jsonResponse([
+            'success' => false,
+            'error' => 'Kolo nelze smazat. Upravte jeho výsledky, nebo smažte celou hru.'
+        ], 400);
         break;
         
     /**

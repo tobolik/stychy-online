@@ -1278,7 +1278,7 @@
         
         <!-- Footer -->
         <div class="app-footer">
-            <span>Štychy Záznamník v1.5.9</span>
+            <span>Štychy Záznamník v1.6.0</span>
             <span>•</span>
             <span id="build-date">2026-06-22</span>
         </div>
@@ -3100,16 +3100,10 @@
                 html += `<button class="btn btn-primary" onclick="openBiddingModal()">
                     <i class="fa-solid fa-bullhorn"></i> Zadat hlášení
                 </button>`;
-                html += `<button class="btn btn-danger" onclick="deleteRound(${lastRound.id})" title="Smazat kolo">
-                    <i class="fa-solid fa-trash"></i>
-                </button>`;
             } else if (lastRound.status === 'playing') {
                 // Čekáme na výsledky
                 html += `<button class="btn btn-primary" onclick="openResultsModal()">
                     <i class="fa-solid fa-calculator"></i> Zadat výsledky kola
-                </button>`;
-                html += `<button class="btn btn-danger" onclick="deleteRound(${lastRound.id})" title="Smazat kolo">
-                    <i class="fa-solid fa-trash"></i>
                 </button>`;
             }
 
@@ -4021,20 +4015,7 @@
             }
         }
 
-        async function deleteRound(roundId) {
-            if (!confirm('Opravdu chcete smazat toto kolo? Body budou odečteny.')) return;
-
-            const result = await api('rounds.php', {
-                action: 'delete',
-                round_id: roundId
-            });
-
-            if (result.success) {
-                await openGame(currentGame.game.id);
-            } else {
-                alert(result.error);
-            }
-        }
+        // Mazání kola bylo odebráno (princip: nikdy hard-delete; kola se jen upravují).
 
         // Known Players & Autocomplete
         function updateKnownPlayers(playerNames) {
