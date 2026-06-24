@@ -183,9 +183,9 @@ switch ($action) {
      */
     case 'finish':
         $gameId = intval($input['game_id'] ?? 0);
-        
-        // Ověření vlastnictví
-        $stmt = $db->prepare('SELECT * FROM games WHERE id = ? AND user_id = ?');
+
+        // Ověření vlastnictví (jen nesmazaná hra)
+        $stmt = $db->prepare('SELECT * FROM games WHERE id = ? AND user_id = ? AND valid_to IS NULL');
         $stmt->execute([$gameId, $userId]);
         $game = $stmt->fetch();
         

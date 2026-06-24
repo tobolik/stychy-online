@@ -112,10 +112,10 @@ switch ($action) {
         
         // Načtení kola a ověření
         $stmt = $db->prepare('
-            SELECT r.*, g.user_id, g.player_count 
-            FROM rounds r 
-            JOIN games g ON g.id = r.game_id 
-            WHERE r.id = ?
+            SELECT r.*, g.user_id, g.player_count
+            FROM rounds r
+            JOIN games g ON g.id = r.game_id
+            WHERE r.id = ? AND g.valid_to IS NULL
         ');
         $stmt->execute([$roundId]);
         $round = $stmt->fetch();
@@ -169,9 +169,9 @@ switch ($action) {
         // Načtení kola
         $stmt = $db->prepare('
             SELECT r.*, g.user_id, g.id as game_id
-            FROM rounds r 
-            JOIN games g ON g.id = r.game_id 
-            WHERE r.id = ?
+            FROM rounds r
+            JOIN games g ON g.id = r.game_id
+            WHERE r.id = ? AND g.valid_to IS NULL
         ');
         $stmt->execute([$roundId]);
         $round = $stmt->fetch();
@@ -243,9 +243,9 @@ switch ($action) {
         
         $stmt = $db->prepare('
             SELECT r.*, g.user_id
-            FROM rounds r 
-            JOIN games g ON g.id = r.game_id 
-            WHERE r.id = ?
+            FROM rounds r
+            JOIN games g ON g.id = r.game_id
+            WHERE r.id = ? AND g.valid_to IS NULL
         ');
         $stmt->execute([$roundId]);
         $round = $stmt->fetch();
@@ -283,9 +283,9 @@ switch ($action) {
         // Načtení kola
         $stmt = $db->prepare('
             SELECT r.*, g.user_id, g.id as game_id
-            FROM rounds r 
-            JOIN games g ON g.id = r.game_id 
-            WHERE r.id = ?
+            FROM rounds r
+            JOIN games g ON g.id = r.game_id
+            WHERE r.id = ? AND g.valid_to IS NULL
         ');
         $stmt->execute([$roundId]);
         $round = $stmt->fetch();
