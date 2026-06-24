@@ -3,6 +3,12 @@
  * Pomocné funkce
  */
 
+// Soft-delete propagace na celý strom hry (game_players, rounds, round_results).
+// Bezpečnostní flag pro rollout: dokud nejsou na DB audit sloupce (migrace 003a),
+// nech FALSE -> kód se chová jako dřív (soft-delete jen na games). Po ověření sloupců
+// na produkci přepnout na TRUE (malý samostatný PR). Brání 500 při deploy před migrací.
+define('SOFT_DELETE_SUBTREE', false);
+
 /**
  * Odeslání JSON odpovědi
  */
