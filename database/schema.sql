@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS `games` (
     PRIMARY KEY (`id`),
     KEY `user_games` (`user_id`),
     KEY `valid_to_idx` (`valid_to`),
-    CONSTRAINT `fk_games_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+    CONSTRAINT `fk_games_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_czech_ci;
 
 -- -----------------------------------------------------
@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS `game_players` (
     KEY `game_players_idx` (`game_id`),
     KEY `valid_to_idx` (`valid_to`),
     UNIQUE KEY `game_position_unique` (`game_id`, `position`),
-    CONSTRAINT `fk_players_game` FOREIGN KEY (`game_id`) REFERENCES `games` (`id`) ON DELETE CASCADE
+    CONSTRAINT `fk_players_game` FOREIGN KEY (`game_id`) REFERENCES `games` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_czech_ci;
 
 -- -----------------------------------------------------
@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS `rounds` (
     KEY `game_rounds_idx` (`game_id`),
     KEY `valid_to_idx` (`valid_to`),
     UNIQUE KEY `game_round_unique` (`game_id`, `round_number`),
-    CONSTRAINT `fk_rounds_game` FOREIGN KEY (`game_id`) REFERENCES `games` (`id`) ON DELETE CASCADE
+    CONSTRAINT `fk_rounds_game` FOREIGN KEY (`game_id`) REFERENCES `games` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_czech_ci;
 
 -- -----------------------------------------------------
@@ -100,8 +100,8 @@ CREATE TABLE IF NOT EXISTS `round_results` (
     KEY `player_results_idx` (`player_id`),
     KEY `valid_to_idx` (`valid_to`),
     UNIQUE KEY `round_player_unique` (`round_id`, `player_id`),
-    CONSTRAINT `fk_results_round` FOREIGN KEY (`round_id`) REFERENCES `rounds` (`id`) ON DELETE CASCADE,
-    CONSTRAINT `fk_results_player` FOREIGN KEY (`player_id`) REFERENCES `game_players` (`id`) ON DELETE CASCADE
+    CONSTRAINT `fk_results_round` FOREIGN KEY (`round_id`) REFERENCES `rounds` (`id`),
+    CONSTRAINT `fk_results_player` FOREIGN KEY (`player_id`) REFERENCES `game_players` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_czech_ci;
 
 -- -----------------------------------------------------
@@ -117,7 +117,7 @@ CREATE TABLE IF NOT EXISTS `user_stats` (
     `perfect_rounds` INT DEFAULT 0,
     PRIMARY KEY (`id`),
     KEY `user_stats_idx` (`user_id`),
-    CONSTRAINT `fk_stats_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+    CONSTRAINT `fk_stats_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_czech_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;

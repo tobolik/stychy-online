@@ -3,6 +3,17 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.6.1] – 2026-06-24
+
+### Bezpečnost / data (soft-delete, Fáze 2)
+- Zrušeno `ON DELETE CASCADE` na všech 6 cizích klíčích (migrace `003b`) → databáze nově
+  **odmítne** jakýkoli tvrdý `DELETE` na řádek s navázanými záznamy (defense-in-depth proti
+  omylnému/ručnímu smazání). Po Fázi 1 už žádný kód natvrdo nemaže; tohle je pojistka.
+- Ověřeno na MariaDB 11.8 s kopií prod dat: 6 cascade → 0 (6× RESTRICT), hard DELETE na
+  games/users/rounds/game_players odmítnut (errno 1451), 0 řádků smazáno, reverzní SQL čisté.
+- Doplněn read-filtr `valid_to IS NULL` na zbývající vstupní body (finish + rounds.php
+  save_bids/save_results/get/update_results) – engine bere konzistentně jen nesmazané.
+
 ## [1.6.0] – 2026-06-23
 
 ### Bezpečnost / data (soft-delete, Fáze 1)
