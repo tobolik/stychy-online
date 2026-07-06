@@ -324,9 +324,9 @@
             .modal-content.modal-game { padding: 34px 38px; }
             .modal-content.modal-game .modal-title { font-size: 1.9rem; }
             .modal-content.modal-game .bid-player-name,
-            .modal-content.modal-game .result-row .player-name { font-size: 2rem; }
-            .modal-content.modal-game .bid-btn { width: 44px; height: 44px; font-size: 1.2rem; }
-            .modal-content.modal-game .result-btn { width: 64px; height: 52px; }
+            .modal-content.modal-game .result-row .player-name { font-size: 1.4rem; }
+            .modal-content.modal-game .bid-btn { width: 44px; height: 40px; font-size: 1.15rem; }
+            .modal-content.modal-game .result-btn { width: 58px; height: 38px; }
             .modal-content.modal-game .result-bid-badge,
             .modal-content.modal-game .bid-badge { font-size: 2.1rem; }
             /* sticky lišta dosedne k okrajům i při širším paddingu .modal-game (34px 38px) */
@@ -376,14 +376,14 @@
         /* na desktopu širší + řádek hráče na jeden řádek; sloupec jmen FIXNÍ šířky,
            aby tlačítka pro zadávání byla ve všech řádcích zarovnaná pod sebou. */
         @media (min-width: 768px) {
-            .modal-content.modal-game.modal-flex { max-width: 1040px; }
+            .modal-content.modal-game.modal-flex { max-width: 920px; }
             .modal-flex .bid-player-name {
-                white-space: nowrap; flex: 0 0 230px; width: 230px;
+                white-space: nowrap; flex: 0 0 210px; width: 210px;
                 overflow: hidden; text-overflow: ellipsis;
             }
-            .modal-content.modal-game.modal-flex .bid-buttons { flex: 1 1 auto; }
+            .modal-content.modal-game.modal-flex .bid-buttons { flex: 1 1 auto; justify-content: space-between; }
             .modal-content.modal-game.modal-flex .bid-btn {
-                flex: 1 1 0; min-width: 30px; max-width: 50px; width: auto; height: 42px;
+                flex: 1 1 0; min-width: 44px; max-width: 84px; width: auto; height: 40px;
             }
         }
 
@@ -828,7 +828,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 6px 10px;
+            padding: 4px 10px;
             background: var(--panel-2);
             border-radius: 8px;
             border: 2px solid transparent;   /* stejná šířka pro všechny řádky -> tlačítka zarovnaná */
@@ -846,6 +846,7 @@
         .bid-player-name {
             flex: 1;
             font-weight: bold;
+            line-height: 1.15;
         }
 
         .bid-buttons {
@@ -877,10 +878,18 @@
             opacity: 0.3;
             cursor: not-allowed;
         }
+        /* Zakázaná hodnota rozdávajícího – zvýraznit červeným ohraničením */
+        .bid-btn.forbidden {
+            opacity: 1;
+            border: 2px solid var(--danger);
+            color: var(--danger);
+            background: rgba(255, 94, 94, 0.12);
+            cursor: not-allowed;
+        }
 
         /* Success/Fail buttons for results */
         .result-btn {
-            padding: 12px 24px;
+            padding: 6px 16px;
             border: 2px solid var(--border-light);
             border-radius: 10px;
             background: var(--surface);
@@ -917,10 +926,10 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 6px 10px;
+            padding: 3px 10px;
             background: var(--panel-2);
             border-radius: 6px;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
             transition: all 0.2s;
         }
         .result-row.current-input {
@@ -934,6 +943,7 @@
         .result-row .player-name {
             font-weight: bold;
             font-size: 1.5rem;
+            line-height: 1.15;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -941,6 +951,7 @@
         .result-row .player-bid {
             color: var(--text-muted);
             font-size: 0.7rem;
+            line-height: 1.1;
             text-transform: uppercase;
             letter-spacing: 0.04em;
         }
@@ -949,7 +960,7 @@
             flex: 0 0 auto;
             min-width: 2.2em;
             text-align: center;
-            font-size: 1.9rem;
+            font-size: 1.5rem;
             font-weight: 800;
             line-height: 1;
             color: var(--warning);
@@ -1411,7 +1422,7 @@
         
         <!-- Footer -->
         <div class="app-footer">
-            <span>Štychy Záznamník v1.8.0</span>
+            <span>Štychy Záznamník v1.8.1</span>
             <span>•</span>
             <span id="build-date">2026-07-06</span>
         </div>
@@ -1559,11 +1570,7 @@
                 <button class="close-btn" onclick="closeModal('modal-bidding')">&times;</button>
             </div>
 
-            <p class="mobile-hide" style="margin-bottom: 10px; color: var(--text-muted); font-size: 0.85rem;">
-                Zadejte hlášení klávesami <strong>0-9</strong>, potvrďte <strong>Enter</strong>.
-            </p>
-
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 20px; padding: 15px; background: var(--input-bg); border-radius: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px 16px; margin-bottom: 12px; padding: 10px 15px; background: var(--input-bg); border-radius: 12px;">
                 <div>
                     <span style="color: var(--text-muted);">Počet karet:</span>
                     <strong id="bidding-cards-count" style="color: var(--accent-ink); font-size: 1.3rem; margin-left: 5px;">7</strong>
@@ -1610,9 +1617,6 @@
                 <button class="close-btn" onclick="closeModal('modal-results')">&times;</button>
             </div>
 
-            <p class="mobile-hide" style="margin-bottom: 10px; color: var(--text-muted);">
-                Označte, kdo splnil svůj odhad.
-            </p>
             <div id="results-trump-info" style="margin-bottom: 12px; display: none; align-items: center; flex-wrap: wrap; gap: 8px 16px; font-size: 0.95rem; color: var(--text-muted);">
                 <span><i class="fa-solid fa-cards"></i> Karet: <strong id="results-trump-cards" style="color: var(--text-main);"></strong></span>
                 <span style="display: inline-flex; align-items: center; gap: 6px;">Trumf: <span id="results-trump-card" class="trump-display trump-display-sm"></span></span>
@@ -1621,10 +1625,6 @@
                     Zadat přesný počet štychů
                 </label>
             </div>
-            <div class="mobile-hide" style="margin-bottom: 15px; padding: 10px; background: var(--panel-2); border-radius: 8px; font-size: 0.85rem; color: var(--text-muted);">
-                <strong>Klávesnice:</strong> <span style="color: #ff5e5e;">0 = Nesplnil</span> | <span style="color: #2ecc71;">1 = Splnil</span> | Enter = Uložit
-            </div>
-
             <!-- Edit cards count - only visible in edit mode -->
             <div id="edit-cards-count-container" style="margin-bottom: 15px; display: none;">
                 <label style="display: flex; align-items: center; gap: 10px; color: var(--accent-ink); font-size: 0.9rem;">
@@ -3728,9 +3728,11 @@
             const forbiddenInfo = document.getElementById('forbidden-bid-info');
 
             if (allBidsExceptDealer && forbiddenBid >= 0 && forbiddenBid <= cardsCount) {
-                // Zakázané tlačítko rozdávajícího vždy disablovat
+                // Zakázané tlačítko rozdávajícího vždy disablovat + zvýraznit červeně
                 dealerRow.querySelectorAll('.bid-btn').forEach((btn, idx) => {
-                    btn.disabled = idx === forbiddenBid;
+                    const isForbidden = idx === forbiddenBid;
+                    btn.disabled = isForbidden;
+                    btn.classList.toggle('forbidden', isForbidden);
                 });
                 // Varování ukázat JEN dokud rozdávající nenahlásil – pak je zbytečné
                 // a ukáže se souhrn (bids-status). Vždy jen jedna hláška.
@@ -3746,6 +3748,7 @@
                 forbiddenInfo.style.display = 'none';
                 dealerRow.querySelectorAll('.bid-btn').forEach(btn => {
                     btn.disabled = false;
+                    btn.classList.remove('forbidden');
                 });
             }
         }
