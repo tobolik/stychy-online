@@ -3,6 +3,17 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.8.2] – 2026-07-06
+
+### Změněno (modal hlášení – další ladění z reálné hry)
+- Zrušená rezervovaná (prázdná) oblast nad tlačítkem „Uložit hlášení". Hlášky
+  (zakázaná hodnota / souhrn) se zobrazují **dynamicky** nad tlačítkem; když nejsou,
+  tlačítko je hned pod řádky.
+- Otevření hlášení nově **sroluje na prvního hlásiče** (hráč po rozdávajícím) – dřív
+  mohl být oříznutý nahoře, když scroll zůstal z předchozího kola.
+- Při zadávání se scroll posune tak, aby byl vidět **aktuální hráč + 2 řádky pod ním**
+  (dřív jen aktuální na spodním okraji).
+
 ## [1.8.1] – 2026-07-06
 
 ### Změněno (modaly hlášení a výsledky – po zpětné vazbě z reálné hry)
