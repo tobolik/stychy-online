@@ -3,6 +3,18 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.8.1] – 2026-07-06
+
+### Změněno (modaly hlášení a výsledky – po zpětné vazbě z reálné hry)
+- **Kompaktnější řádky** – vejde se jich na obrazovku 6 místo 3: zmenšeno písmo
+  jmen (2rem → 1.4rem), stažen `line-height` (jméno + „Hlásil" už neroztahují řádek),
+  menší tlačítka a padding, odstraněny nápovědné texty („Zadejte hlášení klávesami…",
+  „Klávesnice: 0=Nesplnil…") a nadbytečný podtitul.
+- **Zakázaná hodnota rozdávajícího** je nově zvýrazněná **červeným ohraničením**
+  (dřív jen ztlumená) – jasně vidět, které číslo nesmí rozdávající zvolit.
+- **Desktop:** tlačítka hlášení 0–N využívají celou šířku řádku (dřív vpravo prázdné
+  místo), sloupec jmen zúžen; jméno rozdávajícího s „(rozdává)" se vejde bez oříznutí.
+
 ## [1.8.0] – 2026-07-06
 
 ### Přidáno
