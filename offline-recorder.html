@@ -348,14 +348,9 @@
             z-index: 2;
         }
         .modal-save-bar .btn { padding: 20px; font-size: 1.15rem; }
-        /* rezervované místo pro hlášku nad tlačítkem -> tlačítko se neposouvá */
-        .bid-msg-slot {
-            min-height: 54px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-        .bid-msg-slot > div { margin: 0 !important; }
+        /* hlášky (forbidden/status) se zobrazují dynamicky nad tlačítkem; skryté (display:none) nezabírají místo */
+        .modal-save-bar > .forbidden-info,
+        .modal-save-bar > #bids-status { margin: 0 !important; }
         @media (max-width: 480px) {
             .modal-save-bar { margin: 12px -14px -14px; padding: 12px 14px 14px; }
         }
@@ -1595,10 +1590,8 @@
             </div>
 
             <div class="modal-save-bar">
-                <div class="bid-msg-slot">
-                    <div class="forbidden-info" id="forbidden-bid-info" style="display: none;"></div>
-                    <div id="bids-status" style="padding: 12px; border-radius: 8px; text-align: center; display: none;"></div>
-                </div>
+                <div class="forbidden-info" id="forbidden-bid-info" style="display: none;"></div>
+                <div id="bids-status" style="padding: 12px; border-radius: 8px; text-align: center; display: none;"></div>
                 <button class="btn btn-primary" onclick="saveBids()">
                     <i class="fa-solid fa-check"></i> Uložit hlášení
                 </button>
@@ -3549,6 +3542,14 @@
             document.getElementById('bid-inputs').innerHTML = html;
             document.getElementById('forbidden-bid-info').style.display = 'none';
             openModal('modal-bidding');
+
+            // Srolovat scroll na začátek, ať je první hlásič (current-input) vidět a není oříznutý
+            const bidScroll = document.querySelector('#modal-bidding .modal-scroll');
+            if (bidScroll) {
+                bidScroll.scrollTop = 0;
+                const firstCurrent = bidScroll.querySelector('.bid-input-row.current-input');
+                if (firstCurrent) firstCurrent.scrollIntoView({ block: 'nearest' });
+            }
             
             // Add keyboard listener
             document.addEventListener('keydown', handleBiddingKeypress);
@@ -3592,7 +3593,10 @@
                 const nextRow = document.querySelector(`.bid-input-row[data-index="${currentBiddingIndex}"]`);
                 if (nextRow) {
                     nextRow.classList.add('current-input');
-                    nextRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    // Ukázat aktuální hráč + 2 řádky pod ním (ne jen aktuální na spodním okraji)
+                    const lookAheadIdx = Math.min(currentBiddingIndex + 2, orderedBiddingPlayers.length - 1);
+                    const lookAheadRow = document.querySelector(`.bid-input-row[data-index="${lookAheadIdx}"]`) || nextRow;
+                    lookAheadRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 }
                 
                 // Announce next player's name (only if voice recognition is NOT active)
