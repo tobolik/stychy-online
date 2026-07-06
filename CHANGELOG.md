@@ -3,6 +3,13 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.9.4] – 2026-07-06
+
+### Změněno
+- Zákaz hodnoty rozdávajícího: místo široké lišty nově **malý plný toast přímo pod
+  zakázaným tlačítkem** – "Není možné zvolit X štych(y/ů)" (se skloňováním). Toast
+  sleduje tlačítko při scrollu a po pár sekundách sám zmizí.
+
 ## [1.9.3] – 2026-07-06
 
 ### Změněno (hlášení – chování hlášek)
