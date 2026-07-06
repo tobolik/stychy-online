@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Záznamník offline her - Štychy Online</title>
+    <script>
+        // Motiv: aplikovat uloženou volbu ještě před vykreslením (bez probliknutí).
+        (function(){try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+    </script>
     <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha384-iw3OoTErCYJJB9mCa8LNS2hbsQ7M3C0EpIsO/H5+EGAkPGc6rk+V8i04oW/K5xq0" crossorigin="anonymous" referrerpolicy="no-referrer" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha384-iw3OoTErCYJJB9mCa8LNS2hbsQ7M3C0EpIsO/H5+EGAkPGc6rk+V8i04oW/K5xq0" crossorigin="anonymous" referrerpolicy="no-referrer"></noscript>
     <style>
@@ -11,6 +15,7 @@
             --bg-color: #1a1c2c;
             --accent: #00ffcc;
             --accent-hover: #00cca3;
+            --accent-ink: var(--accent);   /* accent jako TEXT (tmavý ve světlém režimu) */
             --text-main: #ffffff;
             --text-muted: #a0a0a0;
             --surface: #23263a;
@@ -19,11 +24,34 @@
             --danger: #ff5e5e;
             --success: #2ecc71;
             --warning: #ffcc00;
+            --input-bg: rgba(0,0,0,0.3);
+            --panel-2: rgba(0,0,0,0.2); --panel-3: rgba(0,0,0,0.4);
             /* Aliasy pro proměnné používané v kódu, ale dříve nedefinované */
             --primary: var(--accent);
             --card-bg: var(--surface);
             --text: var(--text-main);
             --bg-main: var(--bg-color);
+            /* Světlá paleta (hodnoty definované jednou, remapované níže) */
+            --l-bg:#eef1f7; --l-surface:#ffffff; --l-surface-hover:#e9edf4;
+            --l-text:#1a1c2c; --l-muted:#5b6472; --l-border:rgba(26,28,44,0.14);
+            --l-accent:#00b89a; --l-accent-hover:#00a88d; --l-accent-ink:#00786a;
+            --l-danger:#d92d2d; --l-success:#188a44; --l-warning:#a6790a; --l-input:#f0f3f8; --l-panel-2:#edf0f6; --l-panel-3:#e2e7f0;
+        }
+        /* Světlý režim dle systému (pokud si uživatel ručně nezvolil tmavý) */
+        @media (prefers-color-scheme: light) {
+            :root:not([data-theme="dark"]) {
+                --bg-color:var(--l-bg); --surface:var(--l-surface); --surface-hover:var(--l-surface-hover);
+                --text-main:var(--l-text); --text-muted:var(--l-muted); --border-light:var(--l-border);
+                --accent:var(--l-accent); --accent-hover:var(--l-accent-hover); --accent-ink:var(--l-accent-ink);
+                --danger:var(--l-danger); --success:var(--l-success); --warning:var(--l-warning); --input-bg:var(--l-input); --panel-2:var(--l-panel-2); --panel-3:var(--l-panel-3);
+            }
+        }
+        /* Ruční volba světlého režimu (přebije systém) */
+        :root[data-theme="light"] {
+            --bg-color:var(--l-bg); --surface:var(--l-surface); --surface-hover:var(--l-surface-hover);
+            --text-main:var(--l-text); --text-muted:var(--l-muted); --border-light:var(--l-border);
+            --accent:var(--l-accent); --accent-hover:var(--l-accent-hover); --accent-ink:var(--l-accent-ink);
+            --danger:var(--l-danger); --success:var(--l-success); --warning:var(--l-warning); --input-bg:var(--l-input); --panel-2:var(--l-panel-2); --panel-3:var(--l-panel-3);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -57,7 +85,7 @@
             font-weight: 800;
             letter-spacing: 2px;
         }
-        .logo span { color: var(--accent); }
+        .logo span { color: var(--accent-ink); }
 
         .user-info {
             display: flex;
@@ -65,7 +93,7 @@
             gap: 15px;
         }
 
-        .username { color: var(--accent); font-weight: bold; }
+        .username { color: var(--accent-ink); font-weight: bold; }
 
         .btn {
             padding: 10px 20px;
@@ -121,7 +149,7 @@
         }
         .btn-icon:hover {
             background: rgba(255,255,255,0.1);
-            color: var(--accent);
+            color: var(--accent-ink);
         }
         .btn-icon-lg {
             background: var(--surface);
@@ -135,7 +163,7 @@
         }
         .btn-icon-lg:hover {
             background: rgba(255,255,255,0.1);
-            color: var(--accent);
+            color: var(--accent-ink);
         }
         .btn-icon-lg.active {
             background: var(--accent);
@@ -255,7 +283,7 @@
         }
         .new-game-card i {
             font-size: 2rem;
-            color: var(--accent);
+            color: var(--accent-ink);
             margin-bottom: 10px;
         }
 
@@ -366,7 +394,7 @@
         .stats-section-title {
             font-size: 1.1rem;
             font-weight: bold;
-            color: var(--primary);
+            color: var(--accent-ink);
             margin-bottom: 12px;
             display: flex;
             align-items: center;
@@ -378,7 +406,7 @@
             gap: 12px;
         }
         .stat-card {
-            background: rgba(0,0,0,0.3);
+            background: var(--input-bg);
             border-radius: 12px;
             padding: 15px;
             text-align: center;
@@ -394,7 +422,7 @@
         .stat-value {
             font-size: 1.8rem;
             font-weight: bold;
-            color: var(--accent);
+            color: var(--accent-ink);
         }
         .stat-label {
             font-size: 0.85rem;
@@ -403,7 +431,7 @@
         }
         .stat-player {
             font-size: 0.9rem;
-            color: var(--primary);
+            color: var(--accent-ink);
             margin-top: 3px;
             font-weight: bold;
         }
@@ -426,7 +454,7 @@
             font-weight: bold;
         }
         .stats-table .highlight {
-            color: var(--accent);
+            color: var(--accent-ink);
             font-weight: bold;
         }
         .stats-badge {
@@ -480,7 +508,7 @@
             display: block;
             margin-bottom: 8px;
             font-weight: 600;
-            color: var(--accent);
+            color: var(--accent-ink);
             font-size: 0.85rem;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -491,8 +519,8 @@
             padding: 12px 15px;
             border: 1px solid var(--border-light);
             border-radius: 10px;
-            background: rgba(0,0,0,0.3);
-            color: white;
+            background: var(--input-bg);
+            color: var(--text-main);
             font-size: 1rem;
             transition: border-color 0.3s;
         }
@@ -514,7 +542,7 @@
             border-radius: 12px;
             border: 2px solid var(--border-light);
             background: transparent;
-            color: white;
+            color: var(--text-main);
             font-size: 1.2rem;
             font-weight: bold;
             cursor: pointer;
@@ -712,7 +740,7 @@
             border: 1px solid var(--border-light);
             border-radius: 10px;
             background: var(--surface);
-            color: white;
+            color: var(--text-main);
             cursor: pointer;
             font-weight: bold;
             font-size: 1.35rem;
@@ -763,7 +791,7 @@
         .score-table .round-num {
             background: var(--surface);
             font-weight: bold;
-            color: var(--accent);
+            color: var(--accent-ink);
         }
 
         .score-table .dealer-marker {
@@ -775,7 +803,7 @@
         }
 
         .bid-value { color: var(--warning); }
-        .tricks-value { color: var(--accent); }
+        .tricks-value { color: var(--accent-ink); }
 
         .score-positive { color: var(--success); font-weight: bold; }
         .score-negative { color: var(--danger); font-weight: bold; }
@@ -801,7 +829,7 @@
             align-items: center;
             gap: 10px;
             padding: 6px 10px;
-            background: rgba(0,0,0,0.2);
+            background: var(--panel-2);
             border-radius: 8px;
             border: 2px solid transparent;   /* stejná šířka pro všechny řádky -> tlačítka zarovnaná */
         }
@@ -831,7 +859,7 @@
             border: 1px solid var(--border-light);
             border-radius: 8px;
             background: var(--surface);
-            color: white;
+            color: var(--text-main);
             cursor: pointer;
             font-weight: bold;
             transition: all 0.2s;
@@ -856,7 +884,7 @@
             border: 2px solid var(--border-light);
             border-radius: 10px;
             background: var(--surface);
-            color: white;
+            color: var(--text-main);
             cursor: pointer;
             font-weight: bold;
             font-size: 1.1rem;
@@ -890,7 +918,7 @@
             align-items: center;
             gap: 10px;
             padding: 6px 10px;
-            background: rgba(0,0,0,0.2);
+            background: var(--panel-2);
             border-radius: 6px;
             margin-bottom: 4px;
             transition: all 0.2s;
@@ -945,7 +973,7 @@
         .mic-btn {
             background: var(--surface);
             border: 2px solid var(--accent);
-            color: var(--accent);
+            color: var(--accent-ink);
             padding: 10px 20px;
             border-radius: 25px;
         }
@@ -968,7 +996,7 @@
         }
         .modal-voice-btn:hover {
             border-color: var(--accent);
-            color: var(--accent);
+            color: var(--accent-ink);
         }
         .modal-voice-btn.active {
             background: var(--danger);
@@ -1047,7 +1075,7 @@
             align-items: center;
             gap: 15px;
             padding: 15px;
-            background: rgba(0,0,0,0.2);
+            background: var(--panel-2);
             border-radius: 10px;
             margin-bottom: 10px;
         }
@@ -1069,10 +1097,10 @@
         .rank-5 { background: #d35400; color: white; }
         .rank-6 { background: #3498db; color: white; }
         .rank-last { background: #2c3e50; color: white; }
-        .rank-other { background: var(--surface); color: white; }
+        .rank-other { background: var(--surface); color: var(--text-main); }
 
         .rank-name { flex: 1; font-weight: bold; }
-        .rank-score { font-size: 1.2rem; color: var(--accent); }
+        .rank-score { font-size: 1.2rem; color: var(--accent-ink); }
 
         /* Current Ranking */
         .current-ranking {
@@ -1096,12 +1124,12 @@
             align-items: center;
             gap: 12px;
             padding: 12px 16px;
-            background: rgba(0,0,0,0.3);
+            background: var(--input-bg);
             border-radius: 10px;
             font-size: 1.6rem;   /* výrazně větší, lepší čitelnost */
         }
         .ranking-row.top-3 {
-            background: rgba(0,0,0,0.4);
+            background: var(--panel-3);
         }
         .ranking-row .position {
             font-weight: bold;
@@ -1135,7 +1163,7 @@
             flex: 0 0 auto; width: 260px; max-width: 50%;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-        .ranking-row .score { color: var(--primary); font-weight: 800; margin-left: 14px; white-space: nowrap; }
+        .ranking-row .score { color: var(--accent-ink); font-weight: 800; margin-left: 14px; white-space: nowrap; }
         @media (max-width: 480px) { .ranking-row .name { width: 150px; } }
 
         /* Round Info Bar */
@@ -1164,7 +1192,7 @@
 
         .round-info-value {
             font-weight: bold;
-            color: var(--accent);
+            color: var(--accent-ink);
         }
 
         .trump-display {
@@ -1219,7 +1247,7 @@
         }
         .loading i {
             font-size: 2rem;
-            color: var(--accent);
+            color: var(--accent-ink);
             animation: spin 1s linear infinite;
         }
         @keyframes spin {
@@ -1279,6 +1307,23 @@
             .trump-value-selector { flex-wrap: wrap; gap: 6px; }
             .trump-value-btn { width: 44px; height: 44px; font-size: 1.1rem; }
         }
+        /* Přepínač světlý/tmavý režim v hlavičce */
+        .theme-toggle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 1px solid var(--border-light);
+            background: var(--surface-hover);
+            color: var(--accent-ink);
+            font-size: 1.05rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .theme-toggle:hover { border-color: var(--accent); transform: scale(1.06); }
     </style>
 </head>
 <body>
@@ -1288,6 +1333,7 @@
             <div class="logo">ŠTYCHY <span>ZÁZNAMNÍK</span></div>
             <div class="user-info">
                 <span>Přihlášen jako: <span class="username" id="display-username">-</span></span>
+                <button class="theme-toggle" onclick="toggleTheme()" aria-label="Přepnout světlý/tmavý režim" title="Přepnout motiv"></button>
                 <a href="index.html" class="btn btn-secondary btn-sm">
                     <i class="fa-solid fa-home"></i> Domů
                 </a>
@@ -1365,7 +1411,7 @@
         
         <!-- Footer -->
         <div class="app-footer">
-            <span>Štychy Záznamník v1.7.0</span>
+            <span>Štychy Záznamník v1.8.0</span>
             <span>•</span>
             <span id="build-date">2026-07-06</span>
         </div>
@@ -1452,7 +1498,7 @@
 
             <div id="dealer-info" style="background: rgba(0, 255, 204, 0.1); border: 1px solid var(--primary); border-radius: 12px; padding: 12px 18px; margin-bottom: 14px;">
                 <div class="dealer-line">
-                    <span style="font-size: 1.15rem; color: var(--text-muted);"><i class="fa-solid fa-hand-holding"></i> Rozdává: <strong id="dealer-name" style="font-size: 1.7rem; color: var(--primary); font-weight: 800; background: rgba(0,255,204,0.16); padding: 1px 12px; border-radius: 10px; display: inline-block; line-height: 1.25;"></strong></span>
+                    <span style="font-size: 1.15rem; color: var(--text-muted);"><i class="fa-solid fa-hand-holding"></i> Rozdává: <strong id="dealer-name" style="font-size: 1.7rem; color: var(--accent-ink); font-weight: 800; background: rgba(0,255,204,0.16); padding: 1px 12px; border-radius: 10px; display: inline-block; line-height: 1.25;"></strong></span>
                     <span id="cards-in-round" class="dealer-line" style="gap: 10px;"></span>
                 </div>
             </div>
@@ -1517,10 +1563,10 @@
                 Zadejte hlášení klávesami <strong>0-9</strong>, potvrďte <strong>Enter</strong>.
             </p>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 20px; padding: 15px; background: var(--input-bg); border-radius: 12px;">
                 <div>
                     <span style="color: var(--text-muted);">Počet karet:</span>
-                    <strong id="bidding-cards-count" style="color: var(--accent); font-size: 1.3rem; margin-left: 5px;">7</strong>
+                    <strong id="bidding-cards-count" style="color: var(--accent-ink); font-size: 1.3rem; margin-left: 5px;">7</strong>
                 </div>
                 <div style="display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted);">
                     Trumf: <span id="bidding-trump" class="trump-display trump-display-sm"></span>
@@ -1575,13 +1621,13 @@
                     Zadat přesný počet štychů
                 </label>
             </div>
-            <div class="mobile-hide" style="margin-bottom: 15px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px; font-size: 0.85rem; color: var(--text-muted);">
+            <div class="mobile-hide" style="margin-bottom: 15px; padding: 10px; background: var(--panel-2); border-radius: 8px; font-size: 0.85rem; color: var(--text-muted);">
                 <strong>Klávesnice:</strong> <span style="color: #ff5e5e;">0 = Nesplnil</span> | <span style="color: #2ecc71;">1 = Splnil</span> | Enter = Uložit
             </div>
 
             <!-- Edit cards count - only visible in edit mode -->
             <div id="edit-cards-count-container" style="margin-bottom: 15px; display: none;">
-                <label style="display: flex; align-items: center; gap: 10px; color: var(--primary); font-size: 0.9rem;">
+                <label style="display: flex; align-items: center; gap: 10px; color: var(--accent-ink); font-size: 0.9rem;">
                     <i class="fa-solid fa-cards"></i> Počet karet v kole:
                     <select id="edit-cards-count" style="padding: 5px 10px; border-radius: 5px; background: var(--card-bg); color: var(--text); border: 1px solid var(--primary);">
                         <option value="1" style="background: var(--surface); color: var(--text-main);">1</option>
@@ -1604,9 +1650,9 @@
                 </div>
             </div>
 
-            <div id="results-status-bar" style="margin-top: 10px; padding: 10px 15px; background: rgba(0,0,0,0.3); border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+            <div id="results-status-bar" style="margin-top: 10px; padding: 10px 15px; background: var(--input-bg); border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
                 <div style="color: var(--text-muted);">
-                    Zadáno: <strong id="results-entered-count" style="color: var(--accent);">0</strong> / <span id="results-total-count">0</span>
+                    Zadáno: <strong id="results-entered-count" style="color: var(--accent-ink);">0</strong> / <span id="results-total-count">0</span>
                 </div>
                 <div id="tricks-sum-container" style="color: var(--text-muted); display: none;">
                     Štychů: <strong id="tricks-sum">0</strong> / <span id="tricks-required">7</span>
@@ -3122,7 +3168,7 @@
                 const tricksSumDisplay = hasTricks ? sumTricks : '-';
                 const bidsColor = hasBids ? (sumBids === round.cards_count ? 'var(--danger)' : (sumBids > round.cards_count ? 'var(--warning)' : 'var(--accent)')) : 'inherit';
                 
-                html += `<td style="background: rgba(0,0,0,0.2);">
+                html += `<td style="background: var(--panel-2);">
                     <span style="color: ${bidsColor};">${bidsSumDisplay}</span> / 
                     <span class="tricks-value">${tricksSumDisplay}</span>
                 </td>`;
@@ -3130,13 +3176,13 @@
                 // Tlačítko pro opravu (jen pokud je kolo dokončené a hra aktivní)
                 if (currentGame.game.status === 'active') {
                     if (round.status === 'finished') {
-                        html += `<td style="background: rgba(0,0,0,0.2);">
+                        html += `<td style="background: var(--panel-2);">
                             <button class="btn btn-sm btn-secondary" onclick="editRound(${round.id})" title="Opravit výsledky" style="padding: 4px 8px;">
                                 <i class="fa-solid fa-pen"></i>
                             </button>
                         </td>`;
                     } else {
-                        html += `<td style="background: rgba(0,0,0,0.2);"></td>`;
+                        html += `<td style="background: var(--panel-2);"></td>`;
                     }
                 }
 
@@ -3349,7 +3395,7 @@
             for (let i = 0; i < cardsCount; i++) cardIconsHtml += '<span class="mini-card"></span>';
             const cardWord = cardsCount === 1 ? 'karta' : (cardsCount < 5 ? 'karty' : 'karet');
             document.getElementById('cards-in-round').innerHTML =
-                `<span style="font-size: 2.5rem; font-weight: 800; color: var(--accent); line-height: 1;">${cardsCount}</span>` +
+                `<span style="font-size: 2.5rem; font-weight: 800; color: var(--accent-ink); line-height: 1;">${cardsCount}</span>` +
                 `<span style="font-size: 1.05rem; color: var(--text-muted); font-weight: 600;">${cardWord}</span>` +
                 `<span class="mini-cards-row" style="opacity: 0.4; margin-left: 6px;">${cardIconsHtml}</span>`;
 
@@ -4952,6 +4998,26 @@
                 };
             }
         });
+    </script>
+    <script>
+        function toggleTheme(){
+            var root=document.documentElement;
+            var cur=root.getAttribute('data-theme');
+            if(!cur){cur=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}
+            var next=cur==='light'?'dark':'light';
+            root.setAttribute('data-theme',next);
+            try{localStorage.setItem('theme',next);}catch(e){}
+            updateThemeButton();
+        }
+        function updateThemeButton(){
+            var root=document.documentElement;
+            var eff=root.getAttribute('data-theme')||(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');
+            document.querySelectorAll('.theme-toggle').forEach(function(b){
+                b.innerHTML=eff==='light'?'<i class="fa-solid fa-moon"></i>':'<i class="fa-solid fa-sun"></i>';
+                b.setAttribute('title',eff==='light'?'Přepnout na tmavý režim':'Přepnout na světlý režim');
+            });
+        }
+        updateThemeButton();
     </script>
 </body>
 </html>

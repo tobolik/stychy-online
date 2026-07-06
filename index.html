@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Štychy Online - stychy.cz</title>
+    <script>
+        // Motiv: aplikovat uloženou volbu ještě před vykreslením (bez probliknutí).
+        (function(){try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+    </script>
     <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha384-iw3OoTErCYJJB9mCa8LNS2hbsQ7M3C0EpIsO/H5+EGAkPGc6rk+V8i04oW/K5xq0" crossorigin="anonymous" referrerpolicy="no-referrer" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha384-iw3OoTErCYJJB9mCa8LNS2hbsQ7M3C0EpIsO/H5+EGAkPGc6rk+V8i04oW/K5xq0" crossorigin="anonymous" referrerpolicy="no-referrer"></noscript>
     <style>
@@ -13,12 +17,39 @@
             --accent-hover: #00cca3;
             --accent-2: #ffcc00;
             --red: #ff6b6b;
+            --accent-ink: var(--accent);   /* accent jako TEXT (tmavý ve světlém režimu) */
             --text-main: #ffffff;
             --text-muted: #c2c6d6; /* zesvětleno z #a0a0a0 kvůli kontrastu (WCAG) */
             --surface: #23263a;
             --surface-hover: #2d314a;
             --border-light: rgba(255,255,255,0.1);
+            --input-bg: rgba(0,0,0,0.3);
+            --bg-darker: #151620; --bg-glow: #2a2d45; --nav-bg: rgba(26,28,44,0.82);
+            --title-a:#ffffff; --title-b:#b3b3b3; --subtle: var(--subtle);
             --mono: ui-monospace, "Cascadia Code", "SF Mono", Consolas, monospace;
+            /* Světlá paleta (hodnoty definované jednou, remapované níže) */
+            --l-bg:#eef1f7; --l-surface:#ffffff; --l-surface-hover:#e9edf4;
+            --l-text:#1a1c2c; --l-muted:#5b6472; --l-border:rgba(26,28,44,0.14);
+            --l-accent:#00b89a; --l-accent-hover:#00a88d; --l-accent-ink:#00786a;
+            --l-red:#e03131; --l-input:#f0f3f8;
+            --l-bg-darker:#e6eaf2; --l-bg-glow:#dfe4f0; --l-nav:rgba(255,255,255,0.85);
+            --l-title-a:#1a1c2c; --l-title-b:#3a4250; --l-subtle:rgba(26,28,44,0.05);
+        }
+        /* Světlý režim dle systému (pokud si uživatel ručně nezvolil tmavý) */
+        @media (prefers-color-scheme: light) {
+            :root:not([data-theme="dark"]) {
+                --bg-color:var(--l-bg); --surface:var(--l-surface); --surface-hover:var(--l-surface-hover);
+                --text-main:var(--l-text); --text-muted:var(--l-muted); --border-light:var(--l-border);
+                --accent:var(--l-accent); --accent-hover:var(--l-accent-hover); --accent-ink:var(--l-accent-ink);
+                --red:var(--l-red); --input-bg:var(--l-input); --bg-darker:var(--l-bg-darker); --bg-glow:var(--l-bg-glow); --nav-bg:var(--l-nav); --title-a:var(--l-title-a); --title-b:var(--l-title-b); --subtle:var(--l-subtle);
+            }
+        }
+        /* Ruční volba světlého režimu (přebije systém) */
+        :root[data-theme="light"] {
+            --bg-color:var(--l-bg); --surface:var(--l-surface); --surface-hover:var(--l-surface-hover);
+            --text-main:var(--l-text); --text-muted:var(--l-muted); --border-light:var(--l-border);
+            --accent:var(--l-accent); --accent-hover:var(--l-accent-hover); --accent-ink:var(--l-accent-ink);
+            --red:var(--l-red); --input-bg:var(--l-input); --bg-darker:var(--l-bg-darker); --bg-glow:var(--l-bg-glow); --nav-bg:var(--l-nav); --title-a:var(--l-title-a); --title-b:var(--l-title-b); --subtle:var(--l-subtle);
         }
 
         * { box-sizing: border-box; }
@@ -52,7 +83,7 @@
         /* --- NAVIGACE --- */
         .nav-shell {
             position: sticky; top: 0; z-index: 50;
-            background: rgba(26,28,44,0.82);
+            background: var(--nav-bg);
             backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border-light);
         }
@@ -73,7 +104,7 @@
             text-transform: uppercase;
             display: flex; align-items: center; gap: 10px;
         }
-        .logo span { color: var(--accent); }
+        .logo span { color: var(--accent-ink); }
         .logo .pips { font-size: 0.95rem; letter-spacing: 1px; }
         .logo .pips .r { color: var(--red); }
 
@@ -96,7 +127,7 @@
             transition: 0.3s;
             position: relative;
         }
-        .nav-btn:hover { color: var(--accent); }
+        .nav-btn:hover { color: var(--accent-ink); }
         .nav-btn-highlight {
             background: var(--accent);
             color: #1a1c2c !important;
@@ -116,7 +147,7 @@
         /* --- HERO --- */
         header.hero {
             padding: 60px 0 70px;
-            background: radial-gradient(circle at 30% 20%, #2a2d45 0%, var(--bg-color) 70%);
+            background: radial-gradient(circle at 30% 20%, var(--bg-glow) 0%, var(--bg-color) 70%);
         }
         .hero-grid {
             display: grid;
@@ -134,7 +165,7 @@
             margin: 0 0 18px 0;
             line-height: 1.08;
             font-weight: 800;
-            background: linear-gradient(to right, #fff, #b3b3b3);
+            background: linear-gradient(to right, var(--title-a), var(--title-b));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -159,7 +190,7 @@
 
         /* --- HERNÍ SETUP --- */
         .game-setup {
-            background: rgba(255,255,255,0.03);
+            background: var(--subtle);
             padding: 28px;
             border-radius: 20px;
             display: block;
@@ -172,7 +203,7 @@
             display: block;
             margin-bottom: 16px;
             font-weight: bold;
-            color: var(--accent);
+            color: var(--accent-ink);
             text-transform: uppercase;
             font-size: 0.85rem;
             letter-spacing: 1px;
@@ -188,8 +219,8 @@
 
         .p-btn {
             background: var(--surface);
-            border: 1px solid #444;
-            color: white;
+            border: 1px solid var(--border-light);
+            color: var(--text-main);
             width: 50px;
             height: 50px;
             border-radius: 12px;
@@ -232,7 +263,7 @@
         /* jemné sekundární tlačítko (méně výrazné než hlavní CTA) */
         .btn-soft {
             display: inline-flex; align-items: center; gap: 10px;
-            background: transparent; color: var(--accent);
+            background: transparent; color: var(--accent-ink);
             border: 1px solid var(--border-light);
             padding: 12px 26px; border-radius: 30px;
             font-weight: 700; text-decoration: none; transition: all .2s;
@@ -241,7 +272,7 @@
 
         /* --- SECTIONS --- */
         .section-padding { padding: 100px 0; }
-        .bg-darker { background: #151620; }
+        .bg-darker { background: var(--bg-darker); }
         
         .section-title {
             font-size: 2.5rem;
@@ -303,7 +334,7 @@
             align-items: center;
         }
         .feature-card:hover { transform: translateY(-10px); background: var(--surface-hover); }
-        .f-icon { font-size: 2.5rem; color: var(--accent); margin-bottom: 25px; }
+        .f-icon { font-size: 2.5rem; color: var(--accent-ink); margin-bottom: 25px; }
         .f-title { font-size: 1.4rem; margin-bottom: 15px; font-weight: bold; }
         .f-text { color: var(--text-muted); font-size: 1rem; }
 
@@ -315,7 +346,7 @@
             border: 1px solid var(--border-light);
         }
         .rule-block { margin-bottom: 30px; border-left: 4px solid var(--accent); padding-left: 25px; }
-        .rule-block h3 { color: var(--accent); font-size: 1.5rem; margin-top: 0; margin-bottom: 10px; }
+        .rule-block h3 { color: var(--accent-ink); font-size: 1.5rem; margin-top: 0; margin-bottom: 10px; }
         .rule-block p, .rule-block li { color: #ccc; font-size: 1.05rem; margin-bottom: 10px; }
         .rule-block ul { padding-left: 20px; }
 
@@ -323,7 +354,7 @@
         .roadmap-list { list-style: none; padding: 0; max-width: 600px; margin: 0 auto; }
         .roadmap-item { 
             display: flex; align-items: center; margin-bottom: 20px; 
-            padding: 15px; background: rgba(255,255,255,0.03); border-radius: 12px;
+            padding: 15px; background: var(--subtle); border-radius: 12px;
         }
         .roadmap-item i { margin-right: 20px; font-size: 1.2rem; }
         .roadmap-item.done { border-left: 4px solid #2ecc71; }
@@ -371,8 +402,8 @@
         .contact-wrap { max-width: 620px; margin: 0 auto; }
         .contact-form { background: var(--surface); border: 1px solid var(--border-light); border-radius: 20px; padding: 35px; }
         .contact-form .form-row { margin-bottom: 18px; text-align: left; }
-        .contact-form label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--accent); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
-        .contact-input { width: 100%; padding: 14px 16px; border: 1px solid var(--border-light); border-radius: 12px; background: rgba(0,0,0,0.3); color: #fff; font-size: 1rem; font-family: inherit; transition: border-color 0.2s, box-shadow 0.2s; }
+        .contact-form label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--accent-ink); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
+        .contact-input { width: 100%; padding: 14px 16px; border: 1px solid var(--border-light); border-radius: 12px; background: var(--input-bg); color: var(--text-main); font-size: 1rem; font-family: inherit; transition: border-color 0.2s, box-shadow 0.2s; }
         .contact-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,255,204,0.12); }
         .contact-input::placeholder { color: var(--text-muted); }
         textarea.contact-input { min-height: 120px; resize: vertical; }
@@ -384,9 +415,31 @@
         .hp-field { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
         .spin { display: none; animation: spin 1s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        .theme-toggle {
+            position: fixed;
+            bottom: 16px;
+            right: 16px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 1px solid var(--border-light);
+            background: var(--surface);
+            color: var(--accent-ink);
+            font-size: 1.15rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1200;
+            transition: all 0.25s;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.28);
+        }
+        .theme-toggle:hover { transform: scale(1.08); border-color: var(--accent); }
     </style>
 </head>
 <body>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Přepnout světlý/tmavý režim" title="Přepnout motiv"></button>
 
     <div class="nav-shell">
         <nav id="mainNav">
@@ -442,7 +495,7 @@
                 <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 40px;">
                     <div style="flex: 1; min-width: 300px;">
                         <h2 style="font-size: 2rem; margin-bottom: 15px;">
-                            <i class="fa-solid fa-clipboard-list" style="color: var(--accent);"></i>
+                            <i class="fa-solid fa-clipboard-list" style="color: var(--accent-ink);"></i>
                             Hrajete offline s přáteli?
                         </h2>
                         <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 20px;">
@@ -450,19 +503,19 @@
                         </p>
                         <ul style="list-style: none; margin-bottom: 25px;">
                             <li style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
-                                <i class="fa-solid fa-check-circle" style="color: var(--accent);" aria-hidden="true"></i>
+                                <i class="fa-solid fa-check-circle" style="color: var(--accent-ink);" aria-hidden="true"></i>
                                 Automatický výpočet bodů
                             </li>
                             <li style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
-                                <i class="fa-solid fa-check-circle" style="color: var(--accent);" aria-hidden="true"></i>
+                                <i class="fa-solid fa-check-circle" style="color: var(--accent-ink);" aria-hidden="true"></i>
                                 Kontrola validních hlášení (zakázaná sázka dealera)
                             </li>
                             <li style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
-                                <i class="fa-solid fa-check-circle" style="color: var(--accent);" aria-hidden="true"></i>
+                                <i class="fa-solid fa-check-circle" style="color: var(--accent-ink);" aria-hidden="true"></i>
                                 Historie her a statistiky
                             </li>
                             <li style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
-                                <i class="fa-solid fa-check-circle" style="color: var(--accent);" aria-hidden="true"></i>
+                                <i class="fa-solid fa-check-circle" style="color: var(--accent-ink);" aria-hidden="true"></i>
                                 Přehledná tabulka s výsledky
                             </li>
                         </ul>
@@ -472,7 +525,7 @@
                     </div>
                     <div style="flex: 1; min-width: 300px; text-align: center;">
                         <div style="background: var(--surface); border-radius: 20px; padding: 25px; border: 1px solid var(--border-light);">
-                            <div style="font-size: 3rem; color: var(--accent); margin-bottom: 10px;">
+                            <div style="font-size: 3rem; color: var(--accent-ink); margin-bottom: 10px;">
                                 <i class="fa-solid fa-table"></i>
                             </div>
                             <p style="font-size: 0.9rem; color: var(--text-muted);">
@@ -640,7 +693,7 @@
                     <p class="story-text">
                         To, na co se právě díváte, není projekt profesionálního studia. Je to výsledek jednoho odpoledne, kdy dcera dodala herní logiku, nadšení a designový cit, a táta pomohl s tím, aby to celé běželo na webu.
                     </p>
-                    <p class="story-text" style="font-weight: bold; color: var(--accent); margin-top: 30px;">
+                    <p class="story-text" style="font-weight: bold; color: var(--accent-ink); margin-top: 30px;">
                         Vytvořeno pro zábavu. Hrajte s námi.
                     </p>
                 </div>
@@ -686,7 +739,7 @@
                 <div class="contact-wrap">
                     <p style="text-align: center; color: var(--text-muted); margin-bottom: 30px;">
                         Máte dotaz, nápad nebo jste narazili na chybu? Napište nám – ozveme se vám.
-                        Můžete i přímo na <a href="mailto:honza@tobolik.cz" style="color: var(--accent);">honza@tobolik.cz</a>.
+                        Můžete i přímo na <a href="mailto:honza@tobolik.cz" style="color: var(--accent-ink);">honza@tobolik.cz</a>.
                     </p>
 
                     <div class="contact-msg err" id="contact-error" role="alert" aria-live="assertive"></div>
@@ -724,7 +777,7 @@
         <footer>
             &copy; <span id="copyright-year">2025</span> – Štychy Online – stychy.cz. Vytvořeno pro zábavu by Juli &amp; Honza.
             <span style="display:block; margin-top:8px; font-family: var(--mono); font-size: 0.82rem; opacity: 0.7;">
-                v1.7.0 · <a href="#kontakt" style="color: var(--text-muted); text-decoration: none;">Kontakt</a>
+                v1.8.0 · <a href="#kontakt" style="color: var(--text-muted); text-decoration: none;">Kontakt</a>
             </span>
         </footer>
     </div>
@@ -927,6 +980,26 @@
             nextScene();
             window.addEventListener('resize', size);
         })();
+    </script>
+    <script>
+        function toggleTheme(){
+            var root=document.documentElement;
+            var cur=root.getAttribute('data-theme');
+            if(!cur){cur=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}
+            var next=cur==='light'?'dark':'light';
+            root.setAttribute('data-theme',next);
+            try{localStorage.setItem('theme',next);}catch(e){}
+            updateThemeButton();
+        }
+        function updateThemeButton(){
+            var root=document.documentElement;
+            var eff=root.getAttribute('data-theme')||(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');
+            document.querySelectorAll('.theme-toggle').forEach(function(b){
+                b.innerHTML=eff==='light'?'<i class="fa-solid fa-moon"></i>':'<i class="fa-solid fa-sun"></i>';
+                b.setAttribute('title',eff==='light'?'Přepnout na tmavý režim':'Přepnout na světlý režim');
+            });
+        }
+        updateThemeButton();
     </script>
 </body>
 </html>
