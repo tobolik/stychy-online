@@ -3,6 +3,12 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.10.4] – 2026-07-06
+
+### Změněno
+- V doku (statistiky vlevo/vpravo) je nově **horní okraj tabulky zarovnaný s panelem
+  průběžného pořadí** (dřív začínala tabulka o ~20 px níž kvůli svému `margin-top`).
+
 ## [1.10.3] – 2026-07-06
 
 ### Změněno
