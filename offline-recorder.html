@@ -142,21 +142,6 @@
             color: var(--bg-main);
             border-color: var(--accent);
         }
-        .mini-cards-row {
-            display: flex;
-            justify-content: center;
-            gap: 3px;
-            margin-bottom: 5px;
-        }
-        .mini-card {
-            width: 14px;
-            height: 20px;
-            background: linear-gradient(135deg, #1a5f7a, #2d8bb5);
-            border: 1px solid #4db8d8;
-            border-radius: 2px;
-            display: inline-block;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
-        }
         .app-footer {
             margin-top: 40px;
             padding: 20px;
@@ -316,6 +301,8 @@
             .modal-content.modal-game .result-btn { width: 64px; height: 52px; }
             .modal-content.modal-game .result-bid-badge,
             .modal-content.modal-game .bid-badge { font-size: 2.1rem; }
+            /* sticky lišta dosedne k okrajům i při širším paddingu .modal-game (34px 38px) */
+            .modal-content.modal-game .modal-save-bar { margin: 15px -38px -34px; padding: 15px 38px 34px; }
         }
 
         /* Sticky lišta s tlačítkem Uložit – vždy viditelná i při mnoha hráčích */
@@ -644,12 +631,6 @@
             font-size: 1.1rem;
             font-weight: bold;
             transform: rotate(180deg);
-        }
-
-        .cards-count-big {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: var(--accent);
         }
 
         .trump-value-selector {
@@ -1220,7 +1201,6 @@
             .trump-suit-btn .trump-val, .trump-suit-btn .trump-val-bottom { font-size: 0.7rem; top: 3px; left: 5px; bottom: 3px; right: 5px; }
 
             /* Větší klíčové číslovky a hodnoty pro pohodlnější zadávání na mobilu */
-            .cards-count-big { font-size: 2rem; }
             #bidding-cards-count { font-size: 1.7rem; }
             .trump-value-selector { flex-wrap: wrap; gap: 6px; }
             .trump-value-btn { width: 44px; height: 44px; font-size: 1.1rem; }
@@ -1313,7 +1293,7 @@
         <div class="app-footer">
             <span>Štychy Záznamník v1.7.0</span>
             <span>•</span>
-            <span id="build-date">2026-06-22</span>
+            <span id="build-date">2026-07-06</span>
         </div>
     </div>
 
@@ -3354,8 +3334,7 @@
             }
             if (creatingRound) return;            // ochrana proti dvojkliku
             creatingRound = true;
-            const trigger = btn || (typeof event !== 'undefined' ? event.target.closest('button') : null);
-            if (trigger) trigger.disabled = true;
+            if (btn) btn.disabled = true;
 
             try {
                 const result = await api('rounds.php', {
@@ -3376,7 +3355,7 @@
                 }
             } finally {
                 creatingRound = false;
-                if (trigger) trigger.disabled = false;
+                if (btn) btn.disabled = false;
             }
         }
 
@@ -3498,7 +3477,7 @@
                         const cards = currentRound.cards_count;
                         const forbidden = cards - sumOthers;
                         if (forbidden >= 0 && forbidden <= cards) {
-                            const stych = forbidden === 1 ? 'štych' : (forbidden < 5 ? 'štychy' : 'štychů');
+                            const stych = forbidden === 1 ? 'štych' : (forbidden >= 2 && forbidden <= 4 ? 'štychy' : 'štychů');
                             speak(`${nextPlayer.name}. Nahlášeno ${sumOthers} z ${cards}. Rozdávající nemůže zvolit ${forbidden} ${stych}.`);
                         } else {
                             speak(`${nextPlayer.name}?`);
@@ -4153,7 +4132,12 @@
 
             if (e.key === 'ArrowDown') {
                 e.preventDefault();
-                if (!isOpen) { showAutocomplete(input, index); return; }
+                if (!isOpen) {
+                    showAutocomplete(input, index);
+                    const fresh = listEl.querySelectorAll('.autocomplete-item');
+                    if (fresh.length) fresh[0].classList.add('active');   // rovnou zvýraznit první
+                    return;
+                }
                 if (!items.length) return;
                 let cur = items.findIndex(it => it.classList.contains('active'));
                 cur = (cur + 1) % items.length;
@@ -4175,7 +4159,11 @@
                     selectAutocomplete(active.dataset.name, index);
                 }
             } else if (e.key === 'Escape') {
-                listEl.classList.remove('show');
+                if (isOpen) {
+                    e.preventDefault();
+                    e.stopPropagation();   // ať Escape zavře jen našeptávač, ne celý modál
+                    listEl.classList.remove('show');
+                }
             }
         }
 
@@ -4574,14 +4562,14 @@
             return sequence;
         }
 
-        // Vrátí celkový počet kol hry — respektuje uložené total_rounds (nové hry),
+        // Vrátí celkový počet kol hry – respektuje uložené total_rounds (nové hry),
         // nebo starý vzorec 2×max_cards (staré hry bez záznamu).
         function getGameTotalRounds(game) {
             if (game.total_rounds) return game.total_rounds;
             return game.max_cards * 2;
         }
 
-        // Vrátí počet karet pro dané kolo (1-based) — pro extra kola starých her vrátí max_cards.
+        // Vrátí počet karet pro dané kolo (1-based) – pro extra kola starých her vrátí max_cards.
         function getRoundCards(game, roundNumber) {
             const seq = getRoundSequence(game.max_cards);
             return seq[roundNumber - 1] ?? game.max_cards;

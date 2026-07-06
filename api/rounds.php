@@ -150,7 +150,7 @@ switch ($action) {
             SELECT r.*, g.user_id, g.player_count
             FROM rounds r
             JOIN games g ON g.id = r.game_id
-            WHERE r.id = ? AND g.valid_to IS NULL
+            WHERE r.id = ? AND g.valid_to IS NULL AND r.valid_to IS NULL
         ');
         $stmt->execute([$roundId]);
         $round = $stmt->fetch();
@@ -206,7 +206,7 @@ switch ($action) {
             SELECT r.*, g.user_id, g.id as game_id
             FROM rounds r
             JOIN games g ON g.id = r.game_id
-            WHERE r.id = ? AND g.valid_to IS NULL
+            WHERE r.id = ? AND g.valid_to IS NULL AND r.valid_to IS NULL
         ');
         $stmt->execute([$roundId]);
         $round = $stmt->fetch();
@@ -280,7 +280,7 @@ switch ($action) {
             SELECT r.*, g.user_id
             FROM rounds r
             JOIN games g ON g.id = r.game_id
-            WHERE r.id = ? AND g.valid_to IS NULL
+            WHERE r.id = ? AND g.valid_to IS NULL AND r.valid_to IS NULL
         ');
         $stmt->execute([$roundId]);
         $round = $stmt->fetch();
@@ -320,7 +320,7 @@ switch ($action) {
             SELECT r.*, g.user_id, g.id as game_id
             FROM rounds r
             JOIN games g ON g.id = r.game_id
-            WHERE r.id = ? AND g.valid_to IS NULL
+            WHERE r.id = ? AND g.valid_to IS NULL AND r.valid_to IS NULL
         ');
         $stmt->execute([$roundId]);
         $round = $stmt->fetch();
@@ -414,10 +414,18 @@ switch ($action) {
             jsonResponse(['success' => false, 'error' => 'Smazat lze jen kolo bez zadaného hlášení. Pro opravu upravte výsledky.'], 400);
         }
 
+        // UNIQUE(game_id, round_number) nezohledňuje valid_to, takže soft-smazané kolo
+        // dál blokuje svůj round_number. Uvolníme slot: dáme smazané kolo pod aktuální
+        // minimum (zaručeně unikátní i při opakovaném smaž+vytvoř), aby další create mohl
+        // číslo znovu použít bez kolize. Čtení kola stejně filtrují přes valid_to.
+        $stmt = $db->prepare('SELECT COALESCE(MIN(round_number), 0) AS mn FROM rounds WHERE game_id = ?');
+        $stmt->execute([$round['game_id']]);
+        $freeNum = ((int)$stmt->fetch()['mn']) - 1;
+
         try {
             $db->beginTransaction();
-            $db->prepare('UPDATE rounds SET valid_to = NOW(), valid_to_user_id = ? WHERE id = ? AND valid_to IS NULL')
-               ->execute([$userId, $roundId]);
+            $db->prepare('UPDATE rounds SET valid_to = NOW(), valid_to_user_id = ?, round_number = ? WHERE id = ? AND valid_to IS NULL')
+               ->execute([$userId, $freeNum, $roundId]);
             $db->prepare('UPDATE round_results SET valid_to = NOW(), valid_to_user_id = ? WHERE round_id = ? AND valid_to IS NULL')
                ->execute([$userId, $roundId]);
             $db->commit();
