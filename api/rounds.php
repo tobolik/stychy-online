@@ -123,6 +123,9 @@ switch ($action) {
             $stmt->execute([$gameId]);
             $lr = $stmt->fetch();
             if ($lr && $lr['status'] === 'bidding') {
+                // aplikovat i zvolený trumf (konzistence s idempotentní větví výše)
+                $db->prepare('UPDATE rounds SET trump_suit = ?, trump_value = ? WHERE id = ?')
+                   ->execute([$trumpSuit, $trumpValue, $lr['id']]);
                 jsonResponse([
                     'success' => true,
                     'round_id' => (int)$lr['id'],
@@ -424,8 +427,14 @@ switch ($action) {
 
         try {
             $db->beginTransaction();
-            $db->prepare('UPDATE rounds SET valid_to = NOW(), valid_to_user_id = ?, round_number = ? WHERE id = ? AND valid_to IS NULL')
-               ->execute([$userId, $freeNum, $roundId]);
+            // status = 'bidding' i ve finálním UPDATE (revalidace proti souběhu se save_bids,
+            // který by kolo mezitím přepnul na 'playing') – když se mezitím změnilo, 0 řádků.
+            $stmt = $db->prepare('UPDATE rounds SET valid_to = NOW(), valid_to_user_id = ?, round_number = ? WHERE id = ? AND valid_to IS NULL AND status = "bidding"');
+            $stmt->execute([$userId, $freeNum, $roundId]);
+            if ($stmt->rowCount() === 0) {
+                $db->rollBack();
+                jsonResponse(['success' => false, 'error' => 'Kolo mezitím dostalo hlášení, nelze smazat.'], 409);
+            }
             $db->prepare('UPDATE round_results SET valid_to = NOW(), valid_to_user_id = ? WHERE round_id = ? AND valid_to IS NULL')
                ->execute([$userId, $roundId]);
             $db->commit();
