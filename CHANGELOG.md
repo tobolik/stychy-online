@@ -3,6 +3,14 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.10.1] – 2026-07-06
+
+### Přidáno – dok statistik: vlevo + přetahování
+- Panel "Průběžné pořadí" lze nově doknout i **vlevo** (vedle tabulky) – k dosavadním
+  volbám dole a vpravo. Přepínač má tři šipky (←/↓/→).
+- **Drag-to-dock:** panel lze chytit za úchyt (⠿) a **přetáhnout myší** dolů/vlevo/vpravo –
+  během tažení se ukáže náhled cílové zóny, po puštění se panel přichytí (a volba se uloží).
+
 ## [1.10.0] – 2026-07-06
 
 ### Přidáno – dokovatelný panel průběžného pořadí

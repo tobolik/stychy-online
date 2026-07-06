@@ -1154,25 +1154,29 @@
             gap: 10px;
         }
 
-        /* --- Dokovatelný panel statistik: dole (výchozí) nebo vpravo vedle tabulky --- */
-        .game-dock[data-dock="right"] {
+        /* --- Dokovatelný panel statistik: dole (výchozí), vlevo nebo vpravo vedle tabulky --- */
+        .game-dock[data-dock="right"],
+        .game-dock[data-dock="left"] {
             display: grid;
-            grid-template-columns: minmax(0, 1.7fr) minmax(300px, 1fr);
             gap: 18px;
             align-items: start;
         }
+        .game-dock[data-dock="right"] { grid-template-columns: minmax(0, 1.7fr) minmax(300px, 1fr); }
+        .game-dock[data-dock="left"]  { grid-template-columns: minmax(300px, 1fr) minmax(0, 1.7fr); }
+        .game-dock[data-dock="left"] > .current-ranking { order: -1; }   /* statistiky vlevo */
         .dock-main { min-width: 0; }
-        .game-dock[data-dock="right"] > .current-ranking {
+        .game-dock[data-dock="right"] > .current-ranking,
+        .game-dock[data-dock="left"] > .current-ranking {
             position: sticky;
             top: 12px;
             margin-top: 0;
             max-height: calc(100vh - 24px);
             overflow-y: auto;
         }
-        /* Vpravo -> využít celou šířku obrazovky */
+        /* Vlevo/vpravo -> využít celou šířku obrazovky */
         .container.game-wide { max-width: 1680px; }
         /* Přepínač doku v hlavičce panelu */
-        .dock-toggle { display: inline-flex; gap: 4px; margin-left: auto; }
+        .dock-toggle { display: inline-flex; gap: 4px; margin-left: auto; align-items: center; }
         .dock-btn {
             width: 32px; height: 28px; border-radius: 8px;
             border: 1px solid var(--border-light); background: var(--surface-hover);
@@ -1182,10 +1186,26 @@
         }
         .dock-btn:hover { border-color: var(--accent); color: var(--text-main); }
         .dock-btn.active { background: var(--accent); color: #1a1c2c; border-color: var(--accent); }
+        /* Úchyt pro přetažení panelu (drag-to-dock) */
+        .dock-grip {
+            cursor: grab; color: var(--text-muted); padding: 2px 6px; font-size: 1rem;
+            touch-action: none; user-select: none; border-radius: 6px;
+        }
+        .dock-grip:hover { color: var(--accent); background: var(--surface-hover); }
+        .current-ranking.dragging { opacity: 0.45; }
+        /* Náhled cílové zóny při přetahování */
+        .dock-dropzone {
+            position: fixed; z-index: 4000; pointer-events: none;
+            border: 3px dashed var(--accent); background: rgba(0,255,204,0.12);
+            border-radius: 14px; display: none;
+            transition: all 0.08s ease;
+        }
+        .dock-dropzone.show { display: block; }
         @media (max-width: 900px) {
-            .game-dock[data-dock="right"] { display: block; }
-            .game-dock[data-dock="right"] > .current-ranking {
-                position: static; margin-top: 25px; max-height: none; overflow: visible;
+            .game-dock[data-dock="right"], .game-dock[data-dock="left"] { display: block; }
+            .game-dock[data-dock="right"] > .current-ranking,
+            .game-dock[data-dock="left"] > .current-ranking {
+                position: static; order: 0; margin-top: 25px; max-height: none; overflow: visible;
             }
             .container.game-wide { max-width: 1200px; }
         }
@@ -1490,7 +1510,7 @@
         
         <!-- Footer -->
         <div class="app-footer">
-            <span>Štychy Záznamník v1.10.0</span>
+            <span>Štychy Záznamník v1.10.1</span>
             <span>•</span>
             <span id="build-date">2026-07-06</span>
         </div>
@@ -3353,8 +3373,10 @@
             let html = `<div class="current-ranking-title">
                 <span><i class="fa-solid fa-chart-line"></i> Průběžné pořadí (po ${finishedRounds}. kole z ${totalRounds})</span>
                 <span class="dock-toggle">
-                    <button class="dock-btn" onclick="setStatsDock('bottom')" title="Statistiky dole"><i class="fa-solid fa-table-list"></i></button>
-                    <button class="dock-btn" onclick="setStatsDock('right')" title="Statistiky vpravo (vedle tabulky)"><i class="fa-solid fa-table-columns"></i></button>
+                    <span class="dock-grip" id="dock-grip" title="Přetáhni panel (dolů/vlevo/vpravo)"><i class="fa-solid fa-grip-vertical"></i></span>
+                    <button class="dock-btn" onclick="setStatsDock('left')" title="Statistiky vlevo"><i class="fa-solid fa-arrow-left"></i></button>
+                    <button class="dock-btn" onclick="setStatsDock('bottom')" title="Statistiky dole"><i class="fa-solid fa-arrow-down"></i></button>
+                    <button class="dock-btn" onclick="setStatsDock('right')" title="Statistiky vpravo"><i class="fa-solid fa-arrow-right"></i></button>
                 </span>
             </div>`;
             html += '<div class="current-ranking-list">';
@@ -3420,11 +3442,11 @@
 
         // Dok statistik: 'bottom' (pod tabulkou) nebo 'right' (vedle tabulky, celá šířka + sticky).
         function setStatsDock(pos, persist = true) {
-            if (pos !== 'right') pos = 'bottom';
+            if (!['left', 'right', 'bottom'].includes(pos)) pos = 'bottom';
             const dock = document.getElementById('game-dock');
             if (dock) dock.setAttribute('data-dock', pos);
             const cont = document.querySelector('.container');
-            if (cont) cont.classList.toggle('game-wide', pos === 'right');
+            if (cont) cont.classList.toggle('game-wide', pos !== 'bottom');
             document.querySelectorAll('.dock-btn').forEach(b => b.classList.remove('active'));
             const activeBtn = document.querySelector(`.dock-btn[onclick*="'${pos}'"]`);
             if (activeBtn) activeBtn.classList.add('active');
@@ -3434,6 +3456,69 @@
             let pos = 'bottom';
             try { pos = localStorage.getItem('statsDock') || 'bottom'; } catch (e) {}
             setStatsDock(pos, false);
+            setupDockDrag();
+        }
+
+        // --- Drag-to-dock: chyť úchyt (grip) a přetáhni panel dolů / vlevo / vpravo ---
+        function getDropzone() {
+            let dz = document.getElementById('dock-dropzone');
+            if (!dz) { dz = document.createElement('div'); dz.id = 'dock-dropzone'; dz.className = 'dock-dropzone'; document.body.appendChild(dz); }
+            return dz;
+        }
+        function dockZoneFromPoint(x, y) {
+            const cont = document.querySelector('.container');
+            if (!cont) return 'bottom';
+            const r = cont.getBoundingClientRect();
+            const relY = (y - r.top) / Math.max(1, r.height);
+            const relX = x / Math.max(1, window.innerWidth);
+            if (relY > 0.70) return 'bottom';
+            if (relX < 0.40) return 'left';
+            if (relX > 0.60) return 'right';
+            return 'bottom';
+        }
+        function positionDropzone(zone) {
+            const dz = getDropzone();
+            const cont = document.querySelector('.container');
+            if (!cont) return;
+            const r = cont.getBoundingClientRect();
+            const vw = window.innerWidth, vh = window.innerHeight, pad = 14;
+            const top = Math.max(r.top, 70);
+            let box;
+            if (zone === 'left')       box = { left: pad, top, width: vw * 0.32, height: vh - top - pad };
+            else if (zone === 'right') box = { left: vw - vw * 0.32 - pad, top, width: vw * 0.32, height: vh - top - pad };
+            else                       box = { left: r.left, top: Math.max(r.bottom - 200, top), width: r.width, height: 180 };
+            dz.style.left = Math.round(box.left) + 'px';
+            dz.style.top = Math.round(box.top) + 'px';
+            dz.style.width = Math.round(box.width) + 'px';
+            dz.style.height = Math.round(box.height) + 'px';
+        }
+        function setupDockDrag() {
+            const grip = document.getElementById('dock-grip');
+            if (!grip || grip._bound) return;
+            grip._bound = true;
+            grip.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                const dz = getDropzone();
+                const panel = document.getElementById('current-ranking');
+                let zone = null;
+                if (panel) panel.classList.add('dragging');
+                grip.style.cursor = 'grabbing';
+                const move = (ev) => {
+                    zone = dockZoneFromPoint(ev.clientX, ev.clientY);
+                    positionDropzone(zone);
+                    dz.classList.add('show');
+                };
+                const up = () => {
+                    document.removeEventListener('pointermove', move);
+                    document.removeEventListener('pointerup', up);
+                    dz.classList.remove('show');
+                    if (panel) panel.classList.remove('dragging');
+                    grip.style.cursor = 'grab';
+                    if (zone) setStatsDock(zone);
+                };
+                document.addEventListener('pointermove', move);
+                document.addEventListener('pointerup', up);
+            });
         }
 
         function renderResultsSummary() {
