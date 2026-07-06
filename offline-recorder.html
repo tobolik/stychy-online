@@ -337,11 +337,15 @@
             min-height: 0;
         }
         .modal-flex .modal-save-bar { position: static; }
-        /* na desktopu širší + řádek hráče vždy na jeden řádek (tlačítka se pružně vejdou) */
+        /* na desktopu širší + řádek hráče na jeden řádek; sloupec jmen FIXNÍ šířky,
+           aby tlačítka pro zadávání byla ve všech řádcích zarovnaná pod sebou. */
         @media (min-width: 768px) {
             .modal-content.modal-game.modal-flex { max-width: 1040px; }
             .modal-flex .bid-player-name,
-            .modal-flex .result-player-name { white-space: nowrap; flex: 0 0 auto; min-width: 120px; }
+            .modal-flex .result-player-name {
+                white-space: nowrap; flex: 0 0 230px; width: 230px;
+                overflow: hidden; text-overflow: ellipsis;
+            }
             .modal-content.modal-game.modal-flex .bid-buttons { flex: 1 1 auto; }
             .modal-content.modal-game.modal-flex .bid-btn {
                 flex: 1 1 0; min-width: 30px; max-width: 50px; width: auto; height: 42px;
@@ -784,15 +788,16 @@
             padding: 6px 10px;
             background: rgba(0,0,0,0.2);
             border-radius: 8px;
+            border: 2px solid transparent;   /* stejná šířka pro všechny řádky -> tlačítka zarovnaná */
         }
 
         .bid-input-row.dealer {
-            border: 1px solid gold;
+            border-color: gold;
         }
 
         .bid-input-row.current-input {
             background: rgba(0, 255, 204, 0.15);
-            border: 2px solid var(--primary);
+            border-color: var(--primary);
         }
 
         .bid-player-name {
