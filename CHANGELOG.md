@@ -3,6 +3,27 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.7.0] – 2026-07-06
+
+### Opraveno
+- **Kritické: duplicitní kola při dvojkliku.** „Pokračovat k hlášení" šlo odeslat vícekrát
+  a vytvořilo 2-3 kola. Nově: klient blokuje dvojklik (in-flight flag + disable tlačítka)
+  a server je idempotentní – pokud poslední kolo ještě nemá hlášení, vrátí ho místo vytvoření
+  nového (+ fallback při souběhu). Ověřeno E2E: 3 souběžná volání = 1 kolo.
+- Našeptávač jmen hráčů: klávesová navigace (šipky nahoru/dolů, Enter vybere, Esc zavře).
+
+### Přidáno
+- Mazání kola je opět možné, ale **jen poslední a prázdné** kolo (soft-delete) – úklid
+  duplicit z dvojkliku. Kolo s hlášením smazat nelze (pro opravu slouží úprava výsledků).
+- Audio hláška rozdávajícímu, kolik štychů nesmí zvolit („Nahlášeno X z Y, rozdávající
+  nemůže zvolit Z štychů").
+
+### Změněno
+- Layout maximalizace (mobil i desktop): kompaktní 2řádkový blok rozdávajícího s velkým
+  jménem a velkým číslem karet; herní modály širší na desktopu s větším písmem; sticky
+  tlačítko Uložit (vždy viditelné i u 11 hráčů); průběžné pořadí ~1.6× větší písmo se
+  skóre hned vedle jména. Ověřeno Playwright screenshoty na 430px i desktopu.
+
 ## [1.6.1] – 2026-06-24
 
 ### Bezpečnost / data (soft-delete, Fáze 2)
