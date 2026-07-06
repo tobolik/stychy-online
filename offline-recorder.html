@@ -409,8 +409,9 @@
         .trump-selectors {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 10px;
         }
+        .trump-selectors .form-group { margin-bottom: 0; }
 
         .modal-header {
             display: flex;
@@ -586,11 +587,29 @@
         }
 
         /* Trump Card Selector */
+        /* Dealer blok – vše na jeden řádek (jméno + malé karty + počet) */
+        .dealer-line {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 10px 16px;
+        }
+        .mini-cards-row { display: inline-flex; gap: 3px; }
+        .mini-card {
+            width: 13px;
+            height: 18px;
+            background: linear-gradient(135deg, #1a5f7a, #2d8bb5);
+            border: 1px solid #4db8d8;
+            border-radius: 2px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
         .trump-selector {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 0;
         }
 
         .trump-suit-btn {
@@ -604,7 +623,8 @@
             justify-content: center;
             cursor: pointer;
             transition: all 0.3s;
-            font-size: 2.5rem;
+            font-size: clamp(3.4rem, 9vw, 5.5rem);   /* výrazně větší symbol barvy */
+            line-height: 1;
             position: relative;
             min-height: 100px;
         }
@@ -1376,12 +1396,10 @@
                 <button class="close-btn" onclick="closeModal('modal-new-round')">&times;</button>
             </div>
 
-            <div id="dealer-info" style="background: rgba(0, 255, 204, 0.1); border: 1px solid var(--primary); border-radius: 12px; padding: 14px 18px; margin-bottom: 18px; text-align: center;">
-                <div style="font-size: 1.15rem; color: var(--text-muted);">
-                    <i class="fa-solid fa-hand-holding"></i> Rozdává: <strong id="dealer-name" style="font-size: 1.9rem; color: var(--primary); font-weight: 800; vertical-align: -2px;"></strong>
-                </div>
-                <div id="cards-in-round" style="margin-top: 4px; font-size: 2.6rem; font-weight: 800; color: var(--primary); line-height: 1.1;">
-                    <!-- Velké číslo karet -->
+            <div id="dealer-info" style="background: rgba(0, 255, 204, 0.1); border: 1px solid var(--primary); border-radius: 12px; padding: 12px 18px; margin-bottom: 14px;">
+                <div class="dealer-line">
+                    <span style="font-size: 1.15rem; color: var(--text-muted);"><i class="fa-solid fa-hand-holding"></i> Rozdává: <strong id="dealer-name" style="font-size: 1.7rem; color: var(--primary); font-weight: 800; vertical-align: -2px;"></strong></span>
+                    <span id="cards-in-round" class="dealer-line" style="gap: 10px;"></span>
                 </div>
             </div>
 
@@ -1424,7 +1442,7 @@
                 </div>
             </div>
 
-            <button class="btn btn-primary" style="width: 100%;" onclick="createRound(this)">
+            <button class="btn btn-primary" style="width: 100%; padding: 22px; font-size: 1.2rem;" onclick="createRound(this)">
                 <i class="fa-solid fa-arrow-right"></i> Pokračovat k hlášení
             </button>
         </div>
@@ -3268,10 +3286,14 @@
             document.getElementById('new-round-number').textContent = nextRoundNumber;
             document.getElementById('dealer-name').textContent = dealer ? dealer.name : '?';
             
-            // Velké číslo karet + slovo (2řádkový kompaktní dealer blok)
+            // Jeden řádek: malé karty + velké číslo + slovo
+            let cardIconsHtml = '';
+            for (let i = 0; i < cardsCount; i++) cardIconsHtml += '<span class="mini-card"></span>';
             const cardWord = cardsCount === 1 ? 'karta' : (cardsCount < 5 ? 'karty' : 'karet');
             document.getElementById('cards-in-round').innerHTML =
-                `${cardsCount}<span style="font-size: 1.1rem; color: var(--text-muted); font-weight: 600; margin-left: 8px;">${cardWord}</span>`;
+                `<span class="mini-cards-row">${cardIconsHtml}</span>` +
+                `<span style="font-size: 2.2rem; font-weight: 800; color: var(--primary); line-height: 1;">${cardsCount}</span>` +
+                `<span style="font-size: 1.05rem; color: var(--text-muted); font-weight: 600;">${cardWord}</span>`;
 
             // Reset trump selection
             selectedTrumpSuit = null;
