@@ -142,21 +142,6 @@
             color: var(--bg-main);
             border-color: var(--accent);
         }
-        .mini-cards-row {
-            display: flex;
-            justify-content: center;
-            gap: 3px;
-            margin-bottom: 5px;
-        }
-        .mini-card {
-            width: 14px;
-            height: 20px;
-            background: linear-gradient(135deg, #1a5f7a, #2d8bb5);
-            border: 1px solid #4db8d8;
-            border-radius: 2px;
-            display: inline-block;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
-        }
         .app-footer {
             margin-top: 40px;
             padding: 20px;
@@ -293,7 +278,7 @@
             background: var(--surface);
             border-radius: 20px;
             padding: 30px;
-            max-width: 600px;
+            max-width: 680px;
             width: 100%;
             max-height: 90vh;
             overflow-y: auto;
@@ -301,6 +286,77 @@
         }
         .modal-content.modal-large {
             max-width: 800px;
+        }
+        /* Herní modály (nová hra, trumf, hlášení, výsledky) – více šířky na desktopu */
+        .modal-content.modal-game {
+            max-width: 880px;
+        }
+        /* Desktop: zvětšit písmo v herních modálech (mobil zůstává kompaktní) */
+        @media (min-width: 768px) {
+            .modal-content.modal-game { padding: 34px 38px; }
+            .modal-content.modal-game .modal-title { font-size: 1.9rem; }
+            .modal-content.modal-game .bid-player-name,
+            .modal-content.modal-game .result-row .player-name { font-size: 2rem; }
+            .modal-content.modal-game .bid-btn { width: 44px; height: 44px; font-size: 1.2rem; }
+            .modal-content.modal-game .result-btn { width: 64px; height: 52px; }
+            .modal-content.modal-game .result-bid-badge,
+            .modal-content.modal-game .bid-badge { font-size: 2.1rem; }
+            /* sticky lišta dosedne k okrajům i při širším paddingu .modal-game (34px 38px) */
+            .modal-content.modal-game .modal-save-bar { margin: 15px -38px -34px; padding: 15px 38px 34px; }
+        }
+
+        /* Sticky lišta s tlačítkem Uložit (+ varování/status) – vždy viditelná i při mnoha hráčích */
+        .modal-save-bar {
+            position: sticky;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 10px;
+            margin: 15px -30px -30px;
+            padding: 15px 30px 30px;
+            background: var(--surface);
+            border-top: 1px solid var(--border-light);
+            z-index: 2;
+        }
+        .modal-save-bar .btn { padding: 20px; font-size: 1.15rem; }
+        /* rezervované místo pro hlášku nad tlačítkem -> tlačítko se neposouvá */
+        .bid-msg-slot {
+            min-height: 54px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .bid-msg-slot > div { margin: 0 !important; }
+        @media (max-width: 480px) {
+            .modal-save-bar { margin: 12px -14px -14px; padding: 12px 14px 14px; }
+        }
+
+        /* Herní modály se scroll-částí (hlášení, výsledky): hlavička + info + patička fixní,
+           jen řádky hráčů scrollují -> patička (varování + Uložit) NIKDY nepřekryje poslední řádek. */
+        .modal-content.modal-flex {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .modal-flex .modal-scroll {
+            flex: 1 1 auto;
+            overflow-y: auto;
+            min-height: 0;
+        }
+        .modal-flex .modal-save-bar { position: static; }
+        /* na desktopu širší + řádek hráče na jeden řádek; sloupec jmen FIXNÍ šířky,
+           aby tlačítka pro zadávání byla ve všech řádcích zarovnaná pod sebou. */
+        @media (min-width: 768px) {
+            .modal-content.modal-game.modal-flex { max-width: 1040px; }
+            .modal-flex .bid-player-name {
+                white-space: nowrap; flex: 0 0 230px; width: 230px;
+                overflow: hidden; text-overflow: ellipsis;
+            }
+            .modal-content.modal-game.modal-flex .bid-buttons { flex: 1 1 auto; }
+            .modal-content.modal-game.modal-flex .bid-btn {
+                flex: 1 1 0; min-width: 30px; max-width: 50px; width: auto; height: 42px;
+            }
         }
 
         /* Statistics Styles */
@@ -391,8 +447,9 @@
         .trump-selectors {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 10px;
         }
+        .trump-selectors .form-group { margin-bottom: 0; }
 
         .modal-header {
             display: flex;
@@ -562,16 +619,35 @@
             cursor: pointer;
             transition: background 0.2s;
         }
-        .autocomplete-item:hover {
-            background: rgba(0, 255, 204, 0.1);
+        .autocomplete-item:hover,
+        .autocomplete-item.active {
+            background: rgba(0, 255, 204, 0.18);
         }
 
         /* Trump Card Selector */
+        /* Dealer blok – vše na jeden řádek (jméno + malé karty + počet) */
+        .dealer-line {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 10px 16px;
+        }
+        .mini-cards-row { display: inline-flex; gap: 3px; }
+        .mini-card {
+            width: 13px;
+            height: 18px;
+            background: linear-gradient(135deg, #1a5f7a, #2d8bb5);
+            border: 1px solid #4db8d8;
+            border-radius: 2px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
         .trump-selector {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 0;
         }
 
         .trump-suit-btn {
@@ -585,16 +661,25 @@
             justify-content: center;
             cursor: pointer;
             transition: all 0.3s;
-            font-size: 2.5rem;
+            font-size: clamp(3.4rem, 9vw, 5.5rem);   /* výrazně větší symbol barvy */
+            line-height: 1;
             position: relative;
             min-height: 100px;
         }
         .trump-suit-btn:hover {
             transform: scale(1.05);
         }
+        .trump-suit-btn:focus-visible {
+            outline: 3px solid var(--accent);
+            outline-offset: 3px;
+        }
         .trump-suit-btn.selected {
             border-color: var(--accent);
             box-shadow: 0 0 20px rgba(0, 255, 204, 0.5);
+        }
+        .trump-value-btn:focus-visible {
+            outline: 3px solid var(--accent);
+            outline-offset: 2px;
         }
         .trump-suit-btn.hearts, .trump-suit-btn.diamonds { color: #e74c3c; }
         .trump-suit-btn.clubs, .trump-suit-btn.spades { color: #2c3e50; }
@@ -614,12 +699,6 @@
             transform: rotate(180deg);
         }
 
-        .cards-count-big {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: var(--accent);
-        }
-
         .trump-value-selector {
             display: flex;
             flex-wrap: nowrap;
@@ -628,15 +707,15 @@
         }
 
         .trump-value-btn {
-            width: 36px;
-            height: 36px;
+            width: 54px;
+            height: 54px;
             border: 1px solid var(--border-light);
-            border-radius: 8px;
+            border-radius: 10px;
             background: var(--surface);
             color: white;
             cursor: pointer;
             font-weight: bold;
-            font-size: 0.9rem;
+            font-size: 1.35rem;
             transition: all 0.2s;
         }
         .trump-value-btn:hover {
@@ -724,15 +803,16 @@
             padding: 6px 10px;
             background: rgba(0,0,0,0.2);
             border-radius: 8px;
+            border: 2px solid transparent;   /* stejná šířka pro všechny řádky -> tlačítka zarovnaná */
         }
 
         .bid-input-row.dealer {
-            border: 1px solid gold;
+            border-color: gold;
         }
 
         .bid-input-row.current-input {
             background: rgba(0, 255, 204, 0.15);
-            border: 2px solid var(--primary);
+            border-color: var(--primary);
         }
 
         .bid-player-name {
@@ -825,7 +905,7 @@
         }
         .result-row .player-name {
             font-weight: bold;
-            font-size: 1rem;
+            font-size: 1.5rem;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -1015,28 +1095,31 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 10px 15px;
+            padding: 12px 16px;
             background: rgba(0,0,0,0.3);
             border-radius: 10px;
-            font-size: 1rem;
+            font-size: 1.6rem;   /* výrazně větší, lepší čitelnost */
         }
         .ranking-row.top-3 {
             background: rgba(0,0,0,0.4);
         }
         .ranking-row .position {
             font-weight: bold;
-            width: 28px;
-            height: 28px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             background: rgba(255,255,255,0.1);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.9rem;
+            font-size: 1.05rem;
+            flex-shrink: 0;
         }
         .ranking-row .trophy {
-            font-size: 1.2rem;
-            min-width: 24px;
+            font-size: 1.6rem;
+            flex: 0 0 34px;
+            width: 34px;
+            text-align: center;
         }
         .ranking-row .trophy.gold { color: gold; }
         .ranking-row .trophy.silver { color: silver; }
@@ -1047,8 +1130,13 @@
         .ranking-row .trophy.hamster { color: #e67e22; }
         .ranking-row .trophy.snail { color: #9b59b6; }
         .ranking-row .trophy.crow { color: #ecf0f1; }
-        .ranking-row .name { flex: 1; color: var(--text-main); }
-        .ranking-row .score { color: var(--primary); font-weight: bold; min-width: 50px; text-align: right; }
+        .ranking-row .name {
+            color: var(--text-main); font-weight: 700;
+            flex: 0 0 auto; width: 260px; max-width: 50%;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .ranking-row .score { color: var(--primary); font-weight: 800; margin-left: 14px; white-space: nowrap; }
+        @media (max-width: 480px) { .ranking-row .name { width: 150px; } }
 
         /* Round Info Bar */
         .round-info-bar {
@@ -1187,7 +1275,6 @@
             .trump-suit-btn .trump-val, .trump-suit-btn .trump-val-bottom { font-size: 0.7rem; top: 3px; left: 5px; bottom: 3px; right: 5px; }
 
             /* Větší klíčové číslovky a hodnoty pro pohodlnější zadávání na mobilu */
-            .cards-count-big { font-size: 2rem; }
             #bidding-cards-count { font-size: 1.7rem; }
             .trump-value-selector { flex-wrap: wrap; gap: 6px; }
             .trump-value-btn { width: 44px; height: 44px; font-size: 1.1rem; }
@@ -1278,15 +1365,15 @@
         
         <!-- Footer -->
         <div class="app-footer">
-            <span>Štychy Záznamník v1.6.0</span>
+            <span>Štychy Záznamník v1.7.0</span>
             <span>•</span>
-            <span id="build-date">2026-06-22</span>
+            <span id="build-date">2026-07-06</span>
         </div>
     </div>
 
     <!-- Modal: New Game -->
     <div class="modal" id="modal-new-game">
-        <div class="modal-content">
+        <div class="modal-content modal-game">
             <div class="modal-header">
                 <h2 class="modal-title">Nová hra</h2>
                 <button class="close-btn" onclick="closeModal('modal-new-game')">&times;</button>
@@ -1354,7 +1441,7 @@
 
     <!-- Modal: New Round -->
     <div class="modal" id="modal-new-round">
-        <div class="modal-content">
+        <div class="modal-content modal-game">
             <div class="modal-header">
                 <h2 class="modal-title">Kolo <span id="new-round-number">1</span> - Výběr trumfu</h2>
                 <button class="modal-voice-btn" onclick="toggleVoiceRecognition('global')" title="Hlasové ovládání">
@@ -1363,15 +1450,10 @@
                 <button class="close-btn" onclick="closeModal('modal-new-round')">&times;</button>
             </div>
 
-            <div id="dealer-info" style="background: rgba(0, 255, 204, 0.1); border: 1px solid var(--primary); border-radius: 10px; padding: 15px; margin-bottom: 20px; text-align: center;">
-                <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 5px;">
-                    <i class="fa-solid fa-hand-holding"></i> Rozdává:
-                </div>
-                <div id="dealer-name" style="font-size: 1.3rem; font-weight: bold; color: var(--primary);">
-                    <!-- Jméno rozdávajícího -->
-                </div>
-                <div id="cards-in-round" style="font-size: 0.9rem; color: var(--text-muted); margin-top: 5px;">
-                    <!-- Počet karet -->
+            <div id="dealer-info" style="background: rgba(0, 255, 204, 0.1); border: 1px solid var(--primary); border-radius: 12px; padding: 12px 18px; margin-bottom: 14px;">
+                <div class="dealer-line">
+                    <span style="font-size: 1.15rem; color: var(--text-muted);"><i class="fa-solid fa-hand-holding"></i> Rozdává: <strong id="dealer-name" style="font-size: 1.7rem; color: var(--primary); font-weight: 800; background: rgba(0,255,204,0.16); padding: 1px 12px; border-radius: 10px; display: inline-block; line-height: 1.25;"></strong></span>
+                    <span id="cards-in-round" class="dealer-line" style="gap: 10px;"></span>
                 </div>
             </div>
 
@@ -1414,7 +1496,7 @@
                 </div>
             </div>
 
-            <button class="btn btn-primary" style="width: 100%;" onclick="createRound()">
+            <button id="trump-continue-btn" class="btn btn-primary" style="width: 100%; padding: 22px; font-size: 1.2rem;" onclick="createRound(this)">
                 <i class="fa-solid fa-arrow-right"></i> Pokračovat k hlášení
             </button>
         </div>
@@ -1422,7 +1504,7 @@
 
     <!-- Modal: Bidding -->
     <div class="modal" id="modal-bidding">
-        <div class="modal-content">
+        <div class="modal-content modal-game modal-flex">
             <div class="modal-header">
                 <h2 class="modal-title">Hlášení - Kolo <span id="bidding-round-num">1</span></h2>
                 <button class="modal-voice-btn" onclick="toggleVoiceRecognition('bids')" title="Hlasové zadávání">
@@ -1453,16 +1535,18 @@
                 </div>
             </div>
 
-            <div class="bid-input-grid" id="bid-inputs">
-                <!-- Dynamicky generováno -->
+            <div class="modal-scroll">
+                <div class="bid-input-grid" id="bid-inputs">
+                    <!-- Dynamicky generováno -->
+                </div>
             </div>
 
-            <div class="forbidden-info" id="forbidden-bid-info" style="display: none;"></div>
-            
-            <div id="bids-status" style="margin-top: 15px; padding: 12px; border-radius: 8px; text-align: center; display: none;"></div>
-
-            <div style="display: flex; gap: 10px; margin-top: 15px;">
-                <button class="btn btn-primary" style="flex: 1;" onclick="saveBids()">
+            <div class="modal-save-bar">
+                <div class="bid-msg-slot">
+                    <div class="forbidden-info" id="forbidden-bid-info" style="display: none;"></div>
+                    <div id="bids-status" style="padding: 12px; border-radius: 8px; text-align: center; display: none;"></div>
+                </div>
+                <button class="btn btn-primary" onclick="saveBids()">
                     <i class="fa-solid fa-check"></i> Uložit hlášení
                 </button>
             </div>
@@ -1471,7 +1555,7 @@
 
     <!-- Modal: Results -->
     <div class="modal" id="modal-results" tabindex="-1">
-        <div class="modal-content">
+        <div class="modal-content modal-game modal-flex">
             <div class="modal-header">
                 <h2 class="modal-title"><span id="results-modal-title">Výsledky kola</span> <span id="results-round-num">1</span></h2>
                 <button class="modal-voice-btn" onclick="toggleVoiceRecognition('results')" title="Hlasové zadávání">
@@ -1514,8 +1598,10 @@
                 </label>
             </div>
             
-            <div class="bid-input-grid" id="tricks-inputs">
-                <!-- Dynamicky generováno -->
+            <div class="modal-scroll">
+                <div class="bid-input-grid" id="tricks-inputs">
+                    <!-- Dynamicky generováno -->
+                </div>
             </div>
 
             <div id="results-status-bar" style="margin-top: 10px; padding: 10px 15px; background: rgba(0,0,0,0.3); border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
@@ -1527,8 +1613,8 @@
                 </div>
             </div>
 
-            <div style="display: flex; gap: 10px; margin-top: 15px;">
-                <button class="btn btn-primary" style="flex: 1;" onclick="saveResults()">
+            <div class="modal-save-bar">
+                <button class="btn btn-primary" onclick="saveResults()">
                     <i class="fa-solid fa-save"></i> Uložit výsledky
                 </button>
             </div>
@@ -2802,10 +2888,11 @@
                             <button type="button" class="player-move-btn" onclick="movePlayer(${i}, 1)" ${i === selectedPlayerCount - 1 ? 'disabled' : ''} title="Posunout dolů">▼</button>
                         </div>
                         <div class="autocomplete-wrapper" style="flex: 1;">
-                            <input type="text" class="form-input" id="player-name-${i}" placeholder="${isDealer ? 'Rozdávající' : 'Hráč ' + (i + 1)}" 
+                            <input type="text" class="form-input" id="player-name-${i}" placeholder="${isDealer ? 'Rozdávající' : 'Hráč ' + (i + 1)}"
                                    value="${escapeHtml(prefilled)}"
-                                   oninput="showAutocomplete(this, ${i})" 
+                                   oninput="showAutocomplete(this, ${i})"
                                    onfocus="showAutocomplete(this, ${i})"
+                                   onkeydown="autocompleteKeydown(event, this, ${i})"
                                    autocomplete="off">
                             <div class="autocomplete-list" id="autocomplete-${i}"></div>
                         </div>
@@ -3096,9 +3183,12 @@
                     </button>`;
                 }
             } else if (lastRound.status === 'bidding') {
-                // Čekáme na hlášení
+                // Čekáme na hlášení – lze i smazat toto prázdné kolo (úklid duplicit z dvojkliku)
                 html += `<button class="btn btn-primary" onclick="openBiddingModal()">
                     <i class="fa-solid fa-bullhorn"></i> Zadat hlášení
+                </button>`;
+                html += `<button class="btn btn-danger" onclick="deleteRound(${lastRound.id})" title="Smazat toto prázdné kolo">
+                    <i class="fa-solid fa-trash"></i> Smazat kolo
                 </button>`;
             } else if (lastRound.status === 'playing') {
                 // Čekáme na výsledky
@@ -3254,13 +3344,14 @@
             document.getElementById('new-round-number').textContent = nextRoundNumber;
             document.getElementById('dealer-name').textContent = dealer ? dealer.name : '?';
             
-            // Generate card icons
+            // Jeden řádek: velké čitelné číslo + slovo, pak decentní malé karty (dekorace)
             let cardIconsHtml = '';
-            for (let i = 0; i < cardsCount; i++) {
-                cardIconsHtml += '<span class="mini-card"></span>';
-            }
-            const cardsText = `<span class="cards-count-big">${cardsCount}</span> ${cardsCount === 1 ? 'karta' : (cardsCount < 5 ? 'karty' : 'karet')}`;
-            document.getElementById('cards-in-round').innerHTML = `<div class="mini-cards-row">${cardIconsHtml}</div>${cardsText}`;
+            for (let i = 0; i < cardsCount; i++) cardIconsHtml += '<span class="mini-card"></span>';
+            const cardWord = cardsCount === 1 ? 'karta' : (cardsCount < 5 ? 'karty' : 'karet');
+            document.getElementById('cards-in-round').innerHTML =
+                `<span style="font-size: 2.5rem; font-weight: 800; color: var(--accent); line-height: 1;">${cardsCount}</span>` +
+                `<span style="font-size: 1.05rem; color: var(--text-muted); font-weight: 600;">${cardWord}</span>` +
+                `<span class="mini-cards-row" style="opacity: 0.4; margin-left: 6px;">${cardIconsHtml}</span>`;
 
             // Reset trump selection
             selectedTrumpSuit = null;
@@ -3270,7 +3361,11 @@
             updateTrumpPreview();
 
             openModal('modal-new-round');
-            
+
+            // Fokus na první kartu trumfu → klávesová navigace šipkami + Enter
+            const firstSuit = document.querySelector('#modal-new-round .trump-suit-btn');
+            if (firstSuit) firstSuit.focus();
+
             // Voice announcement: who is dealing and how many cards
             const dealerName = dealer ? dealer.name : 'neznámý';
             speak(`${getOrdinalCzech(nextRoundNumber)} kolo. ${dealerName} rozdává ${getCardsTextCzech(cardsCount)}.`);
@@ -3315,27 +3410,36 @@
             });
         }
 
-        async function createRound() {
+        let creatingRound = false;
+        async function createRound(btn) {
             if (!selectedTrumpSuit) {
                 alert('Vyberte trumfovou barvu');
                 return;
             }
+            if (creatingRound) return;            // ochrana proti dvojkliku
+            creatingRound = true;
+            if (btn) btn.disabled = true;
 
-            const result = await api('rounds.php', {
-                action: 'create',
-                game_id: currentGame.game.id,
-                trump_suit: selectedTrumpSuit,
-                trump_value: selectedTrumpValue
-            });
+            try {
+                const result = await api('rounds.php', {
+                    action: 'create',
+                    game_id: currentGame.game.id,
+                    trump_suit: selectedTrumpSuit,
+                    trump_value: selectedTrumpValue
+                });
 
-            if (result.success) {
-                closeModal('modal-new-round');
-                selectedTrumpSuit = null;
-                selectedTrumpValue = null;
-                await openGame(currentGame.game.id);
-                openBiddingModal();
-            } else {
-                alert(result.error);
+                if (result.success) {
+                    closeModal('modal-new-round');
+                    selectedTrumpSuit = null;
+                    selectedTrumpValue = null;
+                    await openGame(currentGame.game.id);
+                    openBiddingModal();
+                } else {
+                    alert(result.error);
+                }
+            } finally {
+                creatingRound = false;
+                if (btn) btn.disabled = false;
             }
         }
 
@@ -3448,7 +3552,23 @@
                 // Announce next player's name (only if voice recognition is NOT active)
                 const nextPlayer = orderedBiddingPlayers[currentBiddingIndex];
                 if (nextPlayer && !isListening) {
-                    speak(`${nextPlayer.name}?`);
+                    if (nextPlayer.position == currentRound.dealer_position) {
+                        // Rozdávající hlásí poslední – nahlas, kolik NESMÍ zvolit
+                        let sumOthers = 0;
+                        for (const [pos, b] of Object.entries(playerBids)) {
+                            if (parseInt(pos) !== currentRound.dealer_position && b !== null) sumOthers += b;
+                        }
+                        const cards = currentRound.cards_count;
+                        const forbidden = cards - sumOthers;
+                        if (forbidden >= 0 && forbidden <= cards) {
+                            const stych = forbidden === 1 ? 'štych' : (forbidden >= 2 && forbidden <= 4 ? 'štychy' : 'štychů');
+                            speak(`${nextPlayer.name}. Nahlášeno ${sumOthers} z ${cards}. Rozdávající nemůže zvolit ${forbidden} ${stych}.`);
+                        } else {
+                            speak(`${nextPlayer.name}?`);
+                        }
+                    } else {
+                        speak(`${nextPlayer.name}?`);
+                    }
                 }
             } else {
                 currentBiddingIndex = orderedBiddingPlayers.length; // All done
@@ -3562,13 +3682,20 @@
             const forbiddenInfo = document.getElementById('forbidden-bid-info');
 
             if (allBidsExceptDealer && forbiddenBid >= 0 && forbiddenBid <= cardsCount) {
-                forbiddenInfo.innerHTML = `<i class="fa-solid fa-exclamation-triangle"></i> Rozdávající nesmí nahlásit <strong>${forbiddenBid}</strong> (součet by byl ${cardsCount})`;
-                forbiddenInfo.style.display = 'block';
-
-                // Disable forbidden button
+                // Zakázané tlačítko rozdávajícího vždy disablovat
                 dealerRow.querySelectorAll('.bid-btn').forEach((btn, idx) => {
                     btn.disabled = idx === forbiddenBid;
                 });
+                // Varování ukázat JEN dokud rozdávající nenahlásil – pak je zbytečné
+                // a ukáže se souhrn (bids-status). Vždy jen jedna hláška.
+                const dealerHasBid = playerBids[dealerPosition] !== null && playerBids[dealerPosition] !== undefined;
+                if (!dealerHasBid) {
+                    forbiddenInfo.innerHTML = `<i class="fa-solid fa-exclamation-triangle"></i> Rozdávající nesmí nahlásit <strong>${forbiddenBid}</strong> (součet by byl ${cardsCount})`;
+                    forbiddenInfo.style.display = 'block';
+                    document.getElementById('bids-status').style.display = 'none';
+                } else {
+                    forbiddenInfo.style.display = 'none';
+                }
             } else {
                 forbiddenInfo.style.display = 'none';
                 dealerRow.querySelectorAll('.bid-btn').forEach(btn => {
@@ -4015,7 +4142,16 @@
             }
         }
 
-        // Mazání kola bylo odebráno (princip: nikdy hard-delete; kola se jen upravují).
+        // Smazání kola – jen poslední a prázdné (server to vynucuje). Soft-delete.
+        async function deleteRound(roundId) {
+            if (!confirm('Smazat toto prázdné kolo?')) return;
+            const result = await api('rounds.php', { action: 'delete', round_id: roundId });
+            if (result.success) {
+                await openGame(currentGame.game.id);
+            } else {
+                alert(result.error);
+            }
+        }
 
         // Known Players & Autocomplete
         function updateKnownPlayers(playerNames) {
@@ -4076,6 +4212,50 @@
         function selectAutocomplete(name, index) {
             document.getElementById(`player-name-${index}`).value = name;
             document.getElementById(`autocomplete-${index}`).classList.remove('show');
+        }
+
+        // Klávesová navigace v našeptávači: šipky nahoru/dolů, Enter vybere, Esc zavře.
+        function autocompleteKeydown(e, input, index) {
+            const listEl = document.getElementById(`autocomplete-${index}`);
+            if (!listEl) return;
+            const isOpen = listEl.classList.contains('show');
+            const items = Array.from(listEl.querySelectorAll('.autocomplete-item'));
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (!isOpen) {
+                    showAutocomplete(input, index);
+                    const fresh = listEl.querySelectorAll('.autocomplete-item');
+                    if (fresh.length) fresh[0].classList.add('active');   // rovnou zvýraznit první
+                    return;
+                }
+                if (!items.length) return;
+                let cur = items.findIndex(it => it.classList.contains('active'));
+                cur = (cur + 1) % items.length;
+                items.forEach(it => it.classList.remove('active'));
+                items[cur].classList.add('active');
+                items[cur].scrollIntoView({ block: 'nearest' });
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (!isOpen || !items.length) return;
+                let cur = items.findIndex(it => it.classList.contains('active'));
+                cur = cur <= 0 ? items.length - 1 : cur - 1;
+                items.forEach(it => it.classList.remove('active'));
+                items[cur].classList.add('active');
+                items[cur].scrollIntoView({ block: 'nearest' });
+            } else if (e.key === 'Enter') {
+                const active = listEl.querySelector('.autocomplete-item.active');
+                if (isOpen && active) {
+                    e.preventDefault();
+                    selectAutocomplete(active.dataset.name, index);
+                }
+            } else if (e.key === 'Escape') {
+                if (isOpen) {
+                    e.preventDefault();
+                    e.stopPropagation();   // ať Escape zavře jen našeptávač, ne celý modál
+                    listEl.classList.remove('show');
+                }
+            }
         }
 
         // Copy Game - otevře formulář nové hry s předvyplněnými údaji
@@ -4473,14 +4653,14 @@
             return sequence;
         }
 
-        // Vrátí celkový počet kol hry — respektuje uložené total_rounds (nové hry),
+        // Vrátí celkový počet kol hry – respektuje uložené total_rounds (nové hry),
         // nebo starý vzorec 2×max_cards (staré hry bez záznamu).
         function getGameTotalRounds(game) {
             if (game.total_rounds) return game.total_rounds;
             return game.max_cards * 2;
         }
 
-        // Vrátí počet karet pro dané kolo (1-based) — pro extra kola starých her vrátí max_cards.
+        // Vrátí počet karet pro dané kolo (1-based) – pro extra kola starých her vrátí max_cards.
         function getRoundCards(game, roundNumber) {
             const seq = getRoundSequence(game.max_cards);
             return seq[roundNumber - 1] ?? game.max_cards;
@@ -4673,7 +4853,24 @@
             
             const key = e.key;
             console.log('Trump keypress:', key, 'ctrlKey:', e.ctrlKey);
-            
+
+            // Šipky: navigace mezi 4 kartami trumfu
+            if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key)) {
+                const suitBtns = Array.from(document.querySelectorAll('#modal-new-round .trump-suit-btn'));
+                if (suitBtns.length) {
+                    e.preventDefault();
+                    const cur = suitBtns.indexOf(document.activeElement);
+                    let next;
+                    if (key === 'ArrowLeft' || key === 'ArrowUp') {
+                        next = cur <= 0 ? suitBtns.length - 1 : cur - 1;
+                    } else {
+                        next = cur < 0 ? 0 : (cur + 1) % suitBtns.length;
+                    }
+                    suitBtns[next].focus();
+                }
+                return;
+            }
+
             // CTRL + 1-4 for suit selection
             if (e.ctrlKey && /^[1-4]$/.test(key)) {
                 e.preventDefault();
@@ -4706,10 +4903,24 @@
                 return;
             }
             
-            // Enter to continue to bidding
+            // Enter: fokus na kartě trumfu → vyber ji + přesuň fokus na "Pokračovat";
+            //        fokus na "Pokračovat" → nech nativní klik (createRound)
             if (key === 'Enter' && !e.ctrlKey) {
+                const focused = document.activeElement;
+                const suitBtns = Array.from(document.querySelectorAll('#modal-new-round .trump-suit-btn'));
+                const suitIdx = suitBtns.indexOf(focused);
+                if (suitIdx >= 0) {
+                    e.preventDefault();
+                    const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
+                    selectTrumpSuit(suits[suitIdx]);
+                    const cont = document.getElementById('trump-continue-btn');
+                    if (cont) cont.focus();
+                    return;
+                }
+                if (focused && focused.id === 'trump-continue-btn') {
+                    return; // nativní klik tlačítka zavolá createRound(this)
+                }
                 e.preventDefault();
-                console.log('Creating round');
                 createRound();
                 return;
             }
