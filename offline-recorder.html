@@ -1272,10 +1272,10 @@
         .ranking-row .trophy.crow { color: #ecf0f1; }
         .ranking-row .name {
             color: var(--text-main); font-weight: 700;
-            flex: 0 0 auto; width: 180px; max-width: 50%;
+            flex: 0 0 auto; width: 150px; max-width: 50%;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-        .ranking-row .score { color: var(--accent-ink); font-weight: 800; margin-left: 14px; white-space: nowrap; }
+        .ranking-row .score { color: var(--accent-ink); font-weight: 800; margin-left: 10px; white-space: nowrap; }
         @media (max-width: 480px) { .ranking-row .name { width: 150px; } }
 
         /* Round Info Bar */
@@ -1527,7 +1527,7 @@
         
         <!-- Footer -->
         <div class="app-footer">
-            <span>Štychy Záznamník v1.11.0</span>
+            <span>Štychy Záznamník v1.11.1</span>
             <span>•</span>
             <span id="build-date">2026-07-06</span>
         </div>
@@ -3637,7 +3637,7 @@
 
             // Voice announcement: who is dealing and how many cards
             const dealerName = dealer ? dealer.name : 'neznámý';
-            speak(`${getOrdinalCzech(nextRoundNumber)} kolo. ${dealerName} rozdává ${getCardsTextCzech(cardsCount)}.`);
+            speak(`${getOrdinalCzech(nextRoundNumber)} kolo. ${dealerName}, ${getCardsTextCzech(cardsCount)}.`);
         }
 
         // Trump selection
@@ -3841,10 +3841,10 @@
                 const nextPlayer = orderedBiddingPlayers[currentBiddingIndex];
                 const justPlayer = orderedBiddingPlayers[currentIndex];
                 const justBid = justPlayer ? playerBids[justPlayer.position] : null;
-                const justTxt = justBid === null ? '' : `${justBid} ${stychWord(justBid)}. `;
+                const justTxt = justBid === null ? '' : `${justBid}. `;
                 if (nextPlayer && !isListening) {
                     if (nextPlayer.position == currentRound.dealer_position) {
-                        // Rozdávající hlásí poslední – nahlas, kolik NESMÍ zvolit
+                        // Rozdávající hlásí poslední – nahlas, kolik NESMÍ zvolit (jen jméno, jen číslo)
                         let sumOthers = 0;
                         for (const [pos, b] of Object.entries(playerBids)) {
                             if (parseInt(pos) !== currentRound.dealer_position && b !== null) sumOthers += b;
@@ -3852,7 +3852,7 @@
                         const cards = currentRound.cards_count;
                         const forbidden = cards - sumOthers;
                         if (forbidden >= 0 && forbidden <= cards) {
-                            speak(`${justTxt}${nextPlayer.name} rozdává, nemůže zvolit ${forbidden} ${stychWord(forbidden)}.`);
+                            speak(`${justTxt}${nextPlayer.name}, nemůže zvolit ${forbidden}.`);
                         } else {
                             speak(`${justTxt}${nextPlayer.name}?`);
                         }
@@ -3862,10 +3862,10 @@
                 }
             } else {
                 currentBiddingIndex = orderedBiddingPlayers.length; // All done
-                // Hlas: poslední (rozdávající) hlášení
+                // Hlas: poslední (rozdávající) hlášení – jen číslo
                 const justPlayer = orderedBiddingPlayers[currentIndex];
                 const justBid = justPlayer ? playerBids[justPlayer.position] : null;
-                if (justBid !== null && !isListening) speak(`${justBid} ${stychWord(justBid)}.`);
+                if (justBid !== null && !isListening) speak(`${justBid}.`);
             }
         }
 

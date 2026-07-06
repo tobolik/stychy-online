@@ -3,6 +3,14 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.11.1] – 2026-07-07
+
+### Změněno
+- Průběžné pořadí: skóre posunuto o kousek doleva (sloupec jmen 180 → 150 px), aby se
+  vešlo i „b." i když panel prosvítá zpoza modalu trumfu.
+- Hlasové oznámení zjednodušeno: **neříká „rozdává"** (jen jméno hráče) a **nahlášené
+  štychy čte jako pouhá čísla** (bez slova „štych/y/ů").
+
 ## [1.11.0] – 2026-07-06
 
 ### Přidáno – ovládání hlášení a výsledků
