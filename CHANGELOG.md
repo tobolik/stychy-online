@@ -3,6 +3,14 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.9.1] – 2026-07-06
+
+### Opraveno
+- **Hlášení – rozdávající se ořezával dole.** Když přišel na řadu rozdávající (poslední
+  hráč) a objevila se žlutá hláška „Rozdávající nesmí nahlásit…", hláška zmenšila seznam
+  a poslední řádek se uřízl. Scroll se nově spouští až po přepočtu rozložení
+  (`requestAnimationFrame`) + pojistka, že aktuální řádek je vždy celý vidět.
+
 ## [1.9.0] – 2026-07-06
 
 ### Přidáno – flexibilní správa kol
