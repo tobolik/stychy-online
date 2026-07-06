@@ -1417,7 +1417,7 @@
         
         <!-- Footer -->
         <div class="app-footer">
-            <span>Štychy Záznamník v1.9.0</span>
+            <span>Štychy Záznamník v1.9.1</span>
             <span>•</span>
             <span id="build-date">2026-07-06</span>
         </div>
@@ -3622,10 +3622,17 @@
                 const nextRow = document.querySelector(`.bid-input-row[data-index="${currentBiddingIndex}"]`);
                 if (nextRow) {
                     nextRow.classList.add('current-input');
-                    // Ukázat aktuální hráč + 2 řádky pod ním (ne jen aktuální na spodním okraji)
-                    const lookAheadIdx = Math.min(currentBiddingIndex + 2, orderedBiddingPlayers.length - 1);
-                    const lookAheadRow = document.querySelector(`.bid-input-row[data-index="${lookAheadIdx}"]`) || nextRow;
-                    lookAheadRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    // Scroll až PO přepočtu rozložení (rAF): u rozdávajícího se objeví žlutá hláška,
+                    // která zmenší seznam – bez rAF by se poslední řádek (rozdávající) uřízl dole.
+                    requestAnimationFrame(() => {
+                        // Ukázat aktuálního hráče + 2 řádky pod ním; u posledního (rozdávající)
+                        // se srovná jeho vlastní řádek tak, aby byl celý vidět.
+                        const lookAheadIdx = Math.min(currentBiddingIndex + 2, orderedBiddingPlayers.length - 1);
+                        const lookAheadRow = document.querySelector(`.bid-input-row[data-index="${lookAheadIdx}"]`) || nextRow;
+                        lookAheadRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        // Pojistka: aktuální řádek musí být vždy celý vidět (i po zobrazení hlášky)
+                        nextRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    });
                 }
                 
                 // Announce next player's name (only if voice recognition is NOT active)
