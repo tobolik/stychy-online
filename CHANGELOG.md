@@ -23,6 +23,14 @@ verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji v
   jménem a velkým číslem karet; herní modály širší na desktopu s větším písmem; sticky
   tlačítko Uložit (vždy viditelné i u 11 hráčů); průběžné pořadí ~1.6× větší písmo se
   skóre hned vedle jména. Ověřeno Playwright screenshoty na 430px i desktopu.
+- Doladění po živém testu: rozdávající zvýrazněn (jméno v barevném rámečku, velké číslo
+  karet, mini-karty jako decentní dekorace); tlačítka volby hodnoty karty +50 %; body
+  v průběžném pořadí zarovnané do sloupce (ikony pořadí fixní šířky); jména ve výsledcích
+  kola 2× větší.
+
+### Ovládání
+- Výběr trumfu z klávesnice: šipky přepínají mezi 4 kartami barvy, Enter kartu vybere
+  a přesune fokus na „Pokračovat k hlášení" (fokus viditelný jen při ovládání klávesnicí).
 
 ## [1.6.1] – 2026-06-24
 

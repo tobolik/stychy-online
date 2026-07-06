@@ -296,7 +296,7 @@
             .modal-content.modal-game { padding: 34px 38px; }
             .modal-content.modal-game .modal-title { font-size: 1.9rem; }
             .modal-content.modal-game .bid-player-name,
-            .modal-content.modal-game .result-player-name { font-size: 1.35rem; }
+            .modal-content.modal-game .result-row .player-name { font-size: 2rem; }
             .modal-content.modal-game .bid-btn { width: 44px; height: 44px; font-size: 1.2rem; }
             .modal-content.modal-game .result-btn { width: 64px; height: 52px; }
             .modal-content.modal-game .result-bid-badge,
@@ -349,8 +349,7 @@
            aby tlačítka pro zadávání byla ve všech řádcích zarovnaná pod sebou. */
         @media (min-width: 768px) {
             .modal-content.modal-game.modal-flex { max-width: 1040px; }
-            .modal-flex .bid-player-name,
-            .modal-flex .result-player-name {
+            .modal-flex .bid-player-name {
                 white-space: nowrap; flex: 0 0 230px; width: 230px;
                 overflow: hidden; text-overflow: ellipsis;
             }
@@ -670,9 +669,17 @@
         .trump-suit-btn:hover {
             transform: scale(1.05);
         }
+        .trump-suit-btn:focus-visible {
+            outline: 3px solid var(--accent);
+            outline-offset: 3px;
+        }
         .trump-suit-btn.selected {
             border-color: var(--accent);
             box-shadow: 0 0 20px rgba(0, 255, 204, 0.5);
+        }
+        .trump-value-btn:focus-visible {
+            outline: 3px solid var(--accent);
+            outline-offset: 2px;
         }
         .trump-suit-btn.hearts, .trump-suit-btn.diamonds { color: #e74c3c; }
         .trump-suit-btn.clubs, .trump-suit-btn.spades { color: #2c3e50; }
@@ -700,15 +707,15 @@
         }
 
         .trump-value-btn {
-            width: 36px;
-            height: 36px;
+            width: 54px;
+            height: 54px;
             border: 1px solid var(--border-light);
-            border-radius: 8px;
+            border-radius: 10px;
             background: var(--surface);
             color: white;
             cursor: pointer;
             font-weight: bold;
-            font-size: 0.9rem;
+            font-size: 1.35rem;
             transition: all 0.2s;
         }
         .trump-value-btn:hover {
@@ -898,7 +905,7 @@
         }
         .result-row .player-name {
             font-weight: bold;
-            font-size: 1rem;
+            font-size: 1.5rem;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -1110,7 +1117,9 @@
         }
         .ranking-row .trophy {
             font-size: 1.6rem;
-            min-width: 28px;
+            flex: 0 0 34px;
+            width: 34px;
+            text-align: center;
         }
         .ranking-row .trophy.gold { color: gold; }
         .ranking-row .trophy.silver { color: silver; }
@@ -1121,8 +1130,13 @@
         .ranking-row .trophy.hamster { color: #e67e22; }
         .ranking-row .trophy.snail { color: #9b59b6; }
         .ranking-row .trophy.crow { color: #ecf0f1; }
-        .ranking-row .name { color: var(--text-main); font-weight: 700; }
+        .ranking-row .name {
+            color: var(--text-main); font-weight: 700;
+            flex: 0 0 auto; width: 260px; max-width: 50%;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
         .ranking-row .score { color: var(--primary); font-weight: 800; margin-left: 14px; white-space: nowrap; }
+        @media (max-width: 480px) { .ranking-row .name { width: 150px; } }
 
         /* Round Info Bar */
         .round-info-bar {
@@ -1438,7 +1452,7 @@
 
             <div id="dealer-info" style="background: rgba(0, 255, 204, 0.1); border: 1px solid var(--primary); border-radius: 12px; padding: 12px 18px; margin-bottom: 14px;">
                 <div class="dealer-line">
-                    <span style="font-size: 1.15rem; color: var(--text-muted);"><i class="fa-solid fa-hand-holding"></i> Rozdává: <strong id="dealer-name" style="font-size: 1.7rem; color: var(--primary); font-weight: 800; vertical-align: -2px;"></strong></span>
+                    <span style="font-size: 1.15rem; color: var(--text-muted);"><i class="fa-solid fa-hand-holding"></i> Rozdává: <strong id="dealer-name" style="font-size: 1.7rem; color: var(--primary); font-weight: 800; background: rgba(0,255,204,0.16); padding: 1px 12px; border-radius: 10px; display: inline-block; line-height: 1.25;"></strong></span>
                     <span id="cards-in-round" class="dealer-line" style="gap: 10px;"></span>
                 </div>
             </div>
@@ -1482,7 +1496,7 @@
                 </div>
             </div>
 
-            <button class="btn btn-primary" style="width: 100%; padding: 22px; font-size: 1.2rem;" onclick="createRound(this)">
+            <button id="trump-continue-btn" class="btn btn-primary" style="width: 100%; padding: 22px; font-size: 1.2rem;" onclick="createRound(this)">
                 <i class="fa-solid fa-arrow-right"></i> Pokračovat k hlášení
             </button>
         </div>
@@ -3330,14 +3344,14 @@
             document.getElementById('new-round-number').textContent = nextRoundNumber;
             document.getElementById('dealer-name').textContent = dealer ? dealer.name : '?';
             
-            // Jeden řádek: malé karty + velké číslo + slovo
+            // Jeden řádek: velké čitelné číslo + slovo, pak decentní malé karty (dekorace)
             let cardIconsHtml = '';
             for (let i = 0; i < cardsCount; i++) cardIconsHtml += '<span class="mini-card"></span>';
             const cardWord = cardsCount === 1 ? 'karta' : (cardsCount < 5 ? 'karty' : 'karet');
             document.getElementById('cards-in-round').innerHTML =
-                `<span class="mini-cards-row">${cardIconsHtml}</span>` +
-                `<span style="font-size: 2.2rem; font-weight: 800; color: var(--primary); line-height: 1;">${cardsCount}</span>` +
-                `<span style="font-size: 1.05rem; color: var(--text-muted); font-weight: 600;">${cardWord}</span>`;
+                `<span style="font-size: 2.5rem; font-weight: 800; color: var(--accent); line-height: 1;">${cardsCount}</span>` +
+                `<span style="font-size: 1.05rem; color: var(--text-muted); font-weight: 600;">${cardWord}</span>` +
+                `<span class="mini-cards-row" style="opacity: 0.4; margin-left: 6px;">${cardIconsHtml}</span>`;
 
             // Reset trump selection
             selectedTrumpSuit = null;
@@ -3347,7 +3361,11 @@
             updateTrumpPreview();
 
             openModal('modal-new-round');
-            
+
+            // Fokus na první kartu trumfu → klávesová navigace šipkami + Enter
+            const firstSuit = document.querySelector('#modal-new-round .trump-suit-btn');
+            if (firstSuit) firstSuit.focus();
+
             // Voice announcement: who is dealing and how many cards
             const dealerName = dealer ? dealer.name : 'neznámý';
             speak(`${getOrdinalCzech(nextRoundNumber)} kolo. ${dealerName} rozdává ${getCardsTextCzech(cardsCount)}.`);
@@ -4835,7 +4853,24 @@
             
             const key = e.key;
             console.log('Trump keypress:', key, 'ctrlKey:', e.ctrlKey);
-            
+
+            // Šipky: navigace mezi 4 kartami trumfu
+            if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key)) {
+                const suitBtns = Array.from(document.querySelectorAll('#modal-new-round .trump-suit-btn'));
+                if (suitBtns.length) {
+                    e.preventDefault();
+                    const cur = suitBtns.indexOf(document.activeElement);
+                    let next;
+                    if (key === 'ArrowLeft' || key === 'ArrowUp') {
+                        next = cur <= 0 ? suitBtns.length - 1 : cur - 1;
+                    } else {
+                        next = cur < 0 ? 0 : (cur + 1) % suitBtns.length;
+                    }
+                    suitBtns[next].focus();
+                }
+                return;
+            }
+
             // CTRL + 1-4 for suit selection
             if (e.ctrlKey && /^[1-4]$/.test(key)) {
                 e.preventDefault();
@@ -4868,10 +4903,24 @@
                 return;
             }
             
-            // Enter to continue to bidding
+            // Enter: fokus na kartě trumfu → vyber ji + přesuň fokus na "Pokračovat";
+            //        fokus na "Pokračovat" → nech nativní klik (createRound)
             if (key === 'Enter' && !e.ctrlKey) {
+                const focused = document.activeElement;
+                const suitBtns = Array.from(document.querySelectorAll('#modal-new-round .trump-suit-btn'));
+                const suitIdx = suitBtns.indexOf(focused);
+                if (suitIdx >= 0) {
+                    e.preventDefault();
+                    const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
+                    selectTrumpSuit(suits[suitIdx]);
+                    const cont = document.getElementById('trump-continue-btn');
+                    if (cont) cont.focus();
+                    return;
+                }
+                if (focused && focused.id === 'trump-continue-btn') {
+                    return; // nativní klik tlačítka zavolá createRound(this)
+                }
                 e.preventDefault();
-                console.log('Creating round');
                 createRound();
                 return;
             }
