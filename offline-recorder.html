@@ -1186,12 +1186,22 @@
         }
         .dock-btn:hover { border-color: var(--accent); color: var(--text-main); }
         .dock-btn.active { background: var(--accent); color: #1a1c2c; border-color: var(--accent); }
-        /* Úchyt pro přetažení panelu (drag-to-dock) */
+        /* Úchyt pro přetažení panelu (drag-to-dock) – viditelný pill s popiskem */
         .dock-grip {
-            cursor: grab; color: var(--text-muted); padding: 2px 6px; font-size: 1rem;
-            touch-action: none; user-select: none; border-radius: 6px;
+            cursor: grab; color: var(--accent-ink);
+            background: var(--surface-hover);
+            border: 1px dashed var(--border-light);
+            padding: 4px 9px; font-size: 0.75rem; font-weight: 600;
+            border-radius: 8px;
+            display: inline-flex; align-items: center; gap: 5px;
+            touch-action: none; user-select: none; white-space: nowrap;
         }
-        .dock-grip:hover { color: var(--accent); background: var(--surface-hover); }
+        .dock-grip:hover { color: #1a1c2c; background: var(--accent); border-color: var(--accent); }
+        .dock-grip:active { cursor: grabbing; }
+        /* Nadpis panelu se může zkrátit, aby se ovladače vždy vešly */
+        .current-ranking-title > span:first-child {
+            flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
         .current-ranking.dragging { opacity: 0.45; }
         /* Náhled cílové zóny při přetahování */
         .dock-dropzone {
@@ -1510,7 +1520,7 @@
         
         <!-- Footer -->
         <div class="app-footer">
-            <span>Štychy Záznamník v1.10.1</span>
+            <span>Štychy Záznamník v1.10.2</span>
             <span>•</span>
             <span id="build-date">2026-07-06</span>
         </div>
@@ -3373,7 +3383,7 @@
             let html = `<div class="current-ranking-title">
                 <span><i class="fa-solid fa-chart-line"></i> Průběžné pořadí (po ${finishedRounds}. kole z ${totalRounds})</span>
                 <span class="dock-toggle">
-                    <span class="dock-grip" id="dock-grip" title="Přetáhni panel (dolů/vlevo/vpravo)"><i class="fa-solid fa-grip-vertical"></i></span>
+                    <span class="dock-grip" id="dock-grip" title="Přetáhni panel dolů / vlevo / vpravo"><i class="fa-solid fa-up-down-left-right"></i> Přesunout</span>
                     <button class="dock-btn" onclick="setStatsDock('left')" title="Statistiky vlevo"><i class="fa-solid fa-arrow-left"></i></button>
                     <button class="dock-btn" onclick="setStatsDock('bottom')" title="Statistiky dole"><i class="fa-solid fa-arrow-down"></i></button>
                     <button class="dock-btn" onclick="setStatsDock('right')" title="Statistiky vpravo"><i class="fa-solid fa-arrow-right"></i></button>

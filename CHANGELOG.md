@@ -3,6 +3,13 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.10.2] – 2026-07-06
+
+### Změněno
+- Úchyt pro přetažení doku statistik je nově **viditelný ovladač „✥ Přesunout"**
+  (dřív jen decentní tečky ⠿, snadno k přehlédnutí). Nadpis panelu se v případě
+  potřeby zkrátí, aby se ovladače vždy vešly.
+
 ## [1.10.1] – 2026-07-06
 
 ### Přidáno – dok statistik: vlevo + přetahování
