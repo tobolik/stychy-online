@@ -293,7 +293,7 @@
             background: var(--surface);
             border-radius: 20px;
             padding: 30px;
-            max-width: 600px;
+            max-width: 680px;
             width: 100%;
             max-height: 90vh;
             overflow-y: auto;
@@ -301,6 +301,21 @@
         }
         .modal-content.modal-large {
             max-width: 800px;
+        }
+        /* Herní modály (nová hra, trumf, hlášení, výsledky) – více šířky na desktopu */
+        .modal-content.modal-game {
+            max-width: 880px;
+        }
+        /* Desktop: zvětšit písmo v herních modálech (mobil zůstává kompaktní) */
+        @media (min-width: 768px) {
+            .modal-content.modal-game { padding: 34px 38px; }
+            .modal-content.modal-game .modal-title { font-size: 1.9rem; }
+            .modal-content.modal-game .bid-player-name,
+            .modal-content.modal-game .result-player-name { font-size: 1.35rem; }
+            .modal-content.modal-game .bid-btn { width: 44px; height: 44px; font-size: 1.2rem; }
+            .modal-content.modal-game .result-btn { width: 64px; height: 52px; }
+            .modal-content.modal-game .result-bid-badge,
+            .modal-content.modal-game .bid-badge { font-size: 2.1rem; }
         }
 
         /* Statistics Styles */
@@ -1287,7 +1302,7 @@
 
     <!-- Modal: New Game -->
     <div class="modal" id="modal-new-game">
-        <div class="modal-content">
+        <div class="modal-content modal-game">
             <div class="modal-header">
                 <h2 class="modal-title">Nová hra</h2>
                 <button class="close-btn" onclick="closeModal('modal-new-game')">&times;</button>
@@ -1355,7 +1370,7 @@
 
     <!-- Modal: New Round -->
     <div class="modal" id="modal-new-round">
-        <div class="modal-content">
+        <div class="modal-content modal-game">
             <div class="modal-header">
                 <h2 class="modal-title">Kolo <span id="new-round-number">1</span> - Výběr trumfu</h2>
                 <button class="modal-voice-btn" onclick="toggleVoiceRecognition('global')" title="Hlasové ovládání">
@@ -1364,15 +1379,12 @@
                 <button class="close-btn" onclick="closeModal('modal-new-round')">&times;</button>
             </div>
 
-            <div id="dealer-info" style="background: rgba(0, 255, 204, 0.1); border: 1px solid var(--primary); border-radius: 10px; padding: 15px; margin-bottom: 20px; text-align: center;">
-                <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 5px;">
-                    <i class="fa-solid fa-hand-holding"></i> Rozdává:
+            <div id="dealer-info" style="background: rgba(0, 255, 204, 0.1); border: 1px solid var(--primary); border-radius: 12px; padding: 14px 18px; margin-bottom: 18px; text-align: center;">
+                <div style="font-size: 1.15rem; color: var(--text-muted);">
+                    <i class="fa-solid fa-hand-holding"></i> Rozdává: <strong id="dealer-name" style="font-size: 1.9rem; color: var(--primary); font-weight: 800; vertical-align: -2px;"></strong>
                 </div>
-                <div id="dealer-name" style="font-size: 1.3rem; font-weight: bold; color: var(--primary);">
-                    <!-- Jméno rozdávajícího -->
-                </div>
-                <div id="cards-in-round" style="font-size: 0.9rem; color: var(--text-muted); margin-top: 5px;">
-                    <!-- Počet karet -->
+                <div id="cards-in-round" style="margin-top: 4px; font-size: 2.6rem; font-weight: 800; color: var(--primary); line-height: 1.1;">
+                    <!-- Velké číslo karet -->
                 </div>
             </div>
 
@@ -1423,7 +1435,7 @@
 
     <!-- Modal: Bidding -->
     <div class="modal" id="modal-bidding">
-        <div class="modal-content">
+        <div class="modal-content modal-game">
             <div class="modal-header">
                 <h2 class="modal-title">Hlášení - Kolo <span id="bidding-round-num">1</span></h2>
                 <button class="modal-voice-btn" onclick="toggleVoiceRecognition('bids')" title="Hlasové zadávání">
@@ -1472,7 +1484,7 @@
 
     <!-- Modal: Results -->
     <div class="modal" id="modal-results" tabindex="-1">
-        <div class="modal-content">
+        <div class="modal-content modal-game">
             <div class="modal-header">
                 <h2 class="modal-title"><span id="results-modal-title">Výsledky kola</span> <span id="results-round-num">1</span></h2>
                 <button class="modal-voice-btn" onclick="toggleVoiceRecognition('results')" title="Hlasové zadávání">
@@ -3259,13 +3271,10 @@
             document.getElementById('new-round-number').textContent = nextRoundNumber;
             document.getElementById('dealer-name').textContent = dealer ? dealer.name : '?';
             
-            // Generate card icons
-            let cardIconsHtml = '';
-            for (let i = 0; i < cardsCount; i++) {
-                cardIconsHtml += '<span class="mini-card"></span>';
-            }
-            const cardsText = `<span class="cards-count-big">${cardsCount}</span> ${cardsCount === 1 ? 'karta' : (cardsCount < 5 ? 'karty' : 'karet')}`;
-            document.getElementById('cards-in-round').innerHTML = `<div class="mini-cards-row">${cardIconsHtml}</div>${cardsText}`;
+            // Velké číslo karet + slovo (2řádkový kompaktní dealer blok)
+            const cardWord = cardsCount === 1 ? 'karta' : (cardsCount < 5 ? 'karty' : 'karet');
+            document.getElementById('cards-in-round').innerHTML =
+                `${cardsCount}<span style="font-size: 1.1rem; color: var(--text-muted); font-weight: 600; margin-left: 8px;">${cardWord}</span>`;
 
             // Reset trump selection
             selectedTrumpSuit = null;
