@@ -362,6 +362,24 @@
         }
         .bid-float-msg.is-hidden { opacity: 0; }
         .bid-float-msg > div { margin: 0 !important; box-shadow: 0 8px 24px rgba(0,0,0,0.45); }
+        /* Malý plný (neprůsvitný) toast přímo pod zakázanou hodnotou rozdávajícího */
+        .forbidden-toast {
+            position: fixed;
+            transform: translateX(-50%);
+            z-index: 3000;
+            background: var(--danger);
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            white-space: nowrap;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .forbidden-toast.show { opacity: 1; }
         @media (max-width: 480px) {
             .modal-save-bar { margin: 12px -14px -14px; padding: 12px 14px 14px; }
             .bid-float-msg { left: 14px; right: 14px; }
@@ -1429,7 +1447,7 @@
         
         <!-- Footer -->
         <div class="app-footer">
-            <span>Štychy Záznamník v1.9.3</span>
+            <span>Štychy Záznamník v1.9.4</span>
             <span>•</span>
             <span id="build-date">2026-07-06</span>
         </div>
@@ -3771,6 +3789,37 @@
             }
         }
 
+        // Malý plný toast přímo pod zakázanou hodnotou rozdávajícího (sleduje tlačítko při scrollu).
+        let forbiddenToastTimer = null;
+        function positionForbiddenToast() {
+            const toast = document.getElementById('forbidden-toast');
+            const btn = document.querySelector('#modal-bidding .bid-btn.forbidden');
+            if (!toast || !btn) return;
+            const r = btn.getBoundingClientRect();
+            toast.style.left = Math.round(r.left + r.width / 2) + 'px';
+            toast.style.top = Math.round(r.bottom + 8) + 'px';
+        }
+        function showForbiddenToast(text) {
+            let toast = document.getElementById('forbidden-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'forbidden-toast';
+                toast.className = 'forbidden-toast';
+                document.body.appendChild(toast);
+            }
+            toast.textContent = text;
+            requestAnimationFrame(positionForbiddenToast); // umístit až po přepočtu/scrollu
+            toast.classList.add('show');
+            const sc = document.querySelector('#modal-bidding .modal-scroll');
+            if (sc && !sc._ftBound) { sc._ftBound = true; sc.addEventListener('scroll', positionForbiddenToast, { passive: true }); }
+            if (forbiddenToastTimer) clearTimeout(forbiddenToastTimer);
+            forbiddenToastTimer = setTimeout(hideForbiddenToast, 3500);
+        }
+        function hideForbiddenToast() {
+            const toast = document.getElementById('forbidden-toast');
+            if (toast) toast.classList.remove('show');
+        }
+
         function updateDealerConstraint() {
             const dealerPosition = currentRound.dealer_position;
             const cardsCount = currentRound.cards_count;
@@ -3799,16 +3848,14 @@
                     btn.disabled = isForbidden;
                     btn.classList.toggle('forbidden', isForbidden);
                 });
-                // Krátká hláška průběžně (kdykoliv je zakázaná hodnota známá): "Jméno – nemůžeš X štych(y/ů)"
-                const dealer = currentGame.players.find(p => p.position == dealerPosition);
-                const dealerName = dealer ? dealer.name : 'Rozdávající';
+                // Malý plný toast pod zakázanou hodnotou: "Není možné zvolit X štych(y/ů)"
                 const stych = forbiddenBid === 1 ? 'štych' : (forbiddenBid >= 2 && forbiddenBid <= 4 ? 'štychy' : 'štychů');
-                forbiddenInfo.innerHTML = `<i class="fa-solid fa-exclamation-triangle"></i> ${escapeHtml(dealerName)} – nemůžeš <strong>${forbiddenBid}</strong> ${stych}`;
-                forbiddenInfo.style.display = 'block';
+                showForbiddenToast(`Není možné zvolit ${forbiddenBid} ${stych}`);
+                forbiddenInfo.style.display = 'none';
                 document.getElementById('bids-status').style.display = 'none';
-                flashBidFloat();
             } else {
                 forbiddenInfo.style.display = 'none';
+                hideForbiddenToast();
                 dealerRow.querySelectorAll('.bid-btn').forEach(btn => {
                     btn.disabled = false;
                     btn.classList.remove('forbidden');
@@ -4839,6 +4886,7 @@
             // Remove keyboard listeners
             if (modalId === 'modal-bidding') {
                 document.removeEventListener('keydown', handleBiddingKeypress);
+                hideForbiddenToast();
             }
             if (modalId === 'modal-results') {
                 document.removeEventListener('keydown', handleResultsKeypress);
