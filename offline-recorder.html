@@ -318,6 +318,22 @@
             .modal-content.modal-game .bid-badge { font-size: 2.1rem; }
         }
 
+        /* Sticky lišta s tlačítkem Uložit – vždy viditelná i při mnoha hráčích */
+        .modal-save-bar {
+            position: sticky;
+            bottom: 0;
+            display: flex;
+            gap: 10px;
+            margin: 15px -30px -30px;
+            padding: 15px 30px 30px;
+            background: var(--surface);
+            border-top: 1px solid var(--border-light);
+            z-index: 2;
+        }
+        @media (max-width: 480px) {
+            .modal-save-bar { margin: 12px -14px -14px; padding: 12px 14px 14px; }
+        }
+
         /* Statistics Styles */
         .stats-section {
             margin-bottom: 25px;
@@ -1031,28 +1047,29 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 10px 15px;
+            padding: 12px 16px;
             background: rgba(0,0,0,0.3);
             border-radius: 10px;
-            font-size: 1rem;
+            font-size: 1.6rem;   /* výrazně větší, lepší čitelnost */
         }
         .ranking-row.top-3 {
             background: rgba(0,0,0,0.4);
         }
         .ranking-row .position {
             font-weight: bold;
-            width: 28px;
-            height: 28px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             background: rgba(255,255,255,0.1);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.9rem;
+            font-size: 1.05rem;
+            flex-shrink: 0;
         }
         .ranking-row .trophy {
-            font-size: 1.2rem;
-            min-width: 24px;
+            font-size: 1.6rem;
+            min-width: 28px;
         }
         .ranking-row .trophy.gold { color: gold; }
         .ranking-row .trophy.silver { color: silver; }
@@ -1063,8 +1080,8 @@
         .ranking-row .trophy.hamster { color: #e67e22; }
         .ranking-row .trophy.snail { color: #9b59b6; }
         .ranking-row .trophy.crow { color: #ecf0f1; }
-        .ranking-row .name { flex: 1; color: var(--text-main); }
-        .ranking-row .score { color: var(--primary); font-weight: bold; min-width: 50px; text-align: right; }
+        .ranking-row .name { color: var(--text-main); font-weight: 700; }
+        .ranking-row .score { color: var(--primary); font-weight: 800; margin-left: 14px; white-space: nowrap; }
 
         /* Round Info Bar */
         .round-info-bar {
@@ -1474,7 +1491,7 @@
             
             <div id="bids-status" style="margin-top: 15px; padding: 12px; border-radius: 8px; text-align: center; display: none;"></div>
 
-            <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <div class="modal-save-bar">
                 <button class="btn btn-primary" style="flex: 1;" onclick="saveBids()">
                     <i class="fa-solid fa-check"></i> Uložit hlášení
                 </button>
@@ -1540,7 +1557,7 @@
                 </div>
             </div>
 
-            <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <div class="modal-save-bar">
                 <button class="btn btn-primary" style="flex: 1;" onclick="saveResults()">
                     <i class="fa-solid fa-save"></i> Uložit výsledky
                 </button>
