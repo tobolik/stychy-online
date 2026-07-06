@@ -305,11 +305,13 @@
             .modal-content.modal-game .modal-save-bar { margin: 15px -38px -34px; padding: 15px 38px 34px; }
         }
 
-        /* Sticky lišta s tlačítkem Uložit – vždy viditelná i při mnoha hráčích */
+        /* Sticky lišta s tlačítkem Uložit (+ varování/status) – vždy viditelná i při mnoha hráčích */
         .modal-save-bar {
             position: sticky;
             bottom: 0;
             display: flex;
+            flex-direction: column;
+            align-items: stretch;
             gap: 10px;
             margin: 15px -30px -30px;
             padding: 15px 30px 30px;
@@ -317,6 +319,7 @@
             border-top: 1px solid var(--border-light);
             z-index: 2;
         }
+        .modal-save-bar .btn { padding: 20px; font-size: 1.15rem; }
         @media (max-width: 480px) {
             .modal-save-bar { margin: 12px -14px -14px; padding: 12px 14px 14px; }
         }
@@ -1485,12 +1488,10 @@
                 <!-- Dynamicky generováno -->
             </div>
 
-            <div class="forbidden-info" id="forbidden-bid-info" style="display: none;"></div>
-            
-            <div id="bids-status" style="margin-top: 15px; padding: 12px; border-radius: 8px; text-align: center; display: none;"></div>
-
             <div class="modal-save-bar">
-                <button class="btn btn-primary" style="flex: 1;" onclick="saveBids()">
+                <div class="forbidden-info" id="forbidden-bid-info" style="display: none;"></div>
+                <div id="bids-status" style="padding: 12px; border-radius: 8px; text-align: center; display: none;"></div>
+                <button class="btn btn-primary" onclick="saveBids()">
                     <i class="fa-solid fa-check"></i> Uložit hlášení
                 </button>
             </div>
@@ -1556,7 +1557,7 @@
             </div>
 
             <div class="modal-save-bar">
-                <button class="btn btn-primary" style="flex: 1;" onclick="saveResults()">
+                <button class="btn btn-primary" onclick="saveResults()">
                     <i class="fa-solid fa-save"></i> Uložit výsledky
                 </button>
             </div>
