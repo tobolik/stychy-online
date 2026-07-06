@@ -47,9 +47,28 @@ switch ($action) {
         if ($game['status'] !== 'active') {
             jsonResponse(['success' => false, 'error' => 'Hra již byla ukončena'], 400);
         }
-        
-        // Zjištění čísla kola
-        $stmt = $db->prepare('SELECT MAX(round_number) as max_round FROM rounds WHERE game_id = ?');
+
+        // Idempotence proti dvojkliku: pokud poslední kolo ještě nemá zadané hlášení
+        // (status 'bidding'), NEvytvářet nové – aktualizovat trumf a vrátit stávající kolo.
+        $stmt = $db->prepare('SELECT * FROM rounds WHERE game_id = ? AND valid_to IS NULL ORDER BY round_number DESC LIMIT 1');
+        $stmt->execute([$gameId]);
+        $lastRound = $stmt->fetch();
+        if ($lastRound && $lastRound['status'] === 'bidding') {
+            $upd = $db->prepare('UPDATE rounds SET trump_suit = ?, trump_value = ? WHERE id = ?');
+            $upd->execute([$trumpSuit, $trumpValue, $lastRound['id']]);
+            jsonResponse([
+                'success' => true,
+                'round_id' => (int)$lastRound['id'],
+                'round_number' => (int)$lastRound['round_number'],
+                'cards_count' => (int)$lastRound['cards_count'],
+                'dealer_position' => (int)$lastRound['dealer_position'],
+                'total_rounds' => getTotalRounds($game),
+                'reused' => true
+            ]);
+        }
+
+        // Zjištění čísla kola (jen nesmazaná kola -> po smazání posledního kola se číslo znovu použije)
+        $stmt = $db->prepare('SELECT MAX(round_number) as max_round FROM rounds WHERE game_id = ? AND valid_to IS NULL');
         $stmt->execute([$gameId]);
         $result = $stmt->fetch();
         $roundNumber = ($result['max_round'] ?? 0) + 1;
@@ -99,7 +118,23 @@ switch ($action) {
             ]);
         } catch (Exception $e) {
             $db->rollBack();
-            error_log('rounds.php: ' . $e->getMessage()); jsonResponse(['success' => false, 'error' => 'Chyba serveru.'], 500);
+            // Souběh (dvojklik): jiný požadavek už kolo vytvořil -> vrátit existující místo chyby
+            $stmt = $db->prepare('SELECT * FROM rounds WHERE game_id = ? AND valid_to IS NULL ORDER BY round_number DESC LIMIT 1');
+            $stmt->execute([$gameId]);
+            $lr = $stmt->fetch();
+            if ($lr && $lr['status'] === 'bidding') {
+                jsonResponse([
+                    'success' => true,
+                    'round_id' => (int)$lr['id'],
+                    'round_number' => (int)$lr['round_number'],
+                    'cards_count' => (int)$lr['cards_count'],
+                    'dealer_position' => (int)$lr['dealer_position'],
+                    'total_rounds' => getTotalRounds($game),
+                    'reused' => true
+                ]);
+            }
+            error_log('rounds.php create: ' . $e->getMessage());
+            jsonResponse(['success' => false, 'error' => 'Chyba serveru.'], 500);
         }
         break;
         
@@ -348,13 +383,50 @@ switch ($action) {
      * Smazání kola
      */
     case 'delete':
-        // Mazání kola je ZAKÁZÁNO (princip: nikdy hard-delete; v praxi se kola jen
-        // upravují přes update_results, mazání se nepoužívá). Žádné fyzické mazání
-        // řádků ani přečíslování kol. Pro opravu chyby slouží úprava výsledků.
-        jsonResponse([
-            'success' => false,
-            'error' => 'Kolo nelze smazat. Upravte jeho výsledky, nebo smažte celou hru.'
-        ], 400);
+        // Mazání kola je povoleno POUZE pro POSLEDNÍ a PRÁZDNÉ kolo (status 'bidding',
+        // tj. bez zadaného hlášení) – slouží k úklidu duplicit z dvojkliku. Nikdy hard-delete:
+        // soft-delete přes valid_to. Žádný odečet skóre (prázdné kolo body nemá).
+        $roundId = intval($input['round_id'] ?? 0);
+
+        $stmt = $db->prepare('
+            SELECT r.*, g.user_id
+            FROM rounds r
+            JOIN games g ON g.id = r.game_id
+            WHERE r.id = ? AND g.valid_to IS NULL AND r.valid_to IS NULL
+        ');
+        $stmt->execute([$roundId]);
+        $round = $stmt->fetch();
+
+        if (!$round || (int)$round['user_id'] !== $userId) {
+            jsonResponse(['success' => false, 'error' => 'Kolo nenalezeno'], 404);
+        }
+
+        // Jen poslední kolo hry
+        $stmt = $db->prepare('SELECT MAX(round_number) AS m FROM rounds WHERE game_id = ? AND valid_to IS NULL');
+        $stmt->execute([$round['game_id']]);
+        $maxRn = (int)($stmt->fetch()['m'] ?? 0);
+        if ((int)$round['round_number'] !== $maxRn) {
+            jsonResponse(['success' => false, 'error' => 'Smazat lze jen poslední kolo.'], 400);
+        }
+
+        // Jen prázdné kolo (bez zadaného hlášení)
+        if ($round['status'] !== 'bidding') {
+            jsonResponse(['success' => false, 'error' => 'Smazat lze jen kolo bez zadaného hlášení. Pro opravu upravte výsledky.'], 400);
+        }
+
+        try {
+            $db->beginTransaction();
+            $db->prepare('UPDATE rounds SET valid_to = NOW(), valid_to_user_id = ? WHERE id = ? AND valid_to IS NULL')
+               ->execute([$userId, $roundId]);
+            $db->prepare('UPDATE round_results SET valid_to = NOW(), valid_to_user_id = ? WHERE round_id = ? AND valid_to IS NULL')
+               ->execute([$userId, $roundId]);
+            $db->commit();
+            jsonResponse(['success' => true, 'message' => 'Kolo bylo smazáno']);
+        } catch (Exception $e) {
+            $db->rollBack();
+            error_log('rounds.php delete: ' . $e->getMessage());
+            jsonResponse(['success' => false, 'error' => 'Chyba serveru.'], 500);
+        }
         break;
         
     /**

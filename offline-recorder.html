@@ -1414,7 +1414,7 @@
                 </div>
             </div>
 
-            <button class="btn btn-primary" style="width: 100%;" onclick="createRound()">
+            <button class="btn btn-primary" style="width: 100%;" onclick="createRound(this)">
                 <i class="fa-solid fa-arrow-right"></i> Pokračovat k hlášení
             </button>
         </div>
@@ -3096,9 +3096,12 @@
                     </button>`;
                 }
             } else if (lastRound.status === 'bidding') {
-                // Čekáme na hlášení
+                // Čekáme na hlášení – lze i smazat toto prázdné kolo (úklid duplicit z dvojkliku)
                 html += `<button class="btn btn-primary" onclick="openBiddingModal()">
                     <i class="fa-solid fa-bullhorn"></i> Zadat hlášení
+                </button>`;
+                html += `<button class="btn btn-danger" onclick="deleteRound(${lastRound.id})" title="Smazat toto prázdné kolo">
+                    <i class="fa-solid fa-trash"></i> Smazat kolo
                 </button>`;
             } else if (lastRound.status === 'playing') {
                 // Čekáme na výsledky
@@ -3315,27 +3318,37 @@
             });
         }
 
-        async function createRound() {
+        let creatingRound = false;
+        async function createRound(btn) {
             if (!selectedTrumpSuit) {
                 alert('Vyberte trumfovou barvu');
                 return;
             }
+            if (creatingRound) return;            // ochrana proti dvojkliku
+            creatingRound = true;
+            const trigger = btn || (typeof event !== 'undefined' ? event.target.closest('button') : null);
+            if (trigger) trigger.disabled = true;
 
-            const result = await api('rounds.php', {
-                action: 'create',
-                game_id: currentGame.game.id,
-                trump_suit: selectedTrumpSuit,
-                trump_value: selectedTrumpValue
-            });
+            try {
+                const result = await api('rounds.php', {
+                    action: 'create',
+                    game_id: currentGame.game.id,
+                    trump_suit: selectedTrumpSuit,
+                    trump_value: selectedTrumpValue
+                });
 
-            if (result.success) {
-                closeModal('modal-new-round');
-                selectedTrumpSuit = null;
-                selectedTrumpValue = null;
-                await openGame(currentGame.game.id);
-                openBiddingModal();
-            } else {
-                alert(result.error);
+                if (result.success) {
+                    closeModal('modal-new-round');
+                    selectedTrumpSuit = null;
+                    selectedTrumpValue = null;
+                    await openGame(currentGame.game.id);
+                    openBiddingModal();
+                } else {
+                    alert(result.error);
+                }
+            } finally {
+                creatingRound = false;
+                if (trigger) trigger.disabled = false;
             }
         }
 
@@ -4015,7 +4028,16 @@
             }
         }
 
-        // Mazání kola bylo odebráno (princip: nikdy hard-delete; kola se jen upravují).
+        // Smazání kola – jen poslední a prázdné (server to vynucuje). Soft-delete.
+        async function deleteRound(roundId) {
+            if (!confirm('Smazat toto prázdné kolo?')) return;
+            const result = await api('rounds.php', { action: 'delete', round_id: roundId });
+            if (result.success) {
+                await openGame(currentGame.game.id);
+            } else {
+                alert(result.error);
+            }
+        }
 
         // Known Players & Autocomplete
         function updateKnownPlayers(playerNames) {
