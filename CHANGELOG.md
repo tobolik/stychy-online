@@ -3,6 +3,27 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.9.0] – 2026-07-06
+
+### Přidáno – flexibilní správa kol
+- **Doplnit / opravit libovolné kolo:** tlačítko tužka je nově u KAŽDÉHO kola v tabulce.
+  Dokončené kolo → oprava výsledků; kolo se zadaným hlášením → zadání výsledků;
+  prázdné kolo → doplnění hlášení. Řeší zaseknutá prázdná kola, která dřív nešla vyplnit.
+- **Smazat kolo přímo z tabulky:** u prázdného kola (kdekoliv) a u posledního kola.
+  - Prázdné kolo lze smazat i „uprostřed" (úklid zaseknutých kol) – soft-delete, bez dopadu na skóre.
+  - Poslední kolo lze smazat i se zadanými výsledky (undo) – skóre se automaticky přepočítá.
+  - Dřívější kolo se zadanými výsledky smazat nelze (rozbila by se posloupnost) – hláška to vysvětlí.
+
+### Změněno – hlasové oznámení
+- `speak()` vybírá **nejkvalitnější dostupný český hlas** (přednost Google/neural před
+  defaultním hlasem OS). Bez nákladů – využívá hlasy prohlížeče/systému.
+
+### Ověřeno
+- Server (`rounds.php` delete): `php -l` čistý; E2E v dev dockeru (MariaDB 11.8):
+  undo posledního skórovaného kola + přepočet total_score, zákaz mazání dřívějšího
+  skórovaného kola (HTTP 400), smazání prostředního prázdného kola bez poškození dat
+  (total_score i čtení hry v pořádku). Klient: tlačítka u kol + oprava správného kola.
+
 ## [1.8.2] – 2026-07-06
 
 ### Změněno (modal hlášení – další ladění z reálné hry)

@@ -386,9 +386,10 @@ switch ($action) {
      * Smazání kola
      */
     case 'delete':
-        // Mazání kola je povoleno POUZE pro POSLEDNÍ a PRÁZDNÉ kolo (status 'bidding',
-        // tj. bez zadaného hlášení) – slouží k úklidu duplicit z dvojkliku. Nikdy hard-delete:
-        // soft-delete přes valid_to. Žádný odečet skóre (prázdné kolo body nemá).
+        // Mazání kola (soft-delete přes valid_to, NIKDY hard-delete):
+        //  - PRÁZDNÉ kolo (status 'bidding', bez hlášení) lze smazat KDEKOLIV (úklid),
+        //  - POSLEDNÍ kolo lze smazat i se zadanými výsledky (undo) – skóre se odečte,
+        //  - dřívější kolo se zadanými výsledky smazat NELZE (rozbila by se posloupnost).
         $roundId = intval($input['round_id'] ?? 0);
 
         $stmt = $db->prepare('
@@ -404,37 +405,48 @@ switch ($action) {
             jsonResponse(['success' => false, 'error' => 'Kolo nenalezeno'], 404);
         }
 
-        // Jen poslední kolo hry
         $stmt = $db->prepare('SELECT MAX(round_number) AS m FROM rounds WHERE game_id = ? AND valid_to IS NULL');
         $stmt->execute([$round['game_id']]);
         $maxRn = (int)($stmt->fetch()['m'] ?? 0);
-        if ((int)$round['round_number'] !== $maxRn) {
-            jsonResponse(['success' => false, 'error' => 'Smazat lze jen poslední kolo.'], 400);
+
+        $isEmpty = ($round['status'] === 'bidding');
+        $isLast  = ((int)$round['round_number'] === $maxRn);
+        if (!$isEmpty && !$isLast) {
+            jsonResponse(['success' => false, 'error' => 'Smazat lze prázdné kolo, nebo poslední kolo. Dřívější kolo se zadanými výsledky smazat nelze – nejdřív smažte novější kola.'], 400);
         }
 
-        // Jen prázdné kolo (bez zadaného hlášení)
-        if ($round['status'] !== 'bidding') {
-            jsonResponse(['success' => false, 'error' => 'Smazat lze jen kolo bez zadaného hlášení. Pro opravu upravte výsledky.'], 400);
-        }
-
-        // UNIQUE(game_id, round_number) nezohledňuje valid_to, takže soft-smazané kolo
-        // dál blokuje svůj round_number. Uvolníme slot: dáme smazané kolo pod aktuální
-        // minimum (zaručeně unikátní i při opakovaném smaž+vytvoř), aby další create mohl
-        // číslo znovu použít bez kolize. Čtení kola stejně filtrují přes valid_to.
+        // UNIQUE(game_id, round_number) nezohledňuje valid_to -> uvolnit slot pod aktuální minimum,
+        // aby další create mohl číslo znovu použít bez kolize. Čtení stejně filtrují přes valid_to.
         $stmt = $db->prepare('SELECT COALESCE(MIN(round_number), 0) AS mn FROM rounds WHERE game_id = ?');
         $stmt->execute([$round['game_id']]);
         $freeNum = ((int)$stmt->fetch()['mn']) - 1;
 
         try {
             $db->beginTransaction();
-            // status = 'bidding' i ve finálním UPDATE (revalidace proti souběhu se save_bids,
-            // který by kolo mezitím přepnul na 'playing') – když se mezitím změnilo, 0 řádků.
-            $stmt = $db->prepare('UPDATE rounds SET valid_to = NOW(), valid_to_user_id = ?, round_number = ? WHERE id = ? AND valid_to IS NULL AND status = "bidding"');
+
+            // Prázdné kolo: revalidace status='bidding' (souběh se save_bids). Ostatní: jen valid_to.
+            if ($isEmpty) {
+                $stmt = $db->prepare('UPDATE rounds SET valid_to = NOW(), valid_to_user_id = ?, round_number = ? WHERE id = ? AND valid_to IS NULL AND status = "bidding"');
+            } else {
+                $stmt = $db->prepare('UPDATE rounds SET valid_to = NOW(), valid_to_user_id = ?, round_number = ? WHERE id = ? AND valid_to IS NULL');
+            }
             $stmt->execute([$userId, $freeNum, $roundId]);
             if ($stmt->rowCount() === 0) {
                 $db->rollBack();
-                jsonResponse(['success' => false, 'error' => 'Kolo mezitím dostalo hlášení, nelze smazat.'], 409);
+                jsonResponse(['success' => false, 'error' => 'Kolo se mezitím změnilo, zkuste to znovu.'], 409);
             }
+
+            // Kolo se skóre: odečíst body z uloženého total_score (čtení sice přepočítává,
+            // ale držíme cache konzistentní i pro seznam her / statistiky).
+            if (!$isEmpty) {
+                $rs = $db->prepare('SELECT player_id, score FROM round_results WHERE round_id = ? AND valid_to IS NULL AND score IS NOT NULL');
+                $rs->execute([$roundId]);
+                $sub = $db->prepare('UPDATE game_players SET total_score = total_score - ? WHERE id = ?');
+                foreach ($rs->fetchAll() as $r) {
+                    $sub->execute([(int)$r['score'], (int)$r['player_id']]);
+                }
+            }
+
             $db->prepare('UPDATE round_results SET valid_to = NOW(), valid_to_user_id = ? WHERE round_id = ? AND valid_to IS NULL')
                ->execute([$userId, $roundId]);
             $db->commit();

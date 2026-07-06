@@ -1417,7 +1417,7 @@
         
         <!-- Footer -->
         <div class="app-footer">
-            <span>Štychy Záznamník v1.8.2</span>
+            <span>Štychy Záznamník v1.9.0</span>
             <span>•</span>
             <span id="build-date">2026-07-06</span>
         </div>
@@ -1746,6 +1746,29 @@
         let lastSpokenText = ''; // Store last spoken text for resume
         let speechIsPaused = false;
         
+        // Vybere nejkvalitnější dostupný český hlas (Google/neural přednostně před defaultním OS hlasem).
+        let cachedBestVoice = null, cachedVoiceCount = -1;
+        function getBestCzechVoice() {
+            const voices = window.speechSynthesis.getVoices();
+            if (!voices.length) return null;
+            if (cachedBestVoice && voices.length === cachedVoiceCount) return cachedBestVoice;
+            cachedVoiceCount = voices.length;
+            const cs = voices.filter(v => (v.lang || '').toLowerCase().startsWith('cs'));
+            const pool = cs.length ? cs : voices;
+            const rank = v => {
+                const n = (v.name || '').toLowerCase();
+                let s = 0;
+                if (n.includes('google')) s += 100;                          // Google = nejpřirozenější
+                if (n.includes('natural') || n.includes('neural')) s += 80;  // Azure/MS neural
+                if (n.includes('online')) s += 40;
+                if (n.includes('zuzana') || n.includes('iveta')) s += 20;    // známé české hlasy
+                if (v.localService === false) s += 10;                       // cloud bývá kvalitnější
+                return s;
+            };
+            cachedBestVoice = pool.slice().sort((a, b) => rank(b) - rank(a))[0] || null;
+            return cachedBestVoice;
+        }
+
         function speak(text) {
             if (!voiceAnnouncementsEnabled) return;
             if (!('speechSynthesis' in window)) return;
@@ -1766,11 +1789,11 @@
             utterance.pitch = 1.0;
             utterance.volume = 1.0;
             
-            // Try to find Czech voice
-            const voices = window.speechSynthesis.getVoices();
-            const czechVoice = voices.find(v => v.lang.startsWith('cs'));
-            if (czechVoice) {
-                utterance.voice = czechVoice;
+            // Nejlepší dostupný český hlas (Google/neural přednostně)
+            const bestVoice = getBestCzechVoice();
+            if (bestVoice) {
+                utterance.voice = bestVoice;
+                utterance.lang = bestVoice.lang;
             }
             
             // Re-enable voice input after speech ends
@@ -3101,6 +3124,7 @@
             const players = currentGame.players;
             const rounds = currentGame.rounds;
             const roundSequence = getRoundSequence(currentGame.game.max_cards);
+            const maxRoundNumber = rounds.reduce((m, r) => Math.max(m, r.round_number), 0);
 
             let html = '<thead><tr><th>Kolo</th><th>Karty</th>';
             players.forEach(p => {
@@ -3166,17 +3190,21 @@
                     <span class="tricks-value">${tricksSumDisplay}</span>
                 </td>`;
 
-                // Tlačítko pro opravu (jen pokud je kolo dokončené a hra aktivní)
+                // Akce u kola (aktivní hra): doplnit/opravit KAŽDÉ kolo + smazat (prázdné nebo poslední)
                 if (currentGame.game.status === 'active') {
-                    if (round.status === 'finished') {
-                        html += `<td style="background: var(--panel-2);">
-                            <button class="btn btn-sm btn-secondary" onclick="editRound(${round.id})" title="Opravit výsledky" style="padding: 4px 8px;">
+                    const editTitle = round.status === 'finished' ? 'Opravit výsledky'
+                        : (round.status === 'playing' ? 'Zadat výsledky' : 'Doplnit hlášení');
+                    let actions = `<button class="btn btn-sm btn-secondary" onclick="editRound(${round.id})" title="${editTitle}" style="padding: 4px 8px;">
                                 <i class="fa-solid fa-pen"></i>
-                            </button>
-                        </td>`;
-                    } else {
-                        html += `<td style="background: var(--panel-2);"></td>`;
+                            </button>`;
+                    // Smazat: prázdné kolo (kdekoliv) nebo poslední kolo (undo i se skóre)
+                    const isLast = round.round_number === maxRoundNumber;
+                    if (round.status === 'bidding' || isLast) {
+                        actions += ` <button class="btn btn-sm btn-danger" onclick="deleteRound(${round.id})" title="Smazat kolo" style="padding: 4px 8px;">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>`;
                     }
+                    html += `<td style="background: var(--panel-2); white-space: nowrap;">${actions}</td>`;
                 }
 
                 html += '</tr>';
@@ -3483,8 +3511,9 @@
         }
 
         // Bidding
-        function openBiddingModal() {
-            const lastRound = currentGame.rounds[currentGame.rounds.length - 1];
+        function openBiddingModal(roundArg = null) {
+            // roundArg umožňuje doplnit hlášení i u dřívějšího nedokončeného kola (recovery)
+            const lastRound = roundArg || currentGame.rounds[currentGame.rounds.length - 1];
             currentRound = lastRound;
             playerBids = {};
             currentBiddingIndex = 0;
@@ -4133,7 +4162,11 @@
 
         function editRound(roundId) {
             const round = currentGame.rounds.find(r => r.id == roundId);
-            if (round) {
+            if (!round) return;
+            // Podle stavu kola: prázdné (bidding) -> doplnit hlášení; jinak výsledky/oprava
+            if (round.status === 'bidding') {
+                openBiddingModal(round);
+            } else {
                 openResultsModal(round);
             }
         }
@@ -4197,7 +4230,12 @@
 
         // Smazání kola – jen poslední a prázdné (server to vynucuje). Soft-delete.
         async function deleteRound(roundId) {
-            if (!confirm('Smazat toto prázdné kolo?')) return;
+            const round = currentGame.rounds.find(r => r.id == roundId);
+            const hasScores = round && round.status !== 'bidding';
+            const msg = hasScores
+                ? 'Smazat toto kolo VČETNĚ zadaných výsledků? Skóre se přepočítá.'
+                : 'Smazat toto prázdné kolo?';
+            if (!confirm(msg)) return;
             const result = await api('rounds.php', { action: 'delete', round_id: roundId });
             if (result.success) {
                 await openGame(currentGame.game.id);
