@@ -3,6 +3,12 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.10.3] – 2026-07-06
+
+### Změněno
+- Tabulka výsledků má nově **zaoblené rohy** (a jemný rámeček) – sjednoceno se
+  zbytkem panelů (dřív měla ostré rohy).
+
 ## [1.10.2] – 2026-07-06
 
 ### Změněno
