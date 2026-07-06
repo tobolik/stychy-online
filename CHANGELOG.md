@@ -3,6 +3,20 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.11.0] – 2026-07-06
+
+### Přidáno – ovládání hlášení a výsledků
+- **Šipky nahoru/dolů** posouvají zelený rámeček mezi hráči (v hlášení i ve výsledcích) –
+  lze se tak vracet a opravovat.
+- Po uložení hlášení se **rovnou otevře zadávání výsledků** kola (není potřeba druhý krok).
+- **Hlasové oznámení po zadání hlášení** – nahlas se řekne právě zadané hlášení a vyzve
+  se další hráč (u rozdávajícího včetně zakázané hodnoty).
+
+### Změněno
+- Modal výběru trumfu je **užší**: menší karty (~10 %), větší jméno rozdávajícího a počet
+  karet – a hlavně **průběžné pořadí (body) prosvítá zpoza modalu** (v doku vlevo/vpravo),
+  takže při volbě trumfu vidíš aktuální stav. Sloupec jmen v pořadí zúžen, aby body byly víc vlevo.
+
 ## [1.10.4] – 2026-07-06
 
 ### Změněno
