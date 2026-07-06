@@ -3,6 +3,24 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.8.0] – 2026-07-06
+
+### Přidáno
+- **Světlý režim (dark/light mode) na celém webu** (index, záznamník, hra, přihlášení,
+  registrace). Výchozí režim se řídí systémem (`prefers-color-scheme`); přepínač (☀/🌙)
+  umožňuje ruční volbu, která se ukládá do `localStorage` a platí napříč stránkami.
+  Volba se aplikuje ještě před vykreslením (žádné probliknutí – FOUC).
+
+### Technické řešení
+- Token systém: tmavá paleta v `:root`, světlé hodnoty definované jednou (`--l-*`)
+  a remapované přes `@media (prefers-color-scheme: light)` + `:root[data-theme="light"]`
+  (ruční volba přebíjí systém v obou směrech).
+- Nový token `--accent-ink` = accent jako **text** (na světlé tmavší teal `#00786a`,
+  kvůli čitelnosti/WCAG), zatímco `--accent` zůstává živý pro tlačítka/rámečky.
+- Ošetřena tvrdě zadaná pozadí (tmavé pásy, bílé texty na světlých plochách, herní stůl
+  a boxy hráčů); karty ve hře si drží tmavý rámeček, aby byly na světlém stole vidět.
+- Přepínač: auth stránky dole vpravo (plovoucí), záznamník v hlavičce, hra dole vpravo.
+
 ## [1.7.0] – 2026-07-06
 
 ### Opraveno

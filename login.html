@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Přihlášení - Štychy Online</title>
+    <script>
+        // Motiv: aplikovat uloženou volbu ještě před vykreslením (bez probliknutí).
+        // Bez volby se řídí systémem (prefers-color-scheme) přes CSS.
+        (function(){try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+    </script>
     <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha384-iw3OoTErCYJJB9mCa8LNS2hbsQ7M3C0EpIsO/H5+EGAkPGc6rk+V8i04oW/K5xq0" crossorigin="anonymous" referrerpolicy="no-referrer" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha384-iw3OoTErCYJJB9mCa8LNS2hbsQ7M3C0EpIsO/H5+EGAkPGc6rk+V8i04oW/K5xq0" crossorigin="anonymous" referrerpolicy="no-referrer"></noscript>
     <style>
@@ -11,6 +16,7 @@
             --bg-color: #1a1c2c;
             --accent: #00ffcc;
             --accent-hover: #00cca3;
+            --accent-ink: var(--accent);   /* accent jako TEXT (tmavý ve světlém režimu) */
             --text-main: #ffffff;
             --text-muted: #a0a0a0;
             --surface: #23263a;
@@ -18,12 +24,35 @@
             --border-light: rgba(255,255,255,0.1);
             --danger: #ff5e5e;
             --success: #2ecc71;
+            --input-bg: rgba(0,0,0,0.3);
+            --bg-glow: #2a2d45;
+            /* Světlá paleta (hodnoty definované jednou, remapované níže) */
+            --l-bg:#eef1f7; --l-surface:#ffffff; --l-surface-hover:#e9edf4;
+            --l-text:#1a1c2c; --l-muted:#5b6472; --l-border:rgba(26,28,44,0.14);
+            --l-accent:#00b89a; --l-accent-hover:#00a88d; --l-accent-ink:#00786a;
+            --l-danger:#d92d2d; --l-success:#188a44; --l-warning:#a6790a; --l-input:#f0f3f8; --l-glow:#dfe4f0;
+        }
+        /* Světlý režim dle systému (pokud si uživatel ručně nezvolil tmavý) */
+        @media (prefers-color-scheme: light) {
+            :root:not([data-theme="dark"]) {
+                --bg-color:var(--l-bg); --surface:var(--l-surface); --surface-hover:var(--l-surface-hover);
+                --text-main:var(--l-text); --text-muted:var(--l-muted); --border-light:var(--l-border);
+                --accent:var(--l-accent); --accent-hover:var(--l-accent-hover); --accent-ink:var(--l-accent-ink);
+                --danger:var(--l-danger); --success:var(--l-success); --warning:var(--l-warning); --input-bg:var(--l-input); --bg-glow:var(--l-glow);
+            }
+        }
+        /* Ruční volba světlého režimu (přebije systém) */
+        :root[data-theme="light"] {
+            --bg-color:var(--l-bg); --surface:var(--l-surface); --surface-hover:var(--l-surface-hover);
+            --text-main:var(--l-text); --text-muted:var(--l-muted); --border-light:var(--l-border);
+            --accent:var(--l-accent); --accent-hover:var(--l-accent-hover); --accent-ink:var(--l-accent-ink);
+            --danger:var(--l-danger); --success:var(--l-success); --warning:var(--l-warning); --input-bg:var(--l-input);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            background: radial-gradient(circle at center, #2a2d45 0%, var(--bg-color) 70%);
+            background: radial-gradient(circle at center, var(--bg-glow) 0%, var(--bg-color) 70%);
             color: var(--text-main);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             min-height: 100vh;
@@ -49,7 +78,7 @@
             letter-spacing: 3px;
             margin-bottom: 10px;
         }
-        .logo span { color: var(--accent); }
+        .logo span { color: var(--accent-ink); }
 
         .auth-subtitle {
             color: var(--text-muted);
@@ -78,7 +107,7 @@
             display: block;
             margin-bottom: 8px;
             font-weight: 600;
-            color: var(--accent);
+            color: var(--accent-ink);
             font-size: 0.85rem;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -101,8 +130,8 @@
             padding: 14px 15px 14px 45px;
             border: 1px solid var(--border-light);
             border-radius: 12px;
-            background: rgba(0,0,0,0.3);
-            color: white;
+            background: var(--input-bg);
+            color: var(--text-main);
             font-size: 1rem;
             transition: all 0.3s;
         }
@@ -153,7 +182,7 @@
         }
 
         .auth-footer a {
-            color: var(--accent);
+            color: var(--accent-ink);
             text-decoration: none;
             font-weight: 600;
         }
@@ -216,7 +245,7 @@
             font-size: 0.9rem;
         }
         .back-link:hover {
-            color: var(--accent);
+            color: var(--accent-ink);
         }
 
         .loading-spinner {
@@ -227,9 +256,31 @@
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
+
+        .theme-toggle {
+            position: fixed;
+            bottom: 16px;
+            right: 16px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 1px solid var(--border-light);
+            background: var(--surface);
+            color: var(--accent-ink);
+            font-size: 1.15rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: all 0.25s;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+        }
+        .theme-toggle:hover { transform: scale(1.08); border-color: var(--accent); }
     </style>
 </head>
 <body>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Přepnout světlý/tmavý režim" title="Přepnout motiv"></button>
     <div class="auth-container">
         <div class="auth-header">
             <div class="logo">ŠTYCHY <span>ONLINE</span></div>
@@ -279,6 +330,26 @@
     </div>
 
     <script>
+        // --- Přepínač světlý/tmavý režim ---
+        function toggleTheme(){
+            var root=document.documentElement;
+            var cur=root.getAttribute('data-theme');
+            if(!cur){cur=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}
+            var next=cur==='light'?'dark':'light';
+            root.setAttribute('data-theme',next);
+            try{localStorage.setItem('theme',next);}catch(e){}
+            updateThemeButton();
+        }
+        function updateThemeButton(){
+            var root=document.documentElement;
+            var eff=root.getAttribute('data-theme')||(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');
+            document.querySelectorAll('.theme-toggle').forEach(function(b){
+                b.innerHTML=eff==='light'?'<i class="fa-solid fa-moon"></i>':'<i class="fa-solid fa-sun"></i>';
+                b.setAttribute('title',eff==='light'?'Přepnout na tmavý režim':'Přepnout na světlý režim');
+            });
+        }
+        updateThemeButton();
+
         // Check if already logged in
         async function checkAuth() {
             try {

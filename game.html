@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Štychy - Hra</title>
+    <script>
+        (function(){try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+    </script>
     <style>
         :root {
             --bg-color: #1a1c2c;
@@ -12,13 +15,39 @@
             --accent: #00ffcc; 
             --bid-color: #ffcc00; 
             --panel-bg: rgba(0, 0, 0, 0.85);
+            --accent-ink: var(--accent);
+            --text-main: #ffffff;
+            --glow-a:#23263a; --glow-b:#1a1c2c; --screen-a:#2a2d45; --screen-b:#10111a;
+            --box-bg: rgba(0,0,0,0.7); --box-border: var(--box-border);
+            --modal-bg:#2c3e50; --btn-slate:#34495e; --ctrl-bg:#333; --muted:#888; --subtle: rgba(255,255,255,0.05);
+            /* Světlá paleta (remapovaná níže) */
+            --l-bg:#e9edf4; --l-accent:#00b89a; --l-accent-ink:#00786a; --l-bid:#a6790a;
+            --l-panel:rgba(255,255,255,0.92); --l-text:#1a1c2c;
+            --l-glow-a:#f4f6fb; --l-glow-b:#e4e8f1; --l-screen-a:#f4f6fb; --l-screen-b:#dfe3ec;
+            --l-box-bg:rgba(255,255,255,0.85); --l-box-border:rgba(0,0,0,0.14);
+            --l-modal:#ffffff; --l-slate:#e2e7f0; --l-ctrl:#d3d8e0; --l-muted:#5b6472; --l-subtle:rgba(0,0,0,0.05);
             --switch-w: 50px;
             --switch-h: 26px;
+        }
+        /* Světlý režim dle systému + ruční přepínač */
+        @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) {
+            --bg-color:var(--l-bg); --accent:var(--l-accent); --accent-ink:var(--l-accent-ink); --bid-color:var(--l-bid);
+            --panel-bg:var(--l-panel); --text-main:var(--l-text);
+            --glow-a:var(--l-glow-a); --glow-b:var(--l-glow-b); --screen-a:var(--l-screen-a); --screen-b:var(--l-screen-b);
+            --box-bg:var(--l-box-bg); --box-border:var(--l-box-border); --modal-bg:var(--l-modal); --btn-slate:var(--l-slate);
+            --ctrl-bg:var(--l-ctrl); --muted:var(--l-muted); --subtle:var(--l-subtle);
+        } }
+        :root[data-theme="light"] {
+            --bg-color:var(--l-bg); --accent:var(--l-accent); --accent-ink:var(--l-accent-ink); --bid-color:var(--l-bid);
+            --panel-bg:var(--l-panel); --text-main:var(--l-text);
+            --glow-a:var(--l-glow-a); --glow-b:var(--l-glow-b); --screen-a:var(--l-screen-a); --screen-b:var(--l-screen-b);
+            --box-bg:var(--l-box-bg); --box-border:var(--l-box-border); --modal-bg:var(--l-modal); --btn-slate:var(--l-slate);
+            --ctrl-bg:var(--l-ctrl); --muted:var(--l-muted); --subtle:var(--l-subtle);
         }
 
         body {
             background-color: var(--bg-color);
-            color: white;
+            color: var(--text-main);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             overflow: hidden;
@@ -33,7 +62,7 @@
             width: 100vw;
             height: 100vh;
             position: relative;
-            background: radial-gradient(circle, #23263a 0%, #1a1c2c 100%);
+            background: radial-gradient(circle, var(--glow-a) 0%, var(--glow-b) 100%);
             overflow: hidden;
         }
 
@@ -49,7 +78,7 @@
         .screen {
             position: absolute; inset: 0; display: flex; flex-direction: column;
             justify-content: center; align-items: center; z-index: 10000;
-            background: radial-gradient(circle, #2a2d45 0%, #10111a 100%);
+            background: radial-gradient(circle, var(--screen-a) 0%, var(--screen-b) 100%);
             transition: opacity 0.5s ease;
         }
 
@@ -59,11 +88,11 @@
         }
 
         .name-input-container { margin-bottom: 20px; text-align: center; }
-        .name-input-container label { display: block; font-size: 0.8rem; color: var(--accent); margin-bottom: 5px; text-transform: uppercase; }
+        .name-input-container label { display: block; font-size: 0.8rem; color: var(--accent-ink); margin-bottom: 5px; text-transform: uppercase; }
         
         #player-name-input {
-            background: rgba(255, 255, 255, 0.1); border: 1px solid var(--accent);
-            color: white; padding: 10px 15px; border-radius: 8px; font-size: 1.2rem;
+            background: var(--subtle); border: 1px solid var(--accent);
+            color: var(--text-main); padding: 10px 15px; border-radius: 8px; font-size: 1.2rem;
             text-align: center; outline: none; width: 200px; transition: box-shadow 0.3s;
         }
 
@@ -71,12 +100,12 @@
         .settings-row {
             display: flex; justify-content: space-between; align-items: center;
             width: 420px; max-width: 90vw; margin: 12px 0;
-            background: rgba(255,255,255,0.05); padding: 12px 20px; border-radius: 12px;
+            background: var(--subtle); padding: 12px 20px; border-radius: 12px;
         }
-        .settings-label { font-weight: bold; color: #ddd; font-size: 1rem; }
+        .settings-label { font-weight: bold; color: var(--muted); font-size: 1rem; }
         .opt-group { display: flex; gap: 5px; }
         .opt-btn {
-            background: transparent; border: 1px solid #555; color: #888;
+            background: transparent; border: 1px solid #555; color: var(--muted);
             padding: 8px 12px; border-radius: 5px; cursor: pointer;
             font-size: 0.85rem; transition: 0.2s; min-width: 80px;
         }
@@ -87,7 +116,7 @@
 
         .switch { position: relative; display: inline-block; width: var(--switch-w); height: var(--switch-h); cursor: pointer; }
         .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--ctrl-bg); transition: .4s; border-radius: 34px; }
         .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
         input:checked + .slider { background-color: var(--accent); }
         input:checked + .slider:before { transform: translateX(24px); }
@@ -101,13 +130,13 @@
             z-index: 1000;
         }
 
-        .speed-control { display: flex; background: #333; border-radius: 20px; padding: 2px; margin-right: 15px; }
-        .speed-btn { background: transparent; border: none; color: #888; padding: 5px 12px; border-radius: 18px; cursor: pointer; font-size: 0.8rem; font-weight: bold; transition: 0.2s; }
+        .speed-control { display: flex; background: var(--ctrl-bg); border-radius: 20px; padding: 2px; margin-right: 15px; }
+        .speed-btn { background: transparent; border: none; color: var(--muted); padding: 5px 12px; border-radius: 18px; cursor: pointer; font-size: 0.8rem; font-weight: bold; transition: 0.2s; }
         .speed-btn.active { background: var(--accent); color: #1a1c2c; }
 
         #round-display { display: flex; flex-direction: column; line-height: 1.2; }
         #round-num { font-size: 1.2rem; font-weight: bold; }
-        #round-direction { font-size: 0.8rem; color: var(--accent); opacity: 0.9; }
+        #round-direction { font-size: 0.8rem; color: var(--accent-ink); opacity: 0.9; }
 
         .trump-mini-card {
             background: white; color: black; padding: 4px 10px; border-radius: 6px;
@@ -126,8 +155,8 @@
             background: rgba(0, 255, 204, 0.15); transform: scale(1.05);
         }
         .player-info {
-            background: rgba(0, 0, 0, 0.7); padding: 8px; border-radius: 12px;
-            border: 2px solid rgba(255,255,255,0.1); font-size: 0.9rem;
+            background: var(--box-bg); padding: 8px; border-radius: 12px;
+            border: 2px solid var(--box-border); font-size: 0.9rem;
             transition: all 0.3s;
         }
         .status-line { font-weight: bold; font-size: 1.1rem; margin: 3px 0; }
@@ -183,14 +212,14 @@
             padding-top: 50px;
         }
         .modal-content {
-            background: #2c3e50; padding: 32px; border-radius: 20px;
+            background: var(--modal-bg); padding: 32px; border-radius: 20px;
             text-align: center; width: 600px; max-width: 95vw; border: 1px solid var(--accent);
         }
 
         #bid-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(60px, 1fr)); gap: 10px; margin-top: 20px; }
         .bid-btn {
             padding: 15px; font-size: 1.3rem; border: none; border-radius: 8px;
-            background: #34495e; color: white; cursor: pointer; transition: 0.2s;
+            background: var(--btn-slate); color: var(--text-main); cursor: pointer; transition: 0.2s;
             font-weight: bold;
         }
         .bid-btn:hover:not(:disabled) { background: var(--accent); color: #1a1c2c; transform: scale(1.05); }
@@ -200,16 +229,16 @@
 
         .btn-menu {
             width: 250px; padding: 15px; margin: 10px; font-size: 1.2rem; font-weight: bold;
-            border: 2px solid var(--accent); background: transparent; color: var(--accent);
+            border: 2px solid var(--accent); background: transparent; color: var(--accent-ink);
             cursor: pointer; border-radius: 10px; transition: all 0.3s;
         }
         .btn-menu:hover { background: var(--accent); color: #1a1c2c; box-shadow: 0 0 20px var(--accent); }
 
         .streak-badge { background: rgba(255, 215, 0, 0.1); border: 1px solid gold; color: gold; padding: 5px 15px; border-radius: 20px; margin-bottom: 10px; font-weight: bold; }
-        .difficulty-badge { font-size: 0.9rem; color: var(--accent); margin-bottom: 30px; opacity: 0.8; }
+        .difficulty-badge { font-size: 0.9rem; color: var(--accent-ink); margin-bottom: 30px; opacity: 0.8; }
         
         #score-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 1rem; }
-        #score-table th, #score-table td { padding: 8px; border: 1px solid rgba(255,255,255,0.1); text-align: center; }
+        #score-table th, #score-table td { padding: 8px; border: 1px solid var(--box-border); text-align: center; }
         .plus { color: #2ecc71; }
         .minus { color: #ff5e5e; }
         .current-row { background: rgba(0, 255, 204, 0.1); }
@@ -245,9 +274,17 @@
         #my-player-slot-container { width: 100%; height: 80px; position: relative; display: flex; justify-content: center; }
         #my-player-slot-container .player-slot { position: relative; left: auto !important; top: auto !important; transform: none !important; }
         #my-player-slot-container .player-info { border-color: var(--accent); }
+        .theme-toggle {
+            position: fixed; bottom: 14px; right: 14px; width: 42px; height: 42px;
+            border-radius: 50%; border: 1px solid var(--box-border); background: var(--panel-bg);
+            color: var(--accent); font-size: 1.15rem; cursor: pointer; display: flex;
+            align-items: center; justify-content: center; z-index: 3000; transition: transform 0.2s;
+        }
+        .theme-toggle:hover { transform: scale(1.08); }
     </style>
 </head>
 <body>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Přepnout světlý/tmavý režim" title="Přepnout motiv"></button>
 
 <div id="game-container">
     <!-- HLAVNÍ OBRAZOVKA (Nyní spíše jako Pause menu / Setup) -->
@@ -266,7 +303,7 @@
 
     <!-- NASTAVENÍ -->
     <div id="screen-settings" class="screen hidden">
-        <h1 style="color: var(--accent); margin-bottom: 20px;">NASTAVENÍ</h1>
+        <h1 style="color: var(--accent-ink); margin-bottom: 20px;">NASTAVENÍ</h1>
         <div class="settings-row">
             <span class="settings-label">OBTÍŽNOST</span>
             <div class="opt-group">
@@ -300,7 +337,7 @@
             </div>
             <div id="trump-display"><span id="trump-val-text">-</span></div>
         </div>
-        <button onclick="handleMenuClick(() => showScreen('screen-home'))" style="background:transparent; border:1px solid #555; color:white; padding:5px 10px; border-radius:5px; cursor:pointer;">Menu</button>
+        <button onclick="handleMenuClick(() => showScreen('screen-home'))" style="background:transparent; border:1px solid var(--box-border); color:var(--text-main); padding:5px 10px; border-radius:5px; cursor:pointer;">Menu</button>
     </div>
 
     <div id="game-scaler">
@@ -948,5 +985,25 @@
 
     window.onload = loadAll;
 </script>
+    <script>
+        function toggleTheme(){
+            var root=document.documentElement;
+            var cur=root.getAttribute('data-theme');
+            if(!cur){cur=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}
+            var next=cur==='light'?'dark':'light';
+            root.setAttribute('data-theme',next);
+            try{localStorage.setItem('theme',next);}catch(e){}
+            updateThemeButton();
+        }
+        function updateThemeButton(){
+            var root=document.documentElement;
+            var eff=root.getAttribute('data-theme')||(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');
+            document.querySelectorAll('.theme-toggle').forEach(function(b){
+                b.textContent=eff==='light'?'\uD83C\uDF19':'\u2600';
+                b.setAttribute('title',eff==='light'?'Přepnout na tmavý režim':'Přepnout na světlý režim');
+            });
+        }
+        updateThemeButton();
+    </script>
 </body>
 </html>
