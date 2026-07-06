@@ -319,6 +319,8 @@
         .modal-content.modal-game {
             max-width: 880px;
         }
+        /* Trumf modal užší -> menší karty + průběžné body prosvítají zpoza (dok vlevo/vpravo) */
+        #modal-new-round .modal-content.modal-game { max-width: 720px; }
         /* Desktop: zvětšit písmo v herních modálech (mobil zůstává kompaktní) */
         @media (min-width: 768px) {
             .modal-content.modal-game { padding: 34px 38px; }
@@ -714,10 +716,10 @@
             justify-content: center;
             cursor: pointer;
             transition: all 0.3s;
-            font-size: clamp(3.4rem, 9vw, 5.5rem);   /* výrazně větší symbol barvy */
+            font-size: clamp(3.05rem, 8vw, 4.95rem);   /* symbol barvy (o ~10 % menší kvůli místu) */
             line-height: 1;
             position: relative;
-            min-height: 100px;
+            min-height: 90px;
         }
         .trump-suit-btn:hover {
             transform: scale(1.05);
@@ -1270,7 +1272,7 @@
         .ranking-row .trophy.crow { color: #ecf0f1; }
         .ranking-row .name {
             color: var(--text-main); font-weight: 700;
-            flex: 0 0 auto; width: 260px; max-width: 50%;
+            flex: 0 0 auto; width: 180px; max-width: 50%;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         .ranking-row .score { color: var(--accent-ink); font-weight: 800; margin-left: 14px; white-space: nowrap; }
@@ -1525,7 +1527,7 @@
         
         <!-- Footer -->
         <div class="app-footer">
-            <span>Štychy Záznamník v1.10.4</span>
+            <span>Štychy Záznamník v1.11.0</span>
             <span>•</span>
             <span id="build-date">2026-07-06</span>
         </div>
@@ -1612,7 +1614,7 @@
 
             <div id="dealer-info" style="background: rgba(0, 255, 204, 0.1); border: 1px solid var(--primary); border-radius: 12px; padding: 12px 18px; margin-bottom: 14px;">
                 <div class="dealer-line">
-                    <span style="font-size: 1.15rem; color: var(--text-muted);"><i class="fa-solid fa-hand-holding"></i> Rozdává: <strong id="dealer-name" style="font-size: 1.7rem; color: var(--accent-ink); font-weight: 800; background: rgba(0,255,204,0.16); padding: 1px 12px; border-radius: 10px; display: inline-block; line-height: 1.25;"></strong></span>
+                    <span style="font-size: 1.25rem; color: var(--text-muted);"><i class="fa-solid fa-hand-holding"></i> Rozdává: <strong id="dealer-name" style="font-size: 2.1rem; color: var(--accent-ink); font-weight: 800; background: rgba(0,255,204,0.16); padding: 1px 14px; border-radius: 10px; display: inline-block; line-height: 1.25;"></strong></span>
                     <span id="cards-in-round" class="dealer-line" style="gap: 10px;"></span>
                 </div>
             </div>
@@ -3616,8 +3618,8 @@
             for (let i = 0; i < cardsCount; i++) cardIconsHtml += '<span class="mini-card"></span>';
             const cardWord = cardsCount === 1 ? 'karta' : (cardsCount < 5 ? 'karty' : 'karet');
             document.getElementById('cards-in-round').innerHTML =
-                `<span style="font-size: 2.5rem; font-weight: 800; color: var(--accent-ink); line-height: 1;">${cardsCount}</span>` +
-                `<span style="font-size: 1.05rem; color: var(--text-muted); font-weight: 600;">${cardWord}</span>` +
+                `<span style="font-size: 3.1rem; font-weight: 800; color: var(--accent-ink); line-height: 1;">${cardsCount}</span>` +
+                `<span style="font-size: 1.25rem; color: var(--text-muted); font-weight: 600;">${cardWord}</span>` +
                 `<span class="mini-cards-row" style="opacity: 0.4; margin-left: 6px;">${cardIconsHtml}</span>`;
 
             // Reset trump selection
@@ -3835,8 +3837,11 @@
                     });
                 }
                 
-                // Announce next player's name (only if voice recognition is NOT active)
+                // Hlas: nejdřív právě zadané hlášení, pak výzva dalšího hráče
                 const nextPlayer = orderedBiddingPlayers[currentBiddingIndex];
+                const justPlayer = orderedBiddingPlayers[currentIndex];
+                const justBid = justPlayer ? playerBids[justPlayer.position] : null;
+                const justTxt = justBid === null ? '' : `${justBid} ${stychWord(justBid)}. `;
                 if (nextPlayer && !isListening) {
                     if (nextPlayer.position == currentRound.dealer_position) {
                         // Rozdávající hlásí poslední – nahlas, kolik NESMÍ zvolit
@@ -3847,18 +3852,26 @@
                         const cards = currentRound.cards_count;
                         const forbidden = cards - sumOthers;
                         if (forbidden >= 0 && forbidden <= cards) {
-                            const stych = forbidden === 1 ? 'štych' : (forbidden >= 2 && forbidden <= 4 ? 'štychy' : 'štychů');
-                            speak(`${nextPlayer.name}. Nahlášeno ${sumOthers} z ${cards}. Rozdávající nemůže zvolit ${forbidden} ${stych}.`);
+                            speak(`${justTxt}${nextPlayer.name} rozdává, nemůže zvolit ${forbidden} ${stychWord(forbidden)}.`);
                         } else {
-                            speak(`${nextPlayer.name}?`);
+                            speak(`${justTxt}${nextPlayer.name}?`);
                         }
                     } else {
-                        speak(`${nextPlayer.name}?`);
+                        speak(`${justTxt}${nextPlayer.name}?`);
                     }
                 }
             } else {
                 currentBiddingIndex = orderedBiddingPlayers.length; // All done
+                // Hlas: poslední (rozdávající) hlášení
+                const justPlayer = orderedBiddingPlayers[currentIndex];
+                const justBid = justPlayer ? playerBids[justPlayer.position] : null;
+                if (justBid !== null && !isListening) speak(`${justBid} ${stychWord(justBid)}.`);
             }
+        }
+
+        // Skloňování slova "štych" podle počtu
+        function stychWord(n) {
+            return n === 1 ? 'štych' : (n >= 2 && n <= 4 ? 'štychy' : 'štychů');
         }
 
         function handleBiddingKeypress(e) {
@@ -3868,11 +3881,21 @@
             }
 
             const key = e.key;
-            
+
             // Enter to save
             if (key === 'Enter') {
                 e.preventDefault();
                 saveBids();
+                return;
+            }
+
+            // Šipky nahoru/dolů: přesun mezi hráči (zelený rámeček)
+            if (key === 'ArrowUp' || key === 'ArrowDown') {
+                e.preventDefault();
+                const n = orderedBiddingPlayers.length;
+                let idx = currentBiddingIndex >= n ? n - 1 : currentBiddingIndex;
+                idx = Math.max(0, Math.min(n - 1, idx + (key === 'ArrowDown' ? 1 : -1)));
+                setCurrentBidding(idx);
                 return;
             }
 
@@ -3891,6 +3914,14 @@
                     selectBid(player.position, bid, currentBiddingIndex);
                 }
             }
+        }
+
+        // Přesun zeleného rámečku (current-input) na daného hráče v hlášení
+        function setCurrentBidding(idx) {
+            currentBiddingIndex = idx;
+            document.querySelectorAll('#modal-bidding .bid-input-row').forEach(r => r.classList.remove('current-input'));
+            const row = document.querySelector(`#modal-bidding .bid-input-row[data-index="${idx}"]`);
+            if (row) { row.classList.add('current-input'); row.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
         }
 
         // Plovoucí hláška v hlášení: zobraz a po pár sekundách nech zmizet (nehýbe tlačítkem).
@@ -4049,7 +4080,9 @@
             if (result.success) {
                 closeModal('modal-bidding');
                 await openGame(currentGame.game.id);
-                awaitingResultsEntry = true; // Flag to allow Enter to open results
+                // Rovnou otevřít zadávání výsledků kola (bez nutnosti druhého Enteru)
+                const lr = currentGame.rounds[currentGame.rounds.length - 1];
+                if (lr && lr.status === 'playing') openResultsModal();
             } else {
                 alert(result.error);
             }
@@ -4234,6 +4267,14 @@
             }
         }
 
+        // Přesun zeleného rámečku (current-input) na daného hráče ve výsledcích
+        function setCurrentResults(idx) {
+            currentResultsIndex = idx;
+            document.querySelectorAll('#modal-results .result-row').forEach(r => r.classList.remove('current-input'));
+            const row = document.querySelector(`#modal-results [data-index="${idx}"]`);
+            if (row) { row.classList.add('current-input'); row.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+        }
+
         function handleResultsKeypress(e) {
             // Only handle if results modal is open
             if (!document.getElementById('modal-results').classList.contains('active')) {
@@ -4250,6 +4291,16 @@
                     saveResults();
                 }
                 // If not all entered, Enter does nothing (user continues with 0/1)
+                return;
+            }
+
+            // Šipky nahoru/dolů: přesun mezi hráči (zelený rámeček)
+            if (key === 'ArrowUp' || key === 'ArrowDown') {
+                e.preventDefault();
+                const n = orderedResultsPlayers.length;
+                let idx = currentResultsIndex >= n ? n - 1 : currentResultsIndex;
+                idx = Math.max(0, Math.min(n - 1, idx + (key === 'ArrowDown' ? 1 : -1)));
+                setCurrentResults(idx);
                 return;
             }
 
