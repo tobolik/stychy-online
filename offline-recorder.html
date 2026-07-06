@@ -1167,6 +1167,9 @@
         .game-dock[data-dock="left"]  { grid-template-columns: minmax(300px, 1fr) minmax(0, 1.7fr); }
         .game-dock[data-dock="left"] > .current-ranking { order: -1; }   /* statistiky vlevo */
         .dock-main { min-width: 0; }
+        /* V doku (vlevo/vpravo) zarovnat horní okraj tabulky s panelem pořadí (tabulka jinak má margin-top) */
+        .game-dock[data-dock="right"] .dock-main .score-table-container,
+        .game-dock[data-dock="left"] .dock-main .score-table-container { margin-top: 0; }
         .game-dock[data-dock="right"] > .current-ranking,
         .game-dock[data-dock="left"] > .current-ranking {
             position: sticky;
@@ -1522,7 +1525,7 @@
         
         <!-- Footer -->
         <div class="app-footer">
-            <span>Štychy Záznamník v1.10.3</span>
+            <span>Štychy Záznamník v1.10.4</span>
             <span>•</span>
             <span id="build-date">2026-07-06</span>
         </div>
