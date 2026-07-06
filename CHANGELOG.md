@@ -3,6 +3,12 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.9.2] – 2026-07-06
+
+### Změněno
+- Ve výsledcích kola popisek pod jménem hráče „Hlásil" → **„Hlášeno"** (gendrově
+  neutrální – u ženských jmen působil mužský tvar rušivě).
+
 ## [1.9.1] – 2026-07-06
 
 ### Opraveno
