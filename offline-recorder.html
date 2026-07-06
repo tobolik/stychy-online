@@ -348,11 +348,23 @@
             z-index: 2;
         }
         .modal-save-bar .btn { padding: 20px; font-size: 1.15rem; }
-        /* hlášky (forbidden/status) se zobrazují dynamicky nad tlačítkem; skryté (display:none) nezabírají místo */
-        .modal-save-bar > .forbidden-info,
-        .modal-save-bar > #bids-status { margin: 0 !important; }
+        /* Hlášky plovou jako overlay NAD tlačítkem (nehýbou s ním); po chvíli zmizí. */
+        .bid-float-msg {
+            position: absolute;
+            left: 30px; right: 30px;
+            bottom: calc(100% - 8px);
+            z-index: 6;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: opacity 0.4s ease;
+        }
+        .bid-float-msg.is-hidden { opacity: 0; }
+        .bid-float-msg > div { margin: 0 !important; box-shadow: 0 8px 24px rgba(0,0,0,0.45); }
         @media (max-width: 480px) {
             .modal-save-bar { margin: 12px -14px -14px; padding: 12px 14px 14px; }
+            .bid-float-msg { left: 14px; right: 14px; }
         }
 
         /* Herní modály se scroll-částí (hlášení, výsledky): hlavička + info + patička fixní,
@@ -367,7 +379,7 @@
             overflow-y: auto;
             min-height: 0;
         }
-        .modal-flex .modal-save-bar { position: static; }
+        .modal-flex .modal-save-bar { position: relative; }
         /* na desktopu širší + řádek hráče na jeden řádek; sloupec jmen FIXNÍ šířky,
            aby tlačítka pro zadávání byla ve všech řádcích zarovnaná pod sebou. */
         @media (min-width: 768px) {
@@ -1417,7 +1429,7 @@
         
         <!-- Footer -->
         <div class="app-footer">
-            <span>Štychy Záznamník v1.9.2</span>
+            <span>Štychy Záznamník v1.9.3</span>
             <span>•</span>
             <span id="build-date">2026-07-06</span>
         </div>
@@ -1590,8 +1602,10 @@
             </div>
 
             <div class="modal-save-bar">
-                <div class="forbidden-info" id="forbidden-bid-info" style="display: none;"></div>
-                <div id="bids-status" style="padding: 12px; border-radius: 8px; text-align: center; display: none;"></div>
+                <div class="bid-float-msg is-hidden" id="bid-float-msg" aria-live="polite">
+                    <div class="forbidden-info" id="forbidden-bid-info" style="display: none;"></div>
+                    <div id="bids-status" style="padding: 12px; border-radius: 8px; text-align: center; display: none;"></div>
+                </div>
                 <button class="btn btn-primary" onclick="saveBids()">
                     <i class="fa-solid fa-check"></i> Uložit hlášení
                 </button>
@@ -3693,6 +3707,16 @@
             }
         }
 
+        // Plovoucí hláška v hlášení: zobraz a po pár sekundách nech zmizet (nehýbe tlačítkem).
+        let bidFloatTimer = null;
+        function flashBidFloat() {
+            const f = document.getElementById('bid-float-msg');
+            if (!f) return;
+            f.classList.remove('is-hidden');
+            if (bidFloatTimer) clearTimeout(bidFloatTimer);
+            bidFloatTimer = setTimeout(() => { f.classList.add('is-hidden'); }, 3500);
+        }
+
         function updateBidsSum() {
             const cardsCount = currentRound.cards_count;
             let sum = 0;
@@ -3741,6 +3765,7 @@
                     speak(`Je podtlak o ${getCardsTextCzech(Math.abs(diff))}.`);
                 }
                 statusEl.style.display = 'block';
+                flashBidFloat();
             } else {
                 statusEl.style.display = 'none';
             }
@@ -3774,16 +3799,14 @@
                     btn.disabled = isForbidden;
                     btn.classList.toggle('forbidden', isForbidden);
                 });
-                // Varování ukázat JEN dokud rozdávající nenahlásil – pak je zbytečné
-                // a ukáže se souhrn (bids-status). Vždy jen jedna hláška.
-                const dealerHasBid = playerBids[dealerPosition] !== null && playerBids[dealerPosition] !== undefined;
-                if (!dealerHasBid) {
-                    forbiddenInfo.innerHTML = `<i class="fa-solid fa-exclamation-triangle"></i> Rozdávající nesmí nahlásit <strong>${forbiddenBid}</strong> (součet by byl ${cardsCount})`;
-                    forbiddenInfo.style.display = 'block';
-                    document.getElementById('bids-status').style.display = 'none';
-                } else {
-                    forbiddenInfo.style.display = 'none';
-                }
+                // Krátká hláška průběžně (kdykoliv je zakázaná hodnota známá): "Jméno – nemůžeš X štych(y/ů)"
+                const dealer = currentGame.players.find(p => p.position == dealerPosition);
+                const dealerName = dealer ? dealer.name : 'Rozdávající';
+                const stych = forbiddenBid === 1 ? 'štych' : (forbiddenBid >= 2 && forbiddenBid <= 4 ? 'štychy' : 'štychů');
+                forbiddenInfo.innerHTML = `<i class="fa-solid fa-exclamation-triangle"></i> ${escapeHtml(dealerName)} – nemůžeš <strong>${forbiddenBid}</strong> ${stych}`;
+                forbiddenInfo.style.display = 'block';
+                document.getElementById('bids-status').style.display = 'none';
+                flashBidFloat();
             } else {
                 forbiddenInfo.style.display = 'none';
                 dealerRow.querySelectorAll('.bid-btn').forEach(btn => {

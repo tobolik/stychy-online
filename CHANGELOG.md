@@ -3,6 +3,17 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.9.3] – 2026-07-06
+
+### Změněno (hlášení – chování hlášek)
+- Tlačítko „Uložit hlášení" je nově **hned pod posledním řádkem** (žádné rezervované
+  ani roztahující místo). Hlášky (zakázaná hodnota / přetlak-podtlak) se zobrazují jako
+  **plovoucí overlay nad tlačítkem** (z-index) – tlačítkem už nehýbou.
+- Hlášky po pár sekundách **samy zmizí** (plovoucí toast, auto-hide).
+- Zakázaná hodnota rozdávajícího se ukazuje **průběžně** (kdykoliv je známá), ne jen
+  když je rozdávající na řadě. Červené ohraničení zakázaného tlačítka zůstává trvale.
+- Hláška zkrácena na **„{Jméno} – nemůžeš X štych/y/ů"** (se správným skloňováním).
+
 ## [1.9.2] – 2026-07-06
 
 ### Změněno
