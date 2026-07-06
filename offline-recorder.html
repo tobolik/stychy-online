@@ -3472,7 +3472,23 @@
                 // Announce next player's name (only if voice recognition is NOT active)
                 const nextPlayer = orderedBiddingPlayers[currentBiddingIndex];
                 if (nextPlayer && !isListening) {
-                    speak(`${nextPlayer.name}?`);
+                    if (nextPlayer.position == currentRound.dealer_position) {
+                        // Rozdávající hlásí poslední – nahlas, kolik NESMÍ zvolit
+                        let sumOthers = 0;
+                        for (const [pos, b] of Object.entries(playerBids)) {
+                            if (parseInt(pos) !== currentRound.dealer_position && b !== null) sumOthers += b;
+                        }
+                        const cards = currentRound.cards_count;
+                        const forbidden = cards - sumOthers;
+                        if (forbidden >= 0 && forbidden <= cards) {
+                            const stych = forbidden === 1 ? 'štych' : (forbidden < 5 ? 'štychy' : 'štychů');
+                            speak(`${nextPlayer.name}. Nahlášeno ${sumOthers} z ${cards}. Rozdávající nemůže zvolit ${forbidden} ${stych}.`);
+                        } else {
+                            speak(`${nextPlayer.name}?`);
+                        }
+                    } else {
+                        speak(`${nextPlayer.name}?`);
+                    }
                 }
             } else {
                 currentBiddingIndex = orderedBiddingPlayers.length; // All done
