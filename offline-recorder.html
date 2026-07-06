@@ -324,6 +324,30 @@
             .modal-save-bar { margin: 12px -14px -14px; padding: 12px 14px 14px; }
         }
 
+        /* Herní modály se scroll-částí (hlášení, výsledky): hlavička + info + patička fixní,
+           jen řádky hráčů scrollují -> patička (varování + Uložit) NIKDY nepřekryje poslední řádek. */
+        .modal-content.modal-flex {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .modal-flex .modal-scroll {
+            flex: 1 1 auto;
+            overflow-y: auto;
+            min-height: 0;
+        }
+        .modal-flex .modal-save-bar { position: static; }
+        /* na desktopu širší + řádek hráče vždy na jeden řádek (tlačítka se pružně vejdou) */
+        @media (min-width: 768px) {
+            .modal-content.modal-game.modal-flex { max-width: 1040px; }
+            .modal-flex .bid-player-name,
+            .modal-flex .result-player-name { white-space: nowrap; flex: 0 0 auto; min-width: 120px; }
+            .modal-content.modal-game.modal-flex .bid-buttons { flex: 1 1 auto; }
+            .modal-content.modal-game.modal-flex .bid-btn {
+                flex: 1 1 0; min-width: 30px; max-width: 50px; width: auto; height: 42px;
+            }
+        }
+
         /* Statistics Styles */
         .stats-section {
             margin-bottom: 25px;
@@ -1453,7 +1477,7 @@
 
     <!-- Modal: Bidding -->
     <div class="modal" id="modal-bidding">
-        <div class="modal-content modal-game">
+        <div class="modal-content modal-game modal-flex">
             <div class="modal-header">
                 <h2 class="modal-title">Hlášení - Kolo <span id="bidding-round-num">1</span></h2>
                 <button class="modal-voice-btn" onclick="toggleVoiceRecognition('bids')" title="Hlasové zadávání">
@@ -1484,8 +1508,10 @@
                 </div>
             </div>
 
-            <div class="bid-input-grid" id="bid-inputs">
-                <!-- Dynamicky generováno -->
+            <div class="modal-scroll">
+                <div class="bid-input-grid" id="bid-inputs">
+                    <!-- Dynamicky generováno -->
+                </div>
             </div>
 
             <div class="modal-save-bar">
@@ -1500,7 +1526,7 @@
 
     <!-- Modal: Results -->
     <div class="modal" id="modal-results" tabindex="-1">
-        <div class="modal-content modal-game">
+        <div class="modal-content modal-game modal-flex">
             <div class="modal-header">
                 <h2 class="modal-title"><span id="results-modal-title">Výsledky kola</span> <span id="results-round-num">1</span></h2>
                 <button class="modal-voice-btn" onclick="toggleVoiceRecognition('results')" title="Hlasové zadávání">
@@ -1543,8 +1569,10 @@
                 </label>
             </div>
             
-            <div class="bid-input-grid" id="tricks-inputs">
-                <!-- Dynamicky generováno -->
+            <div class="modal-scroll">
+                <div class="bid-input-grid" id="tricks-inputs">
+                    <!-- Dynamicky generováno -->
+                </div>
             </div>
 
             <div id="results-status-bar" style="margin-top: 10px; padding: 10px 15px; background: rgba(0,0,0,0.3); border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
