@@ -3,6 +3,16 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.10.0] – 2026-07-06
+
+### Přidáno – dokovatelný panel průběžného pořadí
+- Panel "Průběžné pořadí" lze nově **doknout dolů** (výchozí, pod tabulku) nebo
+  **doprava** (vedle tabulky výsledků). Přepínač je v hlavičce panelu.
+- V režimu vpravo web **využije celou šířku obrazovky** (žádné prázdné okraje) a panel
+  **drží pozici** (sticky) i když tabulka roste přibývajícími koly.
+- Volba se ukládá do `localStorage` a platí i po znovunačtení. Na úzkém displeji
+  (< 900 px) se panel vždy poskládá pod tabulku.
+
 ## [1.9.4] – 2026-07-06
 
 ### Změněno
