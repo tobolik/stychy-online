@@ -562,8 +562,9 @@
             cursor: pointer;
             transition: background 0.2s;
         }
-        .autocomplete-item:hover {
-            background: rgba(0, 255, 204, 0.1);
+        .autocomplete-item:hover,
+        .autocomplete-item.active {
+            background: rgba(0, 255, 204, 0.18);
         }
 
         /* Trump Card Selector */
@@ -2802,10 +2803,11 @@
                             <button type="button" class="player-move-btn" onclick="movePlayer(${i}, 1)" ${i === selectedPlayerCount - 1 ? 'disabled' : ''} title="Posunout dolů">▼</button>
                         </div>
                         <div class="autocomplete-wrapper" style="flex: 1;">
-                            <input type="text" class="form-input" id="player-name-${i}" placeholder="${isDealer ? 'Rozdávající' : 'Hráč ' + (i + 1)}" 
+                            <input type="text" class="form-input" id="player-name-${i}" placeholder="${isDealer ? 'Rozdávající' : 'Hráč ' + (i + 1)}"
                                    value="${escapeHtml(prefilled)}"
-                                   oninput="showAutocomplete(this, ${i})" 
+                                   oninput="showAutocomplete(this, ${i})"
                                    onfocus="showAutocomplete(this, ${i})"
+                                   onkeydown="autocompleteKeydown(event, this, ${i})"
                                    autocomplete="off">
                             <div class="autocomplete-list" id="autocomplete-${i}"></div>
                         </div>
@@ -4098,6 +4100,41 @@
         function selectAutocomplete(name, index) {
             document.getElementById(`player-name-${index}`).value = name;
             document.getElementById(`autocomplete-${index}`).classList.remove('show');
+        }
+
+        // Klávesová navigace v našeptávači: šipky nahoru/dolů, Enter vybere, Esc zavře.
+        function autocompleteKeydown(e, input, index) {
+            const listEl = document.getElementById(`autocomplete-${index}`);
+            if (!listEl) return;
+            const isOpen = listEl.classList.contains('show');
+            const items = Array.from(listEl.querySelectorAll('.autocomplete-item'));
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (!isOpen) { showAutocomplete(input, index); return; }
+                if (!items.length) return;
+                let cur = items.findIndex(it => it.classList.contains('active'));
+                cur = (cur + 1) % items.length;
+                items.forEach(it => it.classList.remove('active'));
+                items[cur].classList.add('active');
+                items[cur].scrollIntoView({ block: 'nearest' });
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (!isOpen || !items.length) return;
+                let cur = items.findIndex(it => it.classList.contains('active'));
+                cur = cur <= 0 ? items.length - 1 : cur - 1;
+                items.forEach(it => it.classList.remove('active'));
+                items[cur].classList.add('active');
+                items[cur].scrollIntoView({ block: 'nearest' });
+            } else if (e.key === 'Enter') {
+                const active = listEl.querySelector('.autocomplete-item.active');
+                if (isOpen && active) {
+                    e.preventDefault();
+                    selectAutocomplete(active.dataset.name, index);
+                }
+            } else if (e.key === 'Escape') {
+                listEl.classList.remove('show');
+            }
         }
 
         // Copy Game - otevře formulář nové hry s předvyplněnými údaji
