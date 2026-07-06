@@ -320,6 +320,14 @@
             z-index: 2;
         }
         .modal-save-bar .btn { padding: 20px; font-size: 1.15rem; }
+        /* rezervované místo pro hlášku nad tlačítkem -> tlačítko se neposouvá */
+        .bid-msg-slot {
+            min-height: 54px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .bid-msg-slot > div { margin: 0 !important; }
         @media (max-width: 480px) {
             .modal-save-bar { margin: 12px -14px -14px; padding: 12px 14px 14px; }
         }
@@ -1520,8 +1528,10 @@
             </div>
 
             <div class="modal-save-bar">
-                <div class="forbidden-info" id="forbidden-bid-info" style="display: none;"></div>
-                <div id="bids-status" style="padding: 12px; border-radius: 8px; text-align: center; display: none;"></div>
+                <div class="bid-msg-slot">
+                    <div class="forbidden-info" id="forbidden-bid-info" style="display: none;"></div>
+                    <div id="bids-status" style="padding: 12px; border-radius: 8px; text-align: center; display: none;"></div>
+                </div>
                 <button class="btn btn-primary" onclick="saveBids()">
                     <i class="fa-solid fa-check"></i> Uložit hlášení
                 </button>
@@ -3654,13 +3664,20 @@
             const forbiddenInfo = document.getElementById('forbidden-bid-info');
 
             if (allBidsExceptDealer && forbiddenBid >= 0 && forbiddenBid <= cardsCount) {
-                forbiddenInfo.innerHTML = `<i class="fa-solid fa-exclamation-triangle"></i> Rozdávající nesmí nahlásit <strong>${forbiddenBid}</strong> (součet by byl ${cardsCount})`;
-                forbiddenInfo.style.display = 'block';
-
-                // Disable forbidden button
+                // Zakázané tlačítko rozdávajícího vždy disablovat
                 dealerRow.querySelectorAll('.bid-btn').forEach((btn, idx) => {
                     btn.disabled = idx === forbiddenBid;
                 });
+                // Varování ukázat JEN dokud rozdávající nenahlásil – pak je zbytečné
+                // a ukáže se souhrn (bids-status). Vždy jen jedna hláška.
+                const dealerHasBid = playerBids[dealerPosition] !== null && playerBids[dealerPosition] !== undefined;
+                if (!dealerHasBid) {
+                    forbiddenInfo.innerHTML = `<i class="fa-solid fa-exclamation-triangle"></i> Rozdávající nesmí nahlásit <strong>${forbiddenBid}</strong> (součet by byl ${cardsCount})`;
+                    forbiddenInfo.style.display = 'block';
+                    document.getElementById('bids-status').style.display = 'none';
+                } else {
+                    forbiddenInfo.style.display = 'none';
+                }
             } else {
                 forbiddenInfo.style.display = 'none';
                 dealerRow.querySelectorAll('.bid-btn').forEach(btn => {
