@@ -3,6 +3,13 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.11.3] – 2026-07-07
+
+### Opraveno
+- Hlas: čísla nahlášených štychů se čtou v **základním tvaru** (dva, tři…), ne jako
+  řadovky. TTS totiž „2." (číslice s tečkou) četlo jako „druhý" – teď se čísla vyslovují
+  slovem.
+
 ## [1.11.2] – 2026-07-07
 
 ### Změněno

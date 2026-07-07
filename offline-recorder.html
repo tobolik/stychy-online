@@ -1527,7 +1527,7 @@
         
         <!-- Footer -->
         <div class="app-footer">
-            <span>Štychy Záznamník v1.11.2</span>
+            <span>Štychy Záznamník v1.11.3</span>
             <span>•</span>
             <span id="build-date">2026-07-06</span>
         </div>
@@ -3841,7 +3841,7 @@
                 const nextPlayer = orderedBiddingPlayers[currentBiddingIndex];
                 const justPlayer = orderedBiddingPlayers[currentIndex];
                 const justBid = justPlayer ? playerBids[justPlayer.position] : null;
-                const justTxt = justBid === null ? '' : `${justBid}. `;
+                const justTxt = justBid === null ? '' : `${cardinalCz(justBid)}. `;
                 if (nextPlayer && !isListening) {
                     if (nextPlayer.position == currentRound.dealer_position) {
                         // Rozdávající hlásí poslední – nahlas, kolik NESMÍ zvolit (jen jméno, jen číslo)
@@ -3852,7 +3852,7 @@
                         const cards = currentRound.cards_count;
                         const forbidden = cards - sumOthers;
                         if (forbidden >= 0 && forbidden <= cards) {
-                            speak(`${justTxt}${nextPlayer.name}, nemůže zvolit ${forbidden}.`);
+                            speak(`${justTxt}${nextPlayer.name}, nemůže zvolit ${cardinalCz(forbidden)}.`);
                         } else {
                             speak(`${justTxt}${nextPlayer.name}?`);
                         }
@@ -3865,13 +3865,14 @@
                 // Hlas: poslední (rozdávající) hlášení – jen číslo
                 const justPlayer = orderedBiddingPlayers[currentIndex];
                 const justBid = justPlayer ? playerBids[justPlayer.position] : null;
-                if (justBid !== null && !isListening) speak(`${justBid}.`);
+                if (justBid !== null && !isListening) speak(`${cardinalCz(justBid)}.`);
             }
         }
 
-        // Skloňování slova "štych" podle počtu
-        function stychWord(n) {
-            return n === 1 ? 'štych' : (n >= 2 && n <= 4 ? 'štychy' : 'štychů');
+        // Číslo v základním tvaru slovem (aby TTS nečetlo "2." jako řadovku "druhý")
+        function cardinalCz(n) {
+            const w = ['nula','jedna','dva','tři','čtyři','pět','šest','sedm','osm','devět','deset','jedenáct','dvanáct','třináct','čtrnáct','patnáct'];
+            return (n >= 0 && n < w.length) ? w[n] : String(n);
         }
 
         function handleBiddingKeypress(e) {
