@@ -3,6 +3,13 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.11.4] – 2026-07-07
+
+### Opraveno
+- Hlas: po posledním hlášení (rozdávající) se nově řekne i **přetlak/podtlak** („Přetlak
+  o dva" / „Podtlak o jedna"). Dřív se toto oznámení hned přepsalo hláškou čísla, takže
+  nebylo slyšet – teď je součástí finálního oznámení.
+
 ## [1.11.3] – 2026-07-07
 
 ### Opraveno
