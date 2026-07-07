@@ -3,6 +3,12 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.11.2] – 2026-07-07
+
+### Změněno
+- Výběr trumfu: **Enter na kartě barvy nově rovnou pokračuje k hlášení** (vybere barvu
+  a otevře hlášení jedním Enterem, dřív bylo potřeba Enter dvakrát).
+
 ## [1.11.1] – 2026-07-07
 
 ### Změněno
