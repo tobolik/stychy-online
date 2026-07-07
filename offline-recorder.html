@@ -1527,7 +1527,7 @@
         
         <!-- Footer -->
         <div class="app-footer">
-            <span>Štychy Záznamník v1.11.4</span>
+            <span>Štychy Záznamník v1.11.5</span>
             <span>•</span>
             <span id="build-date">2026-07-06</span>
         </div>
@@ -3379,6 +3379,12 @@
             }
 
             container.innerHTML = html;
+            // Fokus na hlavní akční tlačítko (Nové kolo / Zadat hlášení / Zadat výsledky),
+            // aby Enter při prohlížení průběžných výsledků vždy spustil další krok.
+            requestAnimationFrame(() => {
+                if (document.querySelector('.modal.active')) return; // nekrást fokus otevřenému modalu
+                container.querySelector('.btn-primary')?.focus({ preventScroll: true });
+            });
         }
 
         function renderCurrentRanking() {
@@ -5209,33 +5215,7 @@
                 }
             }
             
-            // Enter to open results after bidding
-            if (e.key === 'Enter' && awaitingResultsEntry) {
-                const anyModalOpen = document.querySelector('.modal.active');
-                if (!anyModalOpen && currentGame && currentGame.rounds.length > 0) {
-                    const lastRound = currentGame.rounds[currentGame.rounds.length - 1];
-                    if (lastRound.status === 'playing') {
-                        e.preventDefault();
-                        awaitingResultsEntry = false;
-                        openResultsModal();
-                    }
-                }
-            }
-            
-            // Enter to open new round after results
-            if (e.key === 'Enter' && awaitingNewRoundEntry) {
-                const anyModalOpen = document.querySelector('.modal.active');
-                if (!anyModalOpen && currentGame) {
-                    const rounds = currentGame.rounds;
-                    const lastRound = rounds[rounds.length - 1];
-                    // Can start new round if no rounds or last round is finished
-                    if ((!lastRound || lastRound.status === 'finished') && rounds.length < getGameTotalRounds(currentGame.game)) {
-                        e.preventDefault();
-                        awaitingNewRoundEntry = false;
-                        openNewRoundModal();
-                    }
-                }
-            }
+            // (Enter po hlášení/výsledcích řeší fokus na hlavním akčním tlačítku – viz renderGameActions)
         });
         
         // Keyboard handler for new round modal (trump selection)

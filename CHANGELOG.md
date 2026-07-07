@@ -3,6 +3,13 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.11.5] – 2026-07-07
+
+### Změněno
+- Při prohlížení průběžných výsledků je **hlavní akční tlačítko** (Nové kolo / Zadat
+  hlášení / Zadat výsledky) vždy zaostřené, takže **Enter rovnou spustí další krok**.
+  Odstraněny starší duplicitní Enter-handlery (nahrazeny fokusem), aby se akce nespouštěla dvakrát.
+
 ## [1.11.4] – 2026-07-07
 
 ### Opraveno
