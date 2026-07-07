@@ -1527,7 +1527,7 @@
         
         <!-- Footer -->
         <div class="app-footer">
-            <span>Štychy Záznamník v1.11.3</span>
+            <span>Štychy Záznamník v1.11.4</span>
             <span>•</span>
             <span id="build-date">2026-07-06</span>
         </div>
@@ -3862,10 +3862,18 @@
                 }
             } else {
                 currentBiddingIndex = orderedBiddingPlayers.length; // All done
-                // Hlas: poslední (rozdávající) hlášení – jen číslo
+                // Hlas: poslední hlášení + přetlak/podtlak (finální info, aby se nepřepsalo)
                 const justPlayer = orderedBiddingPlayers[currentIndex];
                 const justBid = justPlayer ? playerBids[justPlayer.position] : null;
-                if (justBid !== null && !isListening) speak(`${cardinalCz(justBid)}.`);
+                if (justBid !== null && !isListening) {
+                    let sum = 0, allSet = true;
+                    for (const b of Object.values(playerBids)) { if (b !== null) sum += b; else allSet = false; }
+                    const diff = sum - currentRound.cards_count;
+                    let msg = `${cardinalCz(justBid)}. `;
+                    if (allSet && diff > 0) msg += `Přetlak o ${cardinalCz(diff)}.`;
+                    else if (allSet && diff < 0) msg += `Podtlak o ${cardinalCz(Math.abs(diff))}.`;
+                    speak(msg);
+                }
             }
         }
 
@@ -3973,14 +3981,10 @@
                     statusEl.innerHTML = `<i class="fa-solid fa-arrow-up"></i> Nahlášeno o <strong>${diff}</strong> více než je karet`;
                     statusEl.style.background = 'rgba(255, 204, 0, 0.2)';
                     statusEl.style.color = 'var(--warning)';
-                    // Voice announcement for přetlak
-                    speak(`Je přetlak o ${getCardsTextCzech(diff)}.`);
                 } else {
                     statusEl.innerHTML = `<i class="fa-solid fa-arrow-down"></i> Nahlášeno o <strong>${Math.abs(diff)}</strong> méně než je karet`;
                     statusEl.style.background = 'rgba(0, 255, 204, 0.2)';
                     statusEl.style.color = 'var(--accent)';
-                    // Voice announcement for podtlak
-                    speak(`Je podtlak o ${getCardsTextCzech(Math.abs(diff))}.`);
                 }
                 statusEl.style.display = 'block';
                 flashBidFloat();
