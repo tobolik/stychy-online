@@ -1527,7 +1527,7 @@
         
         <!-- Footer -->
         <div class="app-footer">
-            <span>Štychy Záznamník v1.11.1</span>
+            <span>Štychy Záznamník v1.11.2</span>
             <span>•</span>
             <span id="build-date">2026-07-06</span>
         </div>
@@ -5291,7 +5291,7 @@
                 return;
             }
             
-            // Enter: fokus na kartě trumfu → vyber ji + přesuň fokus na "Pokračovat";
+            // Enter: fokus na kartě trumfu → vyber ji a ROVNOU pokračuj k hlášení (jeden Enter);
             //        fokus na "Pokračovat" → nech nativní klik (createRound)
             if (key === 'Enter' && !e.ctrlKey) {
                 const focused = document.activeElement;
@@ -5301,8 +5301,7 @@
                     e.preventDefault();
                     const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
                     selectTrumpSuit(suits[suitIdx]);
-                    const cont = document.getElementById('trump-continue-btn');
-                    if (cont) cont.focus();
+                    createRound();   // rovnou pokračovat k hlášení
                     return;
                 }
                 if (focused && focused.id === 'trump-continue-btn') {
