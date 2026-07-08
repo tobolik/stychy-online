@@ -3,6 +3,23 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.15.0] – 2026-07-08
+
+### Přidáno
+- **Velké zobrazení: i výběr trumfu je na celou obrazovku** s velkými kartami barev,
+  velkými tlačítky hodnot i tlačítkem Pokračovat.
+- **Náhled průběžného pořadí během zadávání (klávesy „s" / „+").** Pořadí plynule
+  vystoupí zpoza formuláře do popředí, opakovaným „s"/„+" (nebo Enter/Esc/klik) zase
+  zpět k zadávání. Jen ve velkém zobrazení.
+
+### Změněno
+- **Po zapsání výsledků posledního kola** se už nezobrazuje průběžné pořadí; místo toho
+  je zaostřené tlačítko **Ukončit hru** a po jeho potvrzení přijde **Konečné pořadí**.
+
+### Opraveno
+- Poháry v pořadí na celou obrazovku mají správné barvy (**zlatá / stříbrná / bronzová**);
+  dřív byly bílé, protože barvy platily jen pro boční panel.
+
 ## [1.14.1] – 2026-07-08
 
 ### Opraveno

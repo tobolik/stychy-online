@@ -475,6 +475,49 @@
         :root[data-tv="on"] #modal-bidding .bidding-info-bar .trump-display,
         :root[data-tv="on"] #modal-results #results-trump-info .trump-display { transform: scale(1.25); transform-origin: center; }
 
+        /* TV režim: modal Výběr trumfu taky na celou obrazovku + velké karty barev */
+        :root[data-tv="on"] #modal-new-round { padding: 0; }
+        :root[data-tv="on"] #modal-new-round > .modal-content {
+            width: 100%;
+            height: 100%;
+            max-width: none;
+            max-height: none;
+            border-radius: 0;
+            padding: clamp(18px, 3.2vh, 44px) max(20px, calc((100vw - 1180px) / 2));
+            display: flex;
+            flex-direction: column;
+            animation: modalRise 0.28s ease;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            :root[data-tv="on"] #modal-new-round > .modal-content { animation: none; }
+        }
+        :root[data-tv="on"] #modal-new-round .modal-title { font-size: clamp(1.6rem, 4.2vw, 2.6rem); }
+        :root[data-tv="on"] #modal-new-round .trump-selectors {
+            flex: 1 1 auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: clamp(16px, 3.2vh, 38px);
+            margin: clamp(8px, 2vh, 22px) 0;
+        }
+        :root[data-tv="on"] #modal-new-round .trump-selector { gap: clamp(12px, 2vw, 26px); }
+        :root[data-tv="on"] #modal-new-round .trump-suit-btn {
+            max-height: min(44vh, 430px);
+            font-size: clamp(4rem, 9vw, 7rem);
+        }
+        :root[data-tv="on"] #modal-new-round .form-label { font-size: clamp(1rem, 2vw, 1.35rem); }
+        :root[data-tv="on"] #modal-new-round .trump-value-selector { gap: clamp(6px, 1vw, 12px); }
+        :root[data-tv="on"] #modal-new-round .trump-value-btn {
+            width: clamp(50px, 5vw, 76px);
+            height: clamp(50px, 5vw, 76px);
+            font-size: clamp(1.3rem, 2.2vw, 1.9rem);
+        }
+        :root[data-tv="on"] #modal-new-round #dealer-info { font-size: clamp(1rem, 2vw, 1.35rem); }
+        :root[data-tv="on"] #modal-new-round #trump-continue-btn {
+            font-size: clamp(1.2rem, 2.2vw, 1.6rem) !important;
+            padding: clamp(18px, 2.4vh, 28px) !important;
+        }
+
         /* ===== Fullscreen pořadí (průběžné po kole / konečné po hře) ===== */
         .standings-overlay {
             position: fixed;
@@ -491,6 +534,17 @@
         .standings-overlay.active { display: flex; animation: standingsRise 0.42s cubic-bezier(.2,.7,.2,1); }
         @keyframes standingsRise { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
         @media (prefers-reduced-motion: reduce) { .standings-overlay.active { animation: none; } }
+        /* Peek (s / +): pořadí vystoupí zpoza formuláře do popředí a zpět – přes transition, ne keyframe */
+        .standings-overlay.peek {
+            animation: none;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: opacity 0.32s ease, transform 0.34s cubic-bezier(.2,.7,.2,1);
+        }
+        .standings-overlay.peek.peek-in { opacity: 1; transform: scale(1); }
+        @media (prefers-reduced-motion: reduce) {
+            .standings-overlay.peek { transition: opacity 0.2s ease; transform: none; }
+        }
         .standings-inner {
             width: 100%;
             max-width: 1100px;
@@ -549,6 +603,16 @@
             font-size: var(--fs-font, clamp(1.7rem, 4.2vw, 3rem));
         }
         .fs-rank-trophy .trophy, .fs-rank-trophy i { font-size: inherit; }
+        /* Barvy pohárů i ve fullscreen (jinak scoupnuté jen na .ranking-row -> bílé) */
+        .fs-rank-trophy .trophy.gold { color: gold; }
+        .fs-rank-trophy .trophy.silver { color: silver; }
+        .fs-rank-trophy .trophy.bronze { color: #cd7f32; }
+        .fs-rank-trophy .trophy.potato { color: #f4d03f; }
+        .fs-rank-trophy .trophy.cookie { color: #e67e22; }
+        .fs-rank-trophy .trophy.frog { color: #2ecc71; }
+        .fs-rank-trophy .trophy.hamster { color: #e67e22; }
+        .fs-rank-trophy .trophy.snail { color: #9b59b6; }
+        .fs-rank-trophy .trophy.crow { color: #ecf0f1; }
         .fs-rank-name {
             flex: 1;
             min-width: 0;
@@ -1727,7 +1791,7 @@
         
         <!-- Footer -->
         <div class="app-footer">
-            <span>Štychy Záznamník v1.14.1</span>
+            <span>Štychy Záznamník v1.15.0</span>
             <span>•</span>
             <span id="build-date">2026-07-08</span>
         </div>
@@ -3677,12 +3741,7 @@
 
         // --- Fullscreen pořadí (po zapsání kola / po ukončení hry) ---
         let standingsOnEnter = null;
-        function showStandingsFullscreen(mode) {
-            const overlay = document.getElementById('standings-overlay');
-            if (!overlay) return;
-            const finishedRounds = currentGame.rounds.filter(r => r.status === 'finished').length;
-            const totalRounds = getGameTotalRounds(currentGame.game);
-
+        function fillStandingsList() {
             document.getElementById('standings-list').innerHTML = getRankedPlayers().map(({ player, rank, trophyHtml, isTop3 }) => `
                 <div class="fs-rank-row ${isTop3 ? 'top-3' : ''}">
                     <span class="fs-rank-pos">${rank}.</span>
@@ -3690,6 +3749,14 @@
                     <span class="fs-rank-name">${escapeHtml(player.name)}</span>
                     <span class="fs-rank-score">${player.total_score} b.</span>
                 </div>`).join('');
+        }
+        function showStandingsFullscreen(mode) {
+            const overlay = document.getElementById('standings-overlay');
+            if (!overlay) return;
+            const finishedRounds = currentGame.rounds.filter(r => r.status === 'finished').length;
+            const totalRounds = getGameTotalRounds(currentGame.game);
+
+            fillStandingsList();
 
             if (mode === 'final') {
                 document.getElementById('standings-title').textContent = 'Konečné pořadí';
@@ -3753,6 +3820,47 @@
                 standingsOnEnter = null;
                 hideStandingsFullscreen();
             }
+        }
+
+        // --- Peek pořadí během zadávání (klávesy s / +): pořadí vystoupí zpoza formuláře
+        //     do popředí a opakovaným s/+ (nebo Enter/Esc/klik) zase zpět. Jen v TV režimu. ---
+        let peekActive = false;
+        function togglePeekStandings() { if (peekActive) hidePeekStandings(); else showPeekStandings(); }
+        function showPeekStandings() {
+            const overlay = document.getElementById('standings-overlay');
+            if (!overlay || peekActive || !currentGame) return;
+            const finishedRounds = currentGame.rounds.filter(r => r.status === 'finished').length;
+            const totalRounds = getGameTotalRounds(currentGame.game);
+            fillStandingsList();
+            document.getElementById('standings-title').textContent = 'Průběžné pořadí';
+            document.getElementById('standings-sub').textContent = `Po ${finishedRounds}. kole z ${totalRounds}`;
+            document.getElementById('standings-hint').innerHTML = '<kbd>s</kbd> / <kbd>+</kbd> zpět k zadávání';
+            peekActive = true;
+            overlay.classList.add('active', 'peek');
+            void overlay.offsetWidth; // reflow, ať transition naběhne z počátečního stavu
+            overlay.classList.add('peek-in');
+            requestAnimationFrame(() => fitStandings());
+            overlay.onclick = hidePeekStandings;
+            document.addEventListener('keydown', peekKeyHandler, true);
+            window.addEventListener('resize', fitStandings);
+        }
+        function hidePeekStandings() {
+            const overlay = document.getElementById('standings-overlay');
+            if (!overlay || !peekActive) return;
+            peekActive = false;
+            overlay.onclick = null;
+            document.removeEventListener('keydown', peekKeyHandler, true);
+            window.removeEventListener('resize', fitStandings);
+            overlay.classList.remove('peek-in');
+            const done = () => { overlay.classList.remove('active', 'peek'); overlay.removeEventListener('transitionend', done); };
+            overlay.addEventListener('transitionend', done, { once: true });
+            setTimeout(done, 420); // pojistka, kdyby transitionend nedorazil
+        }
+        function peekKeyHandler(e) {
+            // spolknout klávesy, ať se nemění skryté zadávání pod peekem
+            if (['s', 'S', '+', 'Enter', 'Escape', ' '].includes(e.key)) e.preventDefault();
+            e.stopPropagation();
+            if (['s', 'S', '+', 'Enter', 'Escape'].includes(e.key)) hidePeekStandings();
         }
 
         // Dok statistik: 'bottom' (pod tabulkou) nebo 'right' (vedle tabulky, celá šířka + sticky).
@@ -4729,7 +4837,11 @@
 
                 // Po zapsání nově odehraného kola: v TV režimu průběžné pořadí na celou
                 // obrazovku (Enter -> zpět + další kolo). Při opravě staršího kola ne.
-                if (!wasEdit && isTvMode()) {
+                // Po POSLEDNÍM kole se průběžné nezobrazuje – nabídne se Ukončit hru
+                // (renderGameActions), po jejím potvrzení přijde Konečné pořadí.
+                const doneRounds = currentGame.rounds.filter(r => r.status === 'finished').length;
+                const allRounds = getGameTotalRounds(currentGame.game);
+                if (!wasEdit && isTvMode() && doneRounds < allRounds) {
                     showStandingsFullscreen('running');
                 }
             } else {
@@ -5515,6 +5627,18 @@
             }
             
             // (Enter po hlášení/výsledcích řeší fokus na hlavním akčním tlačítku – viz renderGameActions)
+
+            // s / + : peek na průběžné pořadí během zadávání (jen TV režim, otevřený herní modál)
+            if ((e.key === 's' || e.key === 'S' || e.key === '+') && isTvMode() && !peekActive) {
+                const ae = document.activeElement;
+                const typing = ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA');
+                const gameModalOpen = ['modal-new-round', 'modal-bidding', 'modal-results']
+                    .some(id => { const el = document.getElementById(id); return el && el.classList.contains('active'); });
+                if (!typing && gameModalOpen) {
+                    e.preventDefault();
+                    showPeekStandings();
+                }
+            }
         });
         
         // Keyboard handler for new round modal (trump selection)
