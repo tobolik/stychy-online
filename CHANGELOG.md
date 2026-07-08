@@ -3,6 +3,15 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.15.1] – 2026-07-08
+
+### Opraveno
+- Hlas: počet karet nad 10 se říká **slovem v základním tvaru** („třináct karet"),
+  ne číslicí – TTS totiž „13 karet" četlo jako „třinácti karet".
+- Poháry: **3. místo má vždy bronz** (stupně vítězů mají přednost). Dřív u 3–4 hráčů
+  dostal třetí šneka, protože byl zároveň „druhý odspodu". Vrána (poslední) a šnek
+  (druhý odspodu) se teď dávají jen hráčům mimo stupně vítězů.
+
 ## [1.15.0] – 2026-07-08
 
 ### Přidáno
