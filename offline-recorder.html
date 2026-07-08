@@ -848,6 +848,14 @@
             border-color: var(--accent);
             color: #1a1c2c;
         }
+        /* Zamčené ovladače (počet hráčů/balíčků) v režimu úpravy existující hry */
+        .player-count-btn:disabled,
+        .player-count-btn.locked {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .player-count-btn:disabled:hover,
+        .player-count-btn.locked:hover { border-color: var(--border-light); }
 
         /* Player Names */
         .player-names-grid {
@@ -1782,6 +1790,9 @@
                     <button id="voice-toggle-btn" class="btn-icon-lg" onclick="toggleVoiceAnnouncements()" title="Zapnout hlasové povely">
                         <i class="fa-solid fa-volume-xmark"></i>
                     </button>
+                    <button id="edit-game-btn" class="btn btn-secondary" onclick="openEditGameModal(currentGame.game.id)" title="Upravit hráče a pořadí (jen před prvním kolem)" style="display: none;">
+                        <i class="fa-solid fa-user-pen"></i> Upravit hru
+                    </button>
                     <button class="btn btn-secondary" onclick="openStatsModal()" title="Statistiky hry">
                         <i class="fa-solid fa-chart-bar"></i> Statistiky
                     </button>
@@ -1836,7 +1847,7 @@
     <div class="modal" id="modal-new-game">
         <div class="modal-content modal-game">
             <div class="modal-header">
-                <h2 class="modal-title">Nová hra</h2>
+                <h2 class="modal-title" id="new-game-title">Nová hra</h2>
                 <button class="close-btn" onclick="closeModal('modal-new-game')">&times;</button>
             </div>
 
@@ -1879,8 +1890,8 @@
                     </div>
                 </div>
 
-                <button class="btn btn-primary" style="width: 100%;" onclick="createGame()">
-                    <i class="fa-solid fa-play"></i> Vytvořit hru
+                <button class="btn btn-primary" style="width: 100%;" id="new-game-submit" onclick="submitGameForm()">
+                    <i class="fa-solid fa-play" id="new-game-submit-icon"></i> <span id="new-game-submit-label">Vytvořit hru</span>
                 </button>
             </div>
         </div>
@@ -2408,6 +2419,7 @@
         let selectedDecks = 1;
 
         function selectDecks(count) {
+            if (isEditGameMode) return; // v úpravě hry jsou balíčky (a tím max. karet) zamčené
             selectedDecks = count;
             document.querySelectorAll('#decks-btn-1, #decks-btn-2').forEach(btn => {
                 btn.classList.toggle('selected', parseInt(btn.textContent) === count);
@@ -2419,6 +2431,8 @@
         let playerTricks = {};
         let knownPlayers = []; // Pro našeptávač
         let prefilledPlayers = []; // Pro kopírování hry
+        let isEditGameMode = false; // Modal nové hry běží v režimu úpravy existující hry
+        let editingGameId = null;   // ID upravované hry (jen v edit módu)
         let currentBiddingIndex = 0; // Pro klávesnicové zadávání
         let orderedBiddingPlayers = []; // Pořadí hráčů pro hlášení
         let currentResultsIndex = 0; // Pro klávesnicové zadávání výsledků
@@ -3323,6 +3337,7 @@
 
         // Create Game
         function openNewGameModal() {
+            resetGameFormMode(); // režim "vytvořit" (ne úprava)
             // Clear prefilled data for fresh new game
             prefilledPlayers = [];
             selectedPlayerCount = 8;
@@ -3335,7 +3350,80 @@
             openModal('modal-new-game');
         }
 
+        // Přepne modal "nová hra" zpět do režimu vytvoření (odemkne ovladače, obnoví titulek/tlačítko).
+        function resetGameFormMode() {
+            isEditGameMode = false;
+            editingGameId = null;
+            setGameFormLocked(false);
+            const title = document.getElementById('new-game-title');
+            const label = document.getElementById('new-game-submit-label');
+            const icon = document.getElementById('new-game-submit-icon');
+            if (title) title.textContent = 'Nová hra';
+            if (label) label.textContent = 'Vytvořit hru';
+            if (icon) icon.className = 'fa-solid fa-play';
+        }
+
+        // Zamkne/odemkne počet balíčků a počet hráčů (v edit módu se nemění – max. karet z nich plyne).
+        function setGameFormLocked(locked) {
+            document.querySelectorAll('#player-count-buttons .player-count-btn, #decks-btn-1, #decks-btn-2').forEach(btn => {
+                btn.disabled = locked;
+                btn.classList.toggle('locked', locked);
+            });
+        }
+
+        // Dispatcher primárního tlačítka modalu (vytvořit vs. uložit úpravu).
+        function submitGameForm() {
+            if (isEditGameMode) { saveGameEdit(); } else { createGame(); }
+        }
+
+        // Otevře modal "nová hra" v režimu ÚPRAVY existující hry (jen pořadí + jména; 0 kol).
+        function openEditGameModal(gameId) {
+            if (!currentGame || !currentGame.players) { alert('Nejprve otevřete hru'); return; }
+            if (currentGame.rounds && currentGame.rounds.length > 0) {
+                alert('Hráče lze upravit jen před prvním kolem.');
+                return;
+            }
+            isEditGameMode = true;
+            editingGameId = gameId;
+            // hráči v pořadí dle position
+            const ordered = [...currentGame.players].sort((a, b) => a.position - b.position);
+            prefilledPlayers = ordered.map(p => p.name);
+            selectedPlayerCount = ordered.length;
+            document.getElementById('new-game-name').value = currentGame.game.name || '';
+            document.querySelectorAll('#player-count-buttons .player-count-btn').forEach(btn => {
+                btn.classList.toggle('selected', parseInt(btn.textContent) === selectedPlayerCount);
+            });
+            setGameFormLocked(true);
+            const title = document.getElementById('new-game-title');
+            const label = document.getElementById('new-game-submit-label');
+            const icon = document.getElementById('new-game-submit-icon');
+            if (title) title.textContent = 'Upravit hru';
+            if (label) label.textContent = 'Uložit úpravy';
+            if (icon) icon.className = 'fa-solid fa-floppy-disk';
+            openModal('modal-new-game'); // vyrenderuje pole hráčů z prefilledPlayers
+        }
+
+        // Uloží úpravu sestavy existující hry (název + pořadí/jména), pak hru znovu načte.
+        async function saveGameEdit() {
+            const name = document.getElementById('new-game-name').value.trim();
+            if (!name) { alert('Zadejte název hry'); return; }
+            const players = {};
+            for (let i = 0; i < selectedPlayerCount; i++) {
+                const el = document.getElementById(`player-name-${i}`);
+                players[i] = (el && el.value.trim()) || `Hráč ${i + 1}`;
+            }
+            const gid = editingGameId;
+            const result = await api('games.php', { action: 'update_setup', game_id: gid, name, players });
+            if (result && result.success) {
+                closeModal('modal-new-game');
+                await openGame(gid);
+            } else {
+                alert((result && result.error) || 'Úpravu se nepodařilo uložit');
+            }
+        }
+
         function selectPlayerCount(count) {
+            if (isEditGameMode) return; // v úpravě hry je počet zamčený
             // Preserve current player names when changing count
             const currentNames = [];
             for (let i = 0; i < selectedPlayerCount; i++) {
@@ -3526,6 +3614,12 @@
 
             // Actions
             renderGameActions();
+
+            // "Upravit hru" (pořadí/jména hráčů) jen PŘED prvním kolem – 0 kol a hra není dokončená.
+            const editBtn = document.getElementById('edit-game-btn');
+            if (editBtn) {
+                editBtn.style.display = (currentGame.game.status !== 'finished' && currentGame.rounds.length === 0) ? '' : 'none';
+            }
 
             // Current ranking (during active game)
             if (currentGame.game.status === 'active' && currentGame.rounds.length > 0) {
@@ -5476,7 +5570,8 @@
                 alert('Nejprve otevřete hru');
                 return;
             }
-            
+            resetGameFormMode(); // kopie = nová hra (ne úprava), odemknout ovladače
+
             // Prefill data from current game
             prefilledPlayers = currentGame.players.map(p => p.name);
             selectedPlayerCount = currentGame.players.length;
