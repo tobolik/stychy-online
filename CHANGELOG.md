@@ -3,6 +3,16 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.14.0] – 2026-07-08
+
+### Změněno
+- **Zvětšené zobrazení je nově přepínatelný „režim velkého zobrazení" (fullscreen
+  prezentace na notebooku), ne výchozí stav.** Ve výchozím režimu se vrátilo původní
+  kompaktní zobrazení modálů Hlášení i Výsledky. Po zapnutí (plovoucí tlačítko s ikonou
+  obrazovky vlevo od přepínače motivu) jsou modály na celou obrazovku s velkým písmem,
+  zvětšená info lišta a po kole / po hře se ukáže pořadí přes celou obrazovku. Volba se
+  pamatuje (localStorage). Určeno pro promítání skupině (prohlížeč ve fullscreenu).
+
 ## [1.13.0] – 2026-07-08
 
 ### Přidáno
