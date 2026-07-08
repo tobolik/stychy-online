@@ -518,6 +518,31 @@
             padding: clamp(18px, 2.4vh, 28px) !important;
         }
 
+        /* TV režim: Statistiky hry na celou obrazovku (víc sloupců = míň scrollování) */
+        :root[data-tv="on"] #modal-stats { padding: 0; }
+        :root[data-tv="on"] #modal-stats > .modal-content {
+            width: 100%;
+            height: 100%;
+            max-width: none;
+            max-height: none;
+            border-radius: 0;
+            padding: clamp(18px, 3.2vh, 44px) max(20px, calc((100vw - 1180px) / 2));
+            display: flex;
+            flex-direction: column;
+            animation: modalRise 0.28s ease;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            :root[data-tv="on"] #modal-stats > .modal-content { animation: none; }
+        }
+        :root[data-tv="on"] #modal-stats .modal-title { font-size: clamp(1.6rem, 4.2vw, 2.4rem); }
+        :root[data-tv="on"] #modal-stats #stats-content {
+            max-height: none !important;
+            flex: 1 1 auto;
+            min-height: 0;
+        }
+        :root[data-tv="on"] #modal-stats .stats-grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+        :root[data-tv="on"] #modal-stats .stats-section-title { font-size: clamp(1.15rem, 2.2vw, 1.6rem); }
+
         /* ===== Fullscreen pořadí (průběžné po kole / konečné po hře) ===== */
         .standings-overlay {
             position: fixed;
@@ -1791,7 +1816,7 @@
         
         <!-- Footer -->
         <div class="app-footer">
-            <span>Štychy Záznamník v1.15.1</span>
+            <span>Štychy Záznamník v1.15.2</span>
             <span>•</span>
             <span id="build-date">2026-07-08</span>
         </div>
@@ -4046,8 +4071,11 @@
             if (firstSuit) firstSuit.focus();
 
             // Voice announcement: who is dealing and how many cards
+            // U posledního kola: "Osmé poslední kolo" místo jen "Osmé kolo".
             const dealerName = dealer ? dealer.name : 'neznámý';
-            speak(`${getOrdinalCzech(nextRoundNumber)} kolo. ${dealerName}, ${getCardsTextCzech(cardsCount)}.`);
+            const isLastRound = nextRoundNumber === getGameTotalRounds(currentGame.game);
+            const koloTxt = isLastRound ? 'poslední kolo' : 'kolo';
+            speak(`${getOrdinalCzech(nextRoundNumber)} ${koloTxt}. ${dealerName}, ${getCardsTextCzech(cardsCount)}.`);
         }
 
         // Trump selection
