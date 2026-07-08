@@ -494,7 +494,7 @@
         .standings-inner {
             width: 100%;
             max-width: 1100px;
-            max-height: 100%;
+            height: 100%;
             display: flex;
             flex-direction: column;
             gap: clamp(10px, 2.2vh, 26px);
@@ -512,28 +512,33 @@
             color: var(--text-muted);
             font-size: clamp(0.95rem, 2.4vw, 1.5rem);
         }
+        /* Seznam se VŽDY vejde na jednu obrazovku – rozměry řídí JS (fitStandings)
+           přes proměnné --fs-*, clamp hodnoty jsou jen fallback. Žádný scroll. */
         .standings-list {
+            flex: 1 1 auto;
             display: flex;
             flex-direction: column;
-            gap: clamp(8px, 1.5vh, 16px);
-            overflow-y: auto;
+            justify-content: center;
+            gap: var(--fs-gap, clamp(8px, 1.5vh, 16px));
+            overflow: hidden;
             min-height: 0;
         }
         .fs-rank-row {
             display: flex;
             align-items: center;
             gap: clamp(10px, 2vw, 26px);
+            min-height: var(--fs-row-h, auto);
             background: var(--surface);
             border: 1px solid var(--border-light);
             border-radius: 18px;
-            padding: clamp(10px, 1.7vh, 20px) clamp(16px, 2.5vw, 34px);
+            padding: var(--fs-row-py, clamp(10px, 1.7vh, 20px)) clamp(16px, 2.5vw, 34px);
         }
         .fs-rank-row.top-3 { border-color: var(--accent); }
         .fs-rank-pos {
             min-width: clamp(42px, 5vw, 74px);
             font-weight: 800;
             color: var(--text-muted);
-            font-size: clamp(1.5rem, 3.6vw, 2.8rem);
+            font-size: var(--fs-font-sm, clamp(1.5rem, 3.6vw, 2.8rem));
             font-variant-numeric: tabular-nums;
         }
         .fs-rank-trophy {
@@ -541,7 +546,7 @@
             align-items: center;
             justify-content: center;
             min-width: clamp(40px, 5vw, 64px);
-            font-size: clamp(1.7rem, 4.2vw, 3rem);
+            font-size: var(--fs-font, clamp(1.7rem, 4.2vw, 3rem));
         }
         .fs-rank-trophy .trophy, .fs-rank-trophy i { font-size: inherit; }
         .fs-rank-name {
@@ -549,7 +554,7 @@
             min-width: 0;
             font-weight: 700;
             color: var(--text-main);
-            font-size: clamp(1.5rem, 4.2vw, 3rem);
+            font-size: var(--fs-font, clamp(1.5rem, 4.2vw, 3rem));
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -557,7 +562,7 @@
         .fs-rank-score {
             font-weight: 800;
             color: var(--accent-ink);
-            font-size: clamp(1.5rem, 4.2vw, 3rem);
+            font-size: var(--fs-font, clamp(1.5rem, 4.2vw, 3rem));
             font-variant-numeric: tabular-nums;
             white-space: nowrap;
         }
@@ -1722,7 +1727,7 @@
         
         <!-- Footer -->
         <div class="app-footer">
-            <span>Štychy Záznamník v1.14.0</span>
+            <span>Štychy Záznamník v1.14.1</span>
             <span>•</span>
             <span id="build-date">2026-07-08</span>
         </div>
@@ -3701,14 +3706,38 @@
 
             overlay.classList.add('active');
             overlay.setAttribute('tabindex', '-1');
-            requestAnimationFrame(() => overlay.focus({ preventScroll: true }));
+            requestAnimationFrame(() => { fitStandings(); overlay.focus({ preventScroll: true }); });
             overlay.onclick = () => { if (standingsOnEnter) { const cb = standingsOnEnter; standingsOnEnter = null; cb(); } };
             document.addEventListener('keydown', standingsKeyHandler, true);
+            window.addEventListener('resize', fitStandings);
+        }
+        // Přizpůsobí velikost řádků tak, aby se VŠICHNI hráči vešli na jednu obrazovku (bez scrollu).
+        // Seznam je flex:1 (vyplní volnou výšku pod titulkem), měříme rovnou jeho výšku.
+        function fitStandings() {
+            const overlay = document.getElementById('standings-overlay');
+            if (!overlay || !overlay.classList.contains('active')) return;
+            const list = document.getElementById('standings-list');
+            const n = list.children.length;
+            if (!n) return;
+            // dočasně vynulovat řádkové proměnné, ať výška seznamu nezávisí na předchozím běhu
+            list.style.setProperty('--fs-row-h', '0px');
+            const avail = list.clientHeight;
+            if (avail <= 0) return;
+            const gap = n > 1 ? Math.max(5, Math.min(16, avail * 0.02)) : 0;
+            const rowH = Math.floor((avail - gap * (n - 1)) / n) - 1; // -1 px rezerva proti zaokrouhlení
+            const cappedRowH = Math.max(30, Math.min(rowH, 108)); // ani u 2 hráčů ne obří
+            const font = Math.max(15, Math.min(48, Math.round(cappedRowH * 0.46)));
+            list.style.setProperty('--fs-gap', gap + 'px');
+            list.style.setProperty('--fs-row-h', cappedRowH + 'px');
+            list.style.setProperty('--fs-row-py', '0px');
+            list.style.setProperty('--fs-font', font + 'px');
+            list.style.setProperty('--fs-font-sm', Math.round(font * 0.9) + 'px');
         }
         function hideStandingsFullscreen() {
             const overlay = document.getElementById('standings-overlay');
             if (overlay) { overlay.classList.remove('active'); overlay.onclick = null; }
             document.removeEventListener('keydown', standingsKeyHandler, true);
+            window.removeEventListener('resize', fitStandings);
         }
         function standingsKeyHandler(e) {
             const overlay = document.getElementById('standings-overlay');
