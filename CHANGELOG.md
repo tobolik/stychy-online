@@ -3,6 +3,21 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.12.0] – 2026-07-08
+
+### Přidáno
+- **Herní modály Hlášení a Výsledky na celou obrazovku** s výrazně větším písmem –
+  jména, tlačítka i badge se dají číst od stolu. Obsah je ve středovém sloupci
+  (~1180 px), pozadí vyplní celý viewport. Jemná animace při otevření (respektuje
+  `prefers-reduced-motion`). Mobil zůstává kompaktní (písmo škáluje přes `clamp`).
+- **Přepínač světlý/tmavý režim v záznamníku je nově plovoucí** (kolečko vpravo dole,
+  jako na ostatních stránkách), takže je vždy po ruce.
+- Titulek výběru trumfu ukazuje **celkový počet kol**: „Kolo 1/15 – Výběr trumfu".
+
+### Změněno
+- Na konci hry se automaticky zaostří tlačítko **Ukončit hru** (když není jiná primární
+  akce), aby ho šlo potvrdit Enterem.
+
 ## [1.11.5] – 2026-07-07
 
 ### Změněno
