@@ -3,6 +3,18 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.13.0] – 2026-07-08
+
+### Přidáno
+- **Průběžné pořadí na celou obrazovku po zapsání kola.** Po uložení výsledků se
+  animací zobrazí pořadí velkým písmem přes celou obrazovku; **Enter** ho zavře a
+  rovnou otevře další kolo (výběr trumfu). Kliknutí kamkoliv = totéž, Esc jen zavře.
+  Při opravě staršího kola se nezobrazuje.
+- **Konečné pořadí na celou obrazovku po ukončení hry** – stejný vzhled, **Enter**
+  otevře statistiky.
+- Výpočet pořadí (rank s remízami + trofeje) vytažen do sdílené funkce
+  `getRankedPlayers()`, kterou používá panel i fullscreen (jedno místo pravdy).
+
 ## [1.12.1] – 2026-07-08
 
 ### Změněno
