@@ -3,6 +3,18 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.16.0] – 2026-07-08
+
+### Přidáno
+- **Úprava hry před prvním kolem – „Upravit hru".** V detailu hry, dokud nemá odehrané
+  žádné kolo, je nové tlačítko **Upravit hru**: otevře znovupoužitý dialog nové hry
+  předvyplněný (název + hráči v jejich pořadí) a umožní **opravit pořadí (šipky ▲▼) a
+  jména hráčů** – užitečné, když se člověk při zakládání spletl. Počet hráčů, balíčky
+  i max. karty jsou v tomto režimu zamčené. Po prvním kole už tlačítko nesvítí.
+- Backend: nová akce `games.php` `update_setup` (ověří vlastnictví a **0 odehraných kol**,
+  jinak úpravu odmítne; přepis pořadí je transakční a hráči se aktualizují na místě –
+  žádné mazání dat).
+
 ## [1.15.4] – 2026-07-08
 
 ### Změněno
