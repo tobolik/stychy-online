@@ -526,7 +526,7 @@
             max-width: none;
             max-height: none;
             border-radius: 0;
-            padding: clamp(18px, 3.2vh, 44px) max(20px, calc((100vw - 1180px) / 2));
+            padding: clamp(18px, 3.2vh, 40px) clamp(22px, 2.4vw, 56px);
             display: flex;
             flex-direction: column;
             animation: modalRise 0.28s ease;
@@ -540,7 +540,8 @@
             flex: 1 1 auto;
             min-height: 0;
         }
-        :root[data-tv="on"] #modal-stats .stats-grid { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: clamp(14px, 1.5vw, 22px); }
+        :root[data-tv="on"] #modal-stats .stats-grid { grid-template-columns: repeat(2, 1fr); gap: clamp(14px, 1.5vw, 22px); }
+        @media (min-width: 980px) { :root[data-tv="on"] #modal-stats .stats-grid { grid-template-columns: repeat(4, 1fr); } }
         :root[data-tv="on"] #modal-stats .stats-section-title { font-size: clamp(1.4rem, 2.6vw, 2rem); }
         /* Písmo statistik ~2–2,5× větší pro čtení od stolu / z projekce */
         :root[data-tv="on"] #modal-stats .stat-card { padding: clamp(16px, 1.8vw, 28px); }
@@ -1825,7 +1826,7 @@
         
         <!-- Footer -->
         <div class="app-footer">
-            <span>Štychy Záznamník v1.15.3</span>
+            <span>Štychy Záznamník v1.15.4</span>
             <span>•</span>
             <span id="build-date">2026-07-08</span>
         </div>
