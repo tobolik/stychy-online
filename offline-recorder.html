@@ -463,6 +463,15 @@
             padding: clamp(16px, 2.3vh, 26px);
         }
         #modal-bidding .bid-float-msg { left: 0; right: 0; }
+        /* info lišta (počet karet, trumf, rozdává, součet / zadáno) – zvětšit na úroveň jmen */
+        #modal-bidding .bidding-info-bar,
+        #modal-results #results-trump-info,
+        #modal-results #results-status-bar { font-size: clamp(1.05rem, 2.2vw, 1.5rem) !important; }
+        #modal-bidding .bidding-info-bar strong,
+        #modal-results #results-trump-info strong,
+        #modal-results #results-status-bar strong { font-size: clamp(1.4rem, 3vw, 2rem) !important; }
+        #modal-bidding .bidding-info-bar .trump-display,
+        #modal-results #results-trump-info .trump-display { transform: scale(1.25); transform-origin: center; }
 
         /* Statistics Styles */
         .stats-section {
@@ -1582,7 +1591,7 @@
         
         <!-- Footer -->
         <div class="app-footer">
-            <span>Štychy Záznamník v1.12.0</span>
+            <span>Štychy Záznamník v1.12.1</span>
             <span>•</span>
             <span id="build-date">2026-07-08</span>
         </div>
@@ -1730,7 +1739,7 @@
                 <button class="close-btn" onclick="closeModal('modal-bidding')">&times;</button>
             </div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px 16px; margin-bottom: 12px; padding: 10px 15px; background: var(--input-bg); border-radius: 12px;">
+            <div class="bidding-info-bar" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px 16px; margin-bottom: 12px; padding: 10px 15px; background: var(--input-bg); border-radius: 12px;">
                 <div>
                     <span style="color: var(--text-muted);">Počet karet:</span>
                     <strong id="bidding-cards-count" style="color: var(--accent-ink); font-size: 1.3rem; margin-left: 5px;">7</strong>

@@ -3,6 +3,12 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.12.1] – 2026-07-08
+
+### Změněno
+- Info lišta v modálech Hlášení i Výsledky (Počet karet / Trumf / Rozdává / Součet
+  hlášení / Zadáno) **zvětšena na úroveň jmen hráčů**, ať je čitelná od stolu.
+
 ## [1.12.0] – 2026-07-08
 
 ### Přidáno
