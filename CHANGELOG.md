@@ -3,6 +3,14 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.14.1] – 2026-07-08
+
+### Opraveno
+- Pořadí na celou obrazovku (velké zobrazení): **vždy se vejdou všichni hráči** na
+  jednu obrazovku bez scrollování. Výška řádků a písmo se automaticky přizpůsobí počtu
+  hráčů (3–11) i výšce okna – u mála hráčů velké řádky, u 11 kompaktní, ale všichni
+  viditelní. Reaguje i na změnu velikosti okna.
+
 ## [1.14.0] – 2026-07-08
 
 ### Změněno
