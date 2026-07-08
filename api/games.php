@@ -321,6 +321,85 @@ switch ($action) {
         ]);
         break;
         
+    /**
+     * Úprava sestavy hry (název hry + jména a pořadí hráčů) – JEN u hry BEZ odehraných kol.
+     * Nemění počet hráčů ani max. karet. Pořadí se přepisuje dvoufázově kvůli
+     * UNIQUE(game_id, position). Soft-delete model: řádky se aktualizují in-place, nic se nemaže.
+     */
+    case 'update_setup':
+        $gameId = intval($input['game_id'] ?? 0);
+        $newName = trim($input['name'] ?? '');
+        $players = $input['players'] ?? [];
+
+        if (empty($newName)) {
+            jsonResponse(['success' => false, 'error' => 'Název hry je povinný'], 400);
+        }
+
+        // Ověření vlastnictví (jen platné záznamy)
+        $stmt = $db->prepare('SELECT * FROM games WHERE id = ? AND user_id = ? AND valid_to IS NULL');
+        $stmt->execute([$gameId, $userId]);
+        $game = $stmt->fetch();
+        if (!$game) {
+            jsonResponse(['success' => false, 'error' => 'Hra nenalezena'], 404);
+        }
+
+        // Bezpečnostní pojistka: hráče lze upravit jen když hra NEMÁ odehraná kola –
+        // jinak by přepis pozic rozbil uložený dealer_position u existujících kol.
+        $stmt = $db->prepare('SELECT COUNT(*) FROM rounds WHERE game_id = ? AND valid_to IS NULL');
+        $stmt->execute([$gameId]);
+        if ((int)$stmt->fetchColumn() > 0) {
+            jsonResponse(['success' => false, 'error' => 'Hráče nelze upravit u rozehrané hry'], 400);
+        }
+
+        // Aktivní hráči hry (stabilní pořadí dle id) – slouží jako sloty k přepsání
+        $stmt = $db->prepare('SELECT id FROM game_players WHERE game_id = ? AND valid_to IS NULL ORDER BY id ASC');
+        $stmt->execute([$gameId]);
+        $existingIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        $count = count($existingIds);
+
+        if (count($players) !== $count) {
+            jsonResponse(['success' => false, 'error' => 'Počet hráčů nelze měnit'], 400);
+        }
+
+        // Nová jména v pořadí 0..N-1 (klíč = cílová pozice)
+        $names = [];
+        for ($i = 0; $i < $count; $i++) {
+            if (!isset($players[$i]) || trim($players[$i]) === '') {
+                jsonResponse(['success' => false, 'error' => 'Jméno hráče nesmí být prázdné'], 400);
+            }
+            $names[$i] = trim($players[$i]);
+        }
+
+        try {
+            $db->beginTransaction();
+
+            // Název hry
+            $db->prepare('UPDATE games SET name = ? WHERE id = ?')->execute([$newName, $gameId]);
+
+            // Dvoufázový přepis pozic (obchází UNIQUE(game_id, position)):
+            // 1) uvolnit rozsah 0..N-1 posunem aktivních řádků o +100 (pozice je TINYINT, N<=11)
+            $db->prepare('UPDATE game_players SET position = position + 100 WHERE game_id = ? AND valid_to IS NULL')
+               ->execute([$gameId]);
+            // 2) nastavit finální pozici + jméno na každý slot
+            $upd = $db->prepare('UPDATE game_players SET position = ?, name = ? WHERE id = ?');
+            for ($k = 0; $k < $count; $k++) {
+                $upd->execute([$k, $names[$k], $existingIds[$k]]);
+            }
+
+            $db->commit();
+        } catch (Exception $e) {
+            $db->rollBack();
+            error_log('games.php update_setup: ' . $e->getMessage());
+            jsonResponse(['success' => false, 'error' => 'Chyba serveru.'], 500);
+        }
+
+        jsonResponse([
+            'success' => true,
+            'game_id' => $gameId,
+            'message' => 'Sestava hry byla upravena'
+        ]);
+        break;
+
     default:
         jsonResponse(['success' => false, 'error' => 'Neznámá akce'], 400);
 }
