@@ -3,6 +3,12 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.15.3] – 2026-07-08
+
+### Změněno
+- Velké zobrazení: **písmo statistik zvětšeno ~2–2,5×** (čísla, popisky, ocenění i
+  tabulka hráčů), aby se dalo číst z projekce. Karty ve 3 širších sloupcích.
+
 ## [1.15.2] – 2026-07-08
 
 ### Přidáno
