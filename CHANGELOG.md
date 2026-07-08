@@ -3,6 +3,16 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.15.2] – 2026-07-08
+
+### Přidáno
+- **Velké zobrazení: Statistiky hry na celou obrazovku** – karet ocenění se vejde víc
+  vedle sebe (auto sloupce), takže se míň scrolluje.
+
+### Změněno
+- Hlas: u posledního kola se řekne **„… poslední kolo"** (např. „Osmé poslední kolo"),
+  aby bylo slyšet, že je to poslední.
+
 ## [1.15.1] – 2026-07-08
 
 ### Opraveno
