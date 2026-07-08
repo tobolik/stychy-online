@@ -7,6 +7,7 @@
     <script>
         // Motiv: aplikovat uloženou volbu ještě před vykreslením (bez probliknutí).
         (function(){try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+        (function(){try{if(localStorage.getItem('tvMode')==='on')document.documentElement.setAttribute('data-tv','on');}catch(e){}})();
     </script>
     <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha384-iw3OoTErCYJJB9mCa8LNS2hbsQ7M3C0EpIsO/H5+EGAkPGc6rk+V8i04oW/K5xq0" crossorigin="anonymous" referrerpolicy="no-referrer" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha384-iw3OoTErCYJJB9mCa8LNS2hbsQ7M3C0EpIsO/H5+EGAkPGc6rk+V8i04oW/K5xq0" crossorigin="anonymous" referrerpolicy="no-referrer"></noscript>
@@ -414,12 +415,13 @@
             }
         }
 
-        /* ===== Fullscreen herní modály (Hlášení + Výsledky) =====
-           Na celou obrazovku + zvětšené písmo, aby se dalo číst od stolu.
-           Obsah je ve středovém sloupci (~1180px), pozadí vyplní celý viewport. */
-        #modal-bidding, #modal-results { padding: 0; }
-        #modal-bidding > .modal-content,
-        #modal-results > .modal-content {
+        /* ===== TV REŽIM: herní modály (Hlášení + Výsledky) na celou obrazovku + velké písmo =====
+           Aktivní jen když je zapnutý TV režim (:root[data-tv="on"]) – pro promítání na TV.
+           V normálním režimu zůstává původní kompaktní modál. Obsah ve středovém sloupci (~1180px). */
+        :root[data-tv="on"] #modal-bidding,
+        :root[data-tv="on"] #modal-results { padding: 0; }
+        :root[data-tv="on"] #modal-bidding > .modal-content,
+        :root[data-tv="on"] #modal-results > .modal-content {
             width: 100%;
             height: 100%;
             max-width: none;
@@ -433,45 +435,45 @@
             to   { opacity: 1; transform: scale(1); }
         }
         @media (prefers-reduced-motion: reduce) {
-            #modal-bidding > .modal-content,
-            #modal-results > .modal-content { animation: none; }
+            :root[data-tv="on"] #modal-bidding > .modal-content,
+            :root[data-tv="on"] #modal-results > .modal-content { animation: none; }
         }
         /* Zvětšené písmo – clamp škáluje mobil -> desktop */
-        #modal-bidding .modal-title,
-        #modal-results .modal-title { font-size: clamp(1.6rem, 4.2vw, 2.6rem); }
-        #modal-bidding .bid-player-name,
-        #modal-results .result-row .player-name { font-size: clamp(1.35rem, 3.2vw, 2.05rem); }
-        #modal-bidding .bid-player-name { flex: 0 0 clamp(170px, 22vw, 340px); width: auto; }
-        #modal-bidding .bid-btn {
+        :root[data-tv="on"] #modal-bidding .modal-title,
+        :root[data-tv="on"] #modal-results .modal-title { font-size: clamp(1.6rem, 4.2vw, 2.6rem); }
+        :root[data-tv="on"] #modal-bidding .bid-player-name,
+        :root[data-tv="on"] #modal-results .result-row .player-name { font-size: clamp(1.35rem, 3.2vw, 2.05rem); }
+        :root[data-tv="on"] #modal-bidding .bid-player-name { flex: 0 0 clamp(170px, 22vw, 340px); width: auto; }
+        :root[data-tv="on"] #modal-bidding .bid-btn {
             height: clamp(44px, 6.4vh, 62px);
             max-width: 112px;
             font-size: clamp(1.1rem, 2.3vw, 1.6rem);
         }
-        #modal-results .result-btn {
+        :root[data-tv="on"] #modal-results .result-btn {
             height: clamp(44px, 6vh, 60px);
             width: clamp(58px, 6.4vw, 88px);
             font-size: clamp(1rem, 1.9vw, 1.4rem);
         }
-        #modal-bidding .bid-badge,
-        #modal-results .result-bid-badge { font-size: clamp(1.9rem, 4.8vw, 3rem); }
+        :root[data-tv="on"] #modal-bidding .bid-badge,
+        :root[data-tv="on"] #modal-results .result-bid-badge { font-size: clamp(1.9rem, 4.8vw, 3rem); }
         /* sticky lišta zůstává ve středovém sloupci (nebleeduje do krajů) */
-        #modal-bidding .modal-save-bar,
-        #modal-results .modal-save-bar { margin-left: 0; margin-right: 0; padding-left: 0; padding-right: 0; }
-        #modal-bidding .modal-save-bar .btn,
-        #modal-results .modal-save-bar .btn {
+        :root[data-tv="on"] #modal-bidding .modal-save-bar,
+        :root[data-tv="on"] #modal-results .modal-save-bar { margin-left: 0; margin-right: 0; padding-left: 0; padding-right: 0; }
+        :root[data-tv="on"] #modal-bidding .modal-save-bar .btn,
+        :root[data-tv="on"] #modal-results .modal-save-bar .btn {
             font-size: clamp(1.15rem, 2vw, 1.5rem);
             padding: clamp(16px, 2.3vh, 26px);
         }
-        #modal-bidding .bid-float-msg { left: 0; right: 0; }
+        :root[data-tv="on"] #modal-bidding .bid-float-msg { left: 0; right: 0; }
         /* info lišta (počet karet, trumf, rozdává, součet / zadáno) – zvětšit na úroveň jmen */
-        #modal-bidding .bidding-info-bar,
-        #modal-results #results-trump-info,
-        #modal-results #results-status-bar { font-size: clamp(1.05rem, 2.2vw, 1.5rem) !important; }
-        #modal-bidding .bidding-info-bar strong,
-        #modal-results #results-trump-info strong,
-        #modal-results #results-status-bar strong { font-size: clamp(1.4rem, 3vw, 2rem) !important; }
-        #modal-bidding .bidding-info-bar .trump-display,
-        #modal-results #results-trump-info .trump-display { transform: scale(1.25); transform-origin: center; }
+        :root[data-tv="on"] #modal-bidding .bidding-info-bar,
+        :root[data-tv="on"] #modal-results #results-trump-info,
+        :root[data-tv="on"] #modal-results #results-status-bar { font-size: clamp(1.05rem, 2.2vw, 1.5rem) !important; }
+        :root[data-tv="on"] #modal-bidding .bidding-info-bar strong,
+        :root[data-tv="on"] #modal-results #results-trump-info strong,
+        :root[data-tv="on"] #modal-results #results-status-bar strong { font-size: clamp(1.4rem, 3vw, 2rem) !important; }
+        :root[data-tv="on"] #modal-bidding .bidding-info-bar .trump-display,
+        :root[data-tv="on"] #modal-results #results-trump-info .trump-display { transform: scale(1.25); transform-origin: center; }
 
         /* ===== Fullscreen pořadí (průběžné po kole / konečné po hře) ===== */
         .standings-overlay {
@@ -1600,6 +1602,34 @@
             box-shadow: 0 4px 14px rgba(0,0,0,0.28);
         }
         .theme-toggle:hover { border-color: var(--accent); transform: scale(1.08); }
+        /* Přepínač TV režimu – plovoucí, vlevo od přepínače motivu */
+        .tv-toggle {
+            position: fixed;
+            bottom: 16px;
+            right: 70px;
+            z-index: 1200;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 1px solid var(--border-light);
+            background: var(--surface);
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.28);
+        }
+        .tv-toggle:hover { border-color: var(--accent); transform: scale(1.08); }
+        /* Zapnutý TV režim: zvýraznit accentem */
+        :root[data-tv="on"] .tv-toggle {
+            background: var(--accent);
+            color: #08131a;
+            border-color: var(--accent);
+        }
     </style>
 </head>
 <body>
@@ -1609,6 +1639,7 @@
             <div class="logo">ŠTYCHY <span>ZÁZNAMNÍK</span></div>
             <div class="user-info">
                 <span>Přihlášen jako: <span class="username" id="display-username">-</span></span>
+                <button class="tv-toggle" onclick="toggleTvMode()" aria-label="Přepnout velké zobrazení" title="Velké zobrazení – fullscreen prezentace"></button>
                 <button class="theme-toggle" onclick="toggleTheme()" aria-label="Přepnout světlý/tmavý režim" title="Přepnout motiv"></button>
                 <a href="index.html" class="btn btn-secondary btn-sm">
                     <i class="fa-solid fa-home"></i> Domů
@@ -1691,7 +1722,7 @@
         
         <!-- Footer -->
         <div class="app-footer">
-            <span>Štychy Záznamník v1.13.0</span>
+            <span>Štychy Záznamník v1.14.0</span>
             <span>•</span>
             <span id="build-date">2026-07-08</span>
         </div>
@@ -4667,9 +4698,9 @@
                 // Check for 100-point crossing and play clink sounds
                 checkAndPlayClinkSounds(scoresBefore);
 
-                // Po zapsání nově odehraného kola: průběžné pořadí na celou obrazovku
-                // (Enter -> zpět + další kolo). Při opravě staršího kola nezobrazovat.
-                if (!wasEdit) {
+                // Po zapsání nově odehraného kola: v TV režimu průběžné pořadí na celou
+                // obrazovku (Enter -> zpět + další kolo). Při opravě staršího kola ne.
+                if (!wasEdit && isTvMode()) {
                     showStandingsFullscreen('running');
                 }
             } else {
@@ -4725,8 +4756,8 @@
 
             if (result.success) {
                 await openGame(currentGame.game.id);
-                // Konečné pořadí na celou obrazovku (Enter -> statistiky)
-                showStandingsFullscreen('final');
+                // Konečné pořadí na celou obrazovku – jen v TV režimu (Enter -> statistiky)
+                if (isTvMode()) showStandingsFullscreen('final');
             } else {
                 alert(result.error);
             }
@@ -5583,6 +5614,24 @@
             });
         }
         updateThemeButton();
+
+        // --- TV režim: velké zobrazení pro promítání na TV (modály fullscreen + fullscreen pořadí) ---
+        function isTvMode(){ return document.documentElement.getAttribute('data-tv')==='on'; }
+        function toggleTvMode(){
+            var root=document.documentElement;
+            if(isTvMode()){ root.removeAttribute('data-tv'); try{localStorage.setItem('tvMode','off');}catch(e){} }
+            else { root.setAttribute('data-tv','on'); try{localStorage.setItem('tvMode','on');}catch(e){} }
+            updateTvButton();
+        }
+        function updateTvButton(){
+            var on=isTvMode();
+            document.querySelectorAll('.tv-toggle').forEach(function(b){
+                b.innerHTML='<i class="fa-solid fa-tv"></i>';
+                b.setAttribute('title',on?'Velké zobrazení zapnuté – klikni pro vypnutí':'Velké zobrazení – fullscreen prezentace (velké písmo, pořadí na celou obrazovku)');
+                b.setAttribute('aria-pressed',on?'true':'false');
+            });
+        }
+        updateTvButton();
     </script>
 </body>
 </html>
