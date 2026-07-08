@@ -1791,7 +1791,7 @@
         
         <!-- Footer -->
         <div class="app-footer">
-            <span>Štychy Záznamník v1.15.0</span>
+            <span>Štychy Záznamník v1.15.1</span>
             <span>•</span>
             <span id="build-date">2026-07-08</span>
         </div>
@@ -2360,7 +2360,8 @@
                 5: 'pět karet', 6: 'šest karet', 7: 'sedm karet', 8: 'osm karet',
                 9: 'devět karet', 10: 'deset karet'
             };
-            return texts[count] || `${count} karet`;
+            // 11+ : slovem v základním tvaru (jinak TTS skloní "13 karet" na "třinácti karet")
+            return texts[count] || `${numberToWords(count)} karet`;
         }
 
         // State
@@ -3678,17 +3679,19 @@
                 const isLastRank = player.total_score === lastScore && players.length > 1;
                 const isSecondLastRank = secondLastScore !== null && player.total_score === secondLastScore && !isLastRank;
 
+                // Podium (top 3) má přednost: zlatá/stříbrná/bronz vždy pro první tři.
+                // Vrána (poslední) / šnek (druhý odspodu) až pro hráče MIMO stupně vítězů.
                 let trophyHtml = '';
-                if (isLastRank) {
-                    trophyHtml = '<i class="fa-solid fa-crow trophy crow"></i>';
-                } else if (isSecondLastRank) {
-                    trophyHtml = '<span class="trophy snail">🐌</span>';
-                } else if (currentRank === 1) {
+                if (currentRank === 1) {
                     trophyHtml = '<i class="fa-solid fa-trophy trophy gold"></i>';
                 } else if (currentRank === 2) {
                     trophyHtml = '<i class="fa-solid fa-trophy trophy silver"></i>';
                 } else if (currentRank === 3) {
                     trophyHtml = '<i class="fa-solid fa-trophy trophy bronze"></i>';
+                } else if (isLastRank) {
+                    trophyHtml = '<i class="fa-solid fa-crow trophy crow"></i>';
+                } else if (isSecondLastRank) {
+                    trophyHtml = '<span class="trophy snail">🐌</span>';
                 } else if (currentRank === 4) {
                     trophyHtml = '<span class="trophy potato">🥔</span>';
                 } else if (currentRank === 5) {
