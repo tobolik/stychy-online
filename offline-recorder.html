@@ -591,6 +591,40 @@
         :root[data-tv="on"] #modal-stats .stats-table th,
         :root[data-tv="on"] #modal-stats .stats-table td { padding-top: clamp(8px, 1vh, 14px); padding-bottom: clamp(8px, 1vh, 14px); }
 
+        /* TV režim: Souhrnná statistika na celou obrazovku (stejné jako statistiky hry) */
+        :root[data-tv="on"] #modal-overall-stats { padding: 0; }
+        :root[data-tv="on"] #modal-overall-stats > .modal-content {
+            width: 100%;
+            height: 100%;
+            max-width: none;
+            max-height: none;
+            border-radius: 0;
+            padding: clamp(18px, 3.2vh, 40px) clamp(22px, 2.4vw, 56px);
+            display: flex;
+            flex-direction: column;
+            animation: modalRise 0.28s ease;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            :root[data-tv="on"] #modal-overall-stats > .modal-content { animation: none; }
+        }
+        :root[data-tv="on"] #modal-overall-stats .modal-title { font-size: clamp(1.6rem, 4.2vw, 2.4rem); }
+        :root[data-tv="on"] #modal-overall-stats #overall-content {
+            max-height: none !important;
+            flex: 1 1 auto;
+            min-height: 0;
+        }
+        :root[data-tv="on"] #modal-overall-stats .stats-grid { grid-template-columns: repeat(2, 1fr); gap: clamp(14px, 1.5vw, 22px); }
+        @media (min-width: 980px) { :root[data-tv="on"] #modal-overall-stats .stats-grid { grid-template-columns: repeat(4, 1fr); } }
+        :root[data-tv="on"] #modal-overall-stats .stats-section-title { font-size: clamp(1.4rem, 2.6vw, 2rem); }
+        :root[data-tv="on"] #modal-overall-stats .stat-card { padding: clamp(16px, 1.8vw, 28px); }
+        :root[data-tv="on"] #modal-overall-stats .stat-value { font-size: clamp(2.8rem, 4vw, 4.2rem); }
+        :root[data-tv="on"] #modal-overall-stats .stat-player { font-size: clamp(1.5rem, 2.2vw, 2.1rem); }
+        :root[data-tv="on"] #modal-overall-stats .stat-label { font-size: clamp(1.25rem, 1.9vw, 1.8rem); margin-top: 6px; }
+        :root[data-tv="on"] #modal-overall-stats .stat-award-desc { font-size: clamp(1.05rem, 1.5vw, 1.4rem); }
+        :root[data-tv="on"] #modal-overall-stats .stats-table { font-size: clamp(1.15rem, 1.7vw, 1.65rem); }
+        :root[data-tv="on"] #modal-overall-stats .stats-table th,
+        :root[data-tv="on"] #modal-overall-stats .stats-table td { padding-top: clamp(8px, 1vh, 14px); padding-bottom: clamp(8px, 1vh, 14px); }
+
         /* ===== Fullscreen pořadí (průběžné po kole / konečné po hře) ===== */
         .standings-overlay {
             position: fixed;
@@ -749,6 +783,8 @@
         .stat-card.tappable { cursor: pointer; }
         .info-dot { opacity: 0.5; font-size: 0.72em; margin-left: 4px; }
         .stat-detail { display: none; margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--border-light); font-size: 0.78rem; color: var(--text-muted); line-height: 1.35; }
+        /* Zdůvodnění ocenění v souhrnné statistice (vždy viditelné) */
+        .stat-award-desc { margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--border-light); font-size: 0.78rem; color: var(--text-muted); line-height: 1.35; }
         .stat-detail.show { display: block; }
         .stat-value {
             font-size: 1.8rem;
@@ -1971,17 +2007,24 @@
                 <button class="close-btn" onclick="closeModal('modal-overall-stats')">&times;</button>
             </div>
 
-            <div id="overall-picker" style="margin-bottom: 16px; padding: 12px 14px; background: var(--input-bg); border-radius: 12px;">
-                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 10px;">
+            <div id="overall-picker" style="margin-bottom: 14px; background: var(--input-bg); border-radius: 12px;">
+                <button type="button" onclick="toggleOverallPicker()" style="width:100%; display:flex; align-items:center; gap:10px; padding:12px 14px; background:none; border:none; color:inherit; cursor:pointer; text-align:left; font-size:1rem;">
+                    <i class="fa-solid fa-chevron-right" id="overall-picker-chevron" style="transition: transform 0.2s; color: var(--text-muted);"></i>
                     <strong style="color: var(--accent-ink);"><i class="fa-solid fa-check-double"></i> Zahrnuté hry</strong>
-                    <button class="btn btn-secondary btn-sm" onclick="toggleAllOverallGames(true)">Vybrat vše</button>
-                    <button class="btn btn-secondary btn-sm" onclick="toggleAllOverallGames(false)">Zrušit vše</button>
                     <span id="overall-picker-count" style="color: var(--text-muted); margin-left: auto;"></span>
+                </button>
+                <div id="overall-picker-body" style="padding: 0 14px 12px; display: none;">
+                    <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:8px;">
+                        <input type="text" id="overall-filter" oninput="filterOverallGames()" placeholder="Filtrovat podle názvu (např. Dovolená)…" class="form-input" style="flex:1; min-width:180px;">
+                        <button class="btn btn-secondary btn-sm" onclick="selectFilteredOverallGames()" title="Zaškrtnout jen vyfiltrované hry, ostatní odškrtnout">Jen vyfiltrované</button>
+                        <button class="btn btn-secondary btn-sm" onclick="toggleAllOverallGames(true)">Vybrat vše</button>
+                        <button class="btn btn-secondary btn-sm" onclick="toggleAllOverallGames(false)">Zrušit vše</button>
+                    </div>
+                    <div id="overall-game-list" style="max-height: 28vh; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;"></div>
                 </div>
-                <div id="overall-game-list" style="max-height: 22vh; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;"></div>
             </div>
 
-            <div id="overall-content" style="max-height: 62vh; overflow-y: auto;">
+            <div id="overall-content" style="max-height: 66vh; overflow-y: auto;">
                 <!-- Dynamicky generováno -->
             </div>
         </div>
@@ -5483,18 +5526,53 @@
             list.innerHTML = games.map(g => {
                 const date = new Date(g.created_at).toLocaleDateString('cs-CZ');
                 const done = g.status === 'finished' ? ' ✓' : '';
-                return `<label style="display:flex; align-items:center; gap:10px; padding:6px 8px; border-radius:8px; cursor:pointer;">
+                return `<label class="overall-game-row" data-name="${escapeHtml(g.name.toLowerCase())}" style="display:flex; align-items:center; gap:10px; padding:6px 8px; border-radius:8px; cursor:pointer;">
                     <input type="checkbox" class="overall-game-cb" value="${g.id}" checked onchange="refreshOverallStats()" style="width:18px; height:18px; flex-shrink:0;">
                     <span style="flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(g.name)}${done}</span>
                     <span style="color: var(--text-muted); font-size:0.85rem; flex-shrink:0;">${date}</span>
                 </label>`;
             }).join('');
+            // picker začíná sbalený (max plocha pro výsledky)
+            document.getElementById('overall-picker-body').style.display = 'none';
+            document.getElementById('overall-picker-chevron').style.transform = '';
+            const f = document.getElementById('overall-filter'); if (f) f.value = '';
             openModal('modal-overall-stats');
             refreshOverallStats();
         }
 
+        function toggleOverallPicker() {
+            const body = document.getElementById('overall-picker-body');
+            const chev = document.getElementById('overall-picker-chevron');
+            const open = body.style.display === 'none';
+            body.style.display = open ? 'block' : 'none';
+            chev.style.transform = open ? 'rotate(90deg)' : '';
+        }
+
+        // Filtr podle názvu hry: skryje neshodující se řádky (nemění zaškrtnutí)
+        function filterOverallGames() {
+            const q = (document.getElementById('overall-filter').value || '').trim().toLowerCase();
+            document.querySelectorAll('.overall-game-row').forEach(row => {
+                const match = !q || (row.getAttribute('data-name') || '').includes(q);
+                row.style.display = match ? 'flex' : 'none';
+            });
+        }
+
+        // Zaškrtne jen aktuálně vyfiltrované (viditelné) hry, ostatní odškrtne
+        function selectFilteredOverallGames() {
+            document.querySelectorAll('.overall-game-row').forEach(row => {
+                const cb = row.querySelector('.overall-game-cb');
+                if (cb) cb.checked = row.style.display !== 'none';
+            });
+            refreshOverallStats();
+        }
+
         function toggleAllOverallGames(on) {
-            document.querySelectorAll('.overall-game-cb').forEach(cb => cb.checked = on);
+            // působí jen na viditelné (vyfiltrované) hry
+            document.querySelectorAll('.overall-game-row').forEach(row => {
+                if (row.style.display === 'none') return;
+                const cb = row.querySelector('.overall-game-cb');
+                if (cb) cb.checked = on;
+            });
             refreshOverallStats();
         }
 
@@ -5547,7 +5625,8 @@
                     <div class="stat-value">${a.emoji}</div>
                     <div class="stat-player">${escapeHtml(a.name)}</div>
                     <div class="stat-label">${a.label}</div>
-                    <div class="stat-label" style="opacity:0.75;">${escapeHtml(a.value)}${a.shared ? ' (děleno)' : ''}</div>
+                    <div class="stat-label" style="opacity:0.85; color: var(--accent-ink);">${escapeHtml(a.value)}${a.shared ? ' (děleno)' : ''}</div>
+                    <div class="stat-award-desc">${escapeHtml(a.desc)}</div>
                 </div>`).join('');
 
             content.innerHTML = `
@@ -5556,12 +5635,17 @@
                     <table class="stats-table">
                         <thead><tr>
                             <th style="text-align:center;">#</th><th>Hráč</th>
-                            <th style="text-align:center;">Her</th><th style="text-align:center;">Výhry</th>
-                            <th style="text-align:center;">Ø pořadí</th><th style="text-align:center;">Úspěšnost</th>
-                            <th style="text-align:center;">Body</th>
+                            <th style="text-align:center;" title="Kolik z vybraných her hráč odehrál (ne každý hraje všechny).">Her</th>
+                            <th style="text-align:center;" title="Kolikrát skončil na 1. místě, a v jakém podílu svých her.">Výhry</th>
+                            <th style="text-align:center;" title="Průměrné umístění napříč jeho hrami (nižší = lepší).">Ø pořadí</th>
+                            <th style="text-align:center;" title="Podíl kol, ve kterých splnil svůj odhad (přes všechna jeho odehraná kola).">Úspěšnost</th>
+                            <th style="text-align:center;" title="Součet bodů přes jeho hry a v závorce průměr na hru.">Body</th>
                         </tr></thead>
                         <tbody>${rows}</tbody>
                     </table>
+                    <p style="color: var(--text-muted); font-size: 0.82rem; margin-top: 8px;">
+                        <i class="fa-solid fa-circle-info"></i> Metriky jsou počítané jen z her, které daný hráč skutečně odehrál (ne každý hraje všechny hry). Sloupec „Her" ukazuje jejich počet.
+                    </p>
                 </div>
                 <div class="stats-section">
                     <div class="stats-section-title"><i class="fa-solid fa-award"></i> Souhrnná ocenění</div>
@@ -5572,16 +5656,16 @@
         // Cross-game ocenění: každý hráč max 1 titul (greedy dle normalizované síly, deterministicky)
         function overallAwardPool() {
             return [
-                { id: 'champ', emoji: '👑', label: 'Věčný šampion', kind: 'positive', strength: p => p.wins, value: p => `${p.wins}× vyhrál` },
-                { id: 'crow', emoji: '🐦', label: 'Věčná vrána', kind: 'roast', strength: p => p.lastPlaces, value: p => `${p.lastPlaces}× poslední` },
-                { id: 'sniper', emoji: '🎯', label: 'Nejpřesnější hlásič', kind: 'positive', strength: p => p.successRate, value: p => `${p.successRate}% úspěšnost` },
-                { id: 'brick', emoji: '🧱', label: 'Cihla', kind: 'roast', strength: p => 100 - p.successRate, value: p => `${p.successRate}% úspěšnost` },
-                { id: 'kamikaze', emoji: '💥', label: 'Kamikaze', kind: 'roast', strength: p => p.overbidSum, value: p => `přestřelil o ${p.overbidSum}` },
-                { id: 'regular', emoji: '🎖️', label: 'Stálice', kind: 'positive', strength: p => p.gamesPlayed, value: p => `${p.gamesPlayed} her` },
-                { id: 'collector', emoji: '💰', label: 'Sběratel bodů', kind: 'positive', strength: p => p.pointsTotal, value: p => `${p.pointsTotal} b celkem` },
-                { id: 'harvester', emoji: '🌾', label: 'Sklízeč', kind: 'positive', strength: p => p.totalWon, value: p => `${p.totalWon} štychů` },
-                { id: 'coward', emoji: '🐔', label: 'Strašpytel', kind: 'roast', strength: p => p.zeroBids, value: p => `${p.zeroBids}× hlásil nulu` },
-                { id: 'spoon', emoji: '🥄', label: 'Dřevěná vařečka', kind: 'roast', strength: p => -p.avgPoints, value: p => `Ø ${p.avgPoints} b/hra` }
+                { id: 'champ', emoji: '👑', label: 'Věčný šampion', kind: 'positive', strength: p => p.wins, value: p => `${p.wins}× vyhrál`, desc: 'Nejvíc vyhraných her (1. místo) ze všech hráčů.' },
+                { id: 'crow', emoji: '🐦', label: 'Věčná vrána', kind: 'roast', strength: p => p.lastPlaces, value: p => `${p.lastPlaces}× poslední`, desc: 'Nejčastěji skončil v zápase na posledním místě.' },
+                { id: 'sniper', emoji: '🎯', label: 'Nejpřesnější hlásič', kind: 'positive', strength: p => p.successRate, value: p => `${p.successRate}% úspěšnost`, desc: 'Nejvyšší úspěšnost hlášení – největší podíl splněných kol napříč hrami.' },
+                { id: 'brick', emoji: '🧱', label: 'Cihla', kind: 'roast', strength: p => 100 - p.successRate, value: p => `${p.successRate}% úspěšnost`, desc: 'Nejnižší úspěšnost hlášení napříč hrami.' },
+                { id: 'kamikaze', emoji: '💥', label: 'Kamikaze', kind: 'roast', strength: p => p.overbidSum, value: p => `přestřelil o ${p.overbidSum}`, desc: 'Nejvíc přehlášených štychů celkem (součet přetlaku – hlásil víc, než uhrál).' },
+                { id: 'regular', emoji: '🎖️', label: 'Stálice', kind: 'positive', strength: p => p.gamesPlayed, value: p => `${p.gamesPlayed} her`, desc: 'Nejvíc odehraných her – nejvěrnější účastník.' },
+                { id: 'collector', emoji: '💰', label: 'Sběratel bodů', kind: 'positive', strength: p => p.pointsTotal, value: p => `${p.pointsTotal} b celkem`, desc: 'Nejvíc nasbíraných bodů celkem přes všechny hry.' },
+                { id: 'harvester', emoji: '🌾', label: 'Sklízeč', kind: 'positive', strength: p => p.totalWon, value: p => `${p.totalWon} štychů`, desc: 'Nejvíc uhraných štychů celkem přes všechny hry.' },
+                { id: 'coward', emoji: '🐔', label: 'Strašpytel', kind: 'roast', strength: p => p.zeroBids, value: p => `${p.zeroBids}× hlásil nulu`, desc: 'Nejvíckrát hlásil nulu (na nic si netroufl).' },
+                { id: 'spoon', emoji: '🥄', label: 'Dřevěná vařečka', kind: 'roast', strength: p => -p.avgPoints, value: p => `Ø ${p.avgPoints} b/hra`, desc: 'Nejnižší průměr bodů na hru.' }
             ];
         }
 
@@ -5606,11 +5690,11 @@
                 if (usedA.has(c.aid) || usedP.has(c.name)) continue;
                 byName[c.name] = c.award; usedA.add(c.aid); usedP.add(c.name);
             }
-            const generic = { emoji: '🃏', label: 'Solidní průměr', kind: 'positive', strength: null, value: () => '' };
+            const generic = { emoji: '🃏', label: 'Solidní průměr', kind: 'positive', strength: null, value: () => '', desc: 'Nevyniká v žádné krajní statistice – solidní průměr.' };
             return players.map(p => {
                 const a = byName[p.name] || generic;
                 const shared = a.strength && atMax[a.id] && a.strength(p) === maxRaw[a.id] && atMax[a.id].length >= 2;
-                return { name: p.name, emoji: a.emoji, label: a.label, kind: a.kind, value: a.value ? a.value(p) : '', shared };
+                return { name: p.name, emoji: a.emoji, label: a.label, kind: a.kind, value: a.value ? a.value(p) : '', desc: a.desc || '', shared };
             }).sort((x, y) => (x.kind === y.kind ? 0 : x.kind === 'positive' ? -1 : 1));
         }
 
