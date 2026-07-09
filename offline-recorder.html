@@ -1925,7 +1925,7 @@
         
         <!-- Footer -->
         <div class="app-footer">
-            <span>Štychy Záznamník v1.17.0</span>
+            <span>Štychy Záznamník v1.17.1</span>
             <span>•</span>
             <span id="build-date">2026-07-08</span>
         </div>
@@ -5598,16 +5598,42 @@
             renderOverallStats(res.players || []);
         }
 
+        // Řazení žebříčku (klik na hlavičku sloupce)
+        let lastOverallPlayers = [];
+        let overallSort = { key: 'wins', dir: 'desc' };
+        const OVERALL_ASC_KEYS = ['avgRank', 'name']; // u těchto je „lepší" nižší / abecedně
+        function sortOverall(key) {
+            if (overallSort.key === key) {
+                overallSort.dir = overallSort.dir === 'asc' ? 'desc' : 'asc';
+            } else {
+                overallSort.key = key;
+                overallSort.dir = OVERALL_ASC_KEYS.includes(key) ? 'asc' : 'desc';
+            }
+            renderOverallStats(lastOverallPlayers);
+        }
+        function sortOverallPlayers(players) {
+            const { key, dir } = overallSort;
+            const s = dir === 'asc' ? 1 : -1;
+            return [...players].sort((a, b) => {
+                let d;
+                if (key === 'name') d = a.name.localeCompare(b.name, 'cs');
+                else d = (a[key] - b[key]);
+                d *= s;
+                if (d) return d;
+                // stabilní tiebreak: výhry desc, pak Ø pořadí asc, pak jméno
+                return (b.wins - a.wins) || (a.avgRank - b.avgRank) || a.name.localeCompare(b.name, 'cs');
+            });
+        }
+
         function renderOverallStats(players) {
             const content = document.getElementById('overall-content');
+            lastOverallPlayers = players;
             if (players.length === 0) {
                 content.innerHTML = '<div style="text-align:center; color: var(--text-muted); padding: 30px;">Vybrané hry nemají žádná dokončená kola.</div>';
                 return;
             }
-            // žebříček: dle výher, pak průměrné pořadí, pak úspěšnost, pak body
-            const sorted = [...players].sort((a, b) =>
-                b.wins - a.wins || a.avgRank - b.avgRank || b.successRate - a.successRate || b.pointsTotal - a.pointsTotal
-            );
+            const sorted = sortOverallPlayers(players);
+            const arr = (k) => overallSort.key === k ? (overallSort.dir === 'asc' ? ' <i class="fa-solid fa-caret-up"></i>' : ' <i class="fa-solid fa-caret-down"></i>') : '';
             const rows = sorted.map((p, i) => `
                 <tr>
                     <td style="text-align:center; color: var(--text-muted); font-weight:bold;">${i + 1}.</td>
@@ -5634,17 +5660,18 @@
                     <div class="stats-section-title"><i class="fa-solid fa-trophy"></i> Žebříček (${players.length} hráčů)</div>
                     <table class="stats-table">
                         <thead><tr>
-                            <th style="text-align:center;">#</th><th>Hráč</th>
-                            <th style="text-align:center;" title="Kolik z vybraných her hráč odehrál (ne každý hraje všechny).">Her</th>
-                            <th style="text-align:center;" title="Kolikrát skončil na 1. místě, a v jakém podílu svých her.">Výhry</th>
-                            <th style="text-align:center;" title="Průměrné umístění napříč jeho hrami (nižší = lepší).">Ø pořadí</th>
-                            <th style="text-align:center;" title="Podíl kol, ve kterých splnil svůj odhad (přes všechna jeho odehraná kola).">Úspěšnost</th>
-                            <th style="text-align:center;" title="Součet bodů přes jeho hry a v závorce průměr na hru.">Body</th>
+                            <th style="text-align:center;">#</th>
+                            <th style="cursor:pointer; user-select:none;" title="Řadit podle jména" onclick="sortOverall('name')">Hráč${arr('name')}</th>
+                            <th style="text-align:center; cursor:pointer; user-select:none;" title="Kolik z vybraných her hráč odehrál (ne každý hraje všechny). Klikni pro řazení." onclick="sortOverall('gamesPlayed')">Her${arr('gamesPlayed')}</th>
+                            <th style="text-align:center; cursor:pointer; user-select:none;" title="Kolikrát skončil na 1. místě. Klikni pro řazení." onclick="sortOverall('wins')">Výhry${arr('wins')}</th>
+                            <th style="text-align:center; cursor:pointer; user-select:none;" title="Průměrné umístění napříč jeho hrami (nižší = lepší). Klikni pro řazení." onclick="sortOverall('avgRank')">Ø pořadí${arr('avgRank')}</th>
+                            <th style="text-align:center; cursor:pointer; user-select:none;" title="Podíl kol, ve kterých splnil svůj odhad. Klikni pro řazení." onclick="sortOverall('successRate')">Úspěšnost${arr('successRate')}</th>
+                            <th style="text-align:center; cursor:pointer; user-select:none;" title="Součet bodů přes jeho hry (v závorce průměr na hru). Klikni pro řazení." onclick="sortOverall('pointsTotal')">Body${arr('pointsTotal')}</th>
                         </tr></thead>
                         <tbody>${rows}</tbody>
                     </table>
                     <p style="color: var(--text-muted); font-size: 0.82rem; margin-top: 8px;">
-                        <i class="fa-solid fa-circle-info"></i> Metriky jsou počítané jen z her, které daný hráč skutečně odehrál (ne každý hraje všechny hry). Sloupec „Her" ukazuje jejich počet.
+                        <i class="fa-solid fa-circle-info"></i> Klikni na hlavičku sloupce pro řazení. Metriky jsou počítané jen z her, které daný hráč skutečně odehrál (ne každý hraje všechny hry) – viz sloupec „Her".
                     </p>
                 </div>
                 <div class="stats-section">
