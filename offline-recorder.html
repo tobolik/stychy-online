@@ -716,6 +716,7 @@
             font-family: inherit;
             color: var(--text-main);
         }
+        .standings-hint.flash { color: var(--accent-ink); font-weight: 700; transition: color 0.2s; }
 
         /* Statistics Styles */
         .stats-section {
@@ -3948,6 +3949,9 @@
 
         // --- Fullscreen pořadí (po zapsání kola / po ukončení hry) ---
         let standingsOnEnter = null;
+        let standingsMode = null;           // 'running' | 'final'
+        let standingsFlashT = null;
+        const FINAL_STANDINGS_HINT = '<kbd>K</kbd> nový zápas se stejnými hráči &nbsp;·&nbsp; <kbd>S</kbd> statistiky';
         function fillStandingsList() {
             document.getElementById('standings-list').innerHTML = getRankedPlayers().map(({ player, rank, trophyHtml, isTop3 }) => `
                 <div class="fs-rank-row ${isTop3 ? 'top-3' : ''}">
@@ -3966,11 +3970,15 @@
             fillStandingsList();
 
             if (mode === 'final') {
+                // Turnaj: hlavní akce po konci hry je pokračovat kopií (K). Enter jen připomene volby
+                // (ne vždy se hraje dál). S = statistiky. Esc = zavřít.
+                standingsMode = 'final';
                 document.getElementById('standings-title').textContent = 'Konečné pořadí';
                 document.getElementById('standings-sub').textContent = `Odehráno ${finishedRounds} kol`;
-                document.getElementById('standings-hint').innerHTML = '<kbd>Enter</kbd> statistiky';
-                standingsOnEnter = () => { hideStandingsFullscreen(); openStatsModal(); };
+                document.getElementById('standings-hint').innerHTML = FINAL_STANDINGS_HINT;
+                standingsOnEnter = null;
             } else {
+                standingsMode = 'running';
                 const hasMore = finishedRounds < totalRounds;
                 document.getElementById('standings-title').textContent = 'Průběžné pořadí';
                 document.getElementById('standings-sub').textContent = `Po ${finishedRounds}. kole z ${totalRounds}`;
@@ -3981,7 +3989,10 @@
             overlay.classList.add('active');
             overlay.setAttribute('tabindex', '-1');
             requestAnimationFrame(() => { fitStandings(); overlay.focus({ preventScroll: true }); });
-            overlay.onclick = () => { if (standingsOnEnter) { const cb = standingsOnEnter; standingsOnEnter = null; cb(); } };
+            overlay.onclick = () => {
+                if (standingsMode === 'final') { flashFinalPrompt(); }
+                else if (standingsOnEnter) { const cb = standingsOnEnter; standingsOnEnter = null; cb(); }
+            };
             document.addEventListener('keydown', standingsKeyHandler, true);
             window.addEventListener('resize', fitStandings);
         }
@@ -4012,22 +4023,65 @@
             if (overlay) { overlay.classList.remove('active'); overlay.onclick = null; }
             document.removeEventListener('keydown', standingsKeyHandler, true);
             window.removeEventListener('resize', fitStandings);
+            if (standingsFlashT) { clearTimeout(standingsFlashT); standingsFlashT = null; }
+            standingsMode = null;
         }
         function standingsKeyHandler(e) {
             const overlay = document.getElementById('standings-overlay');
             if (!overlay || !overlay.classList.contains('active')) return;
-            if (e.key === 'Enter') {
+            const k = e.key;
+            if (k === 'Escape') {
+                e.preventDefault();
+                e.stopPropagation();   // ať Escape zavře jen fullscreen pořadí, ne aby navíc odešel z detailu hry
+                standingsOnEnter = null;
+                hideStandingsFullscreen();
+                return;
+            }
+            if (standingsMode === 'final') {
+                // K = nový zápas se stejnými hráči (kopie), S = statistiky, Enter = jen připomenutí voleb
+                if (k === 'k' || k === 'K') {
+                    e.preventDefault(); e.stopPropagation();
+                    hideStandingsFullscreen();
+                    openCopyContinue();
+                } else if (k === 's' || k === 'S') {
+                    e.preventDefault(); e.stopPropagation();
+                    hideStandingsFullscreen();
+                    openStatsModal();
+                } else if (k === 'Enter') {
+                    e.preventDefault(); e.stopPropagation();
+                    flashFinalPrompt();
+                }
+                return;
+            }
+            // running mode: Enter = další kolo / zavřít
+            if (k === 'Enter') {
                 e.preventDefault();
                 e.stopPropagation();
                 const cb = standingsOnEnter;
                 standingsOnEnter = null;
                 if (cb) cb();
-            } else if (e.key === 'Escape') {
-                e.preventDefault();
-                e.stopPropagation();   // ať Escape zavře jen fullscreen pořadí, ne aby navíc odešel z detailu hry
-                standingsOnEnter = null;
-                hideStandingsFullscreen();
             }
+        }
+        // Nový zápas se stejnými hráči: předvyplněný dialog kopie s fokusem na Vytvořit (Enter vytvoří).
+        function openCopyContinue() {
+            openCopyGameModal();
+            requestAnimationFrame(() => {
+                const b = document.getElementById('new-game-submit');
+                if (b) b.focus({ preventScroll: true });
+            });
+        }
+        // Enter na Konečném pořadí: nic natvrdo (ne vždy se hraje dál) – jen připomene volby.
+        function flashFinalPrompt() {
+            const hint = document.getElementById('standings-hint');
+            if (!hint) return;
+            if (standingsFlashT) clearTimeout(standingsFlashT);
+            hint.classList.add('flash');
+            hint.innerHTML = 'Ne vždy se hraje dál – zvol: <kbd>K</kbd> nový zápas &nbsp;·&nbsp; <kbd>S</kbd> statistiky &nbsp;·&nbsp; <kbd>Esc</kbd> zavřít';
+            standingsFlashT = setTimeout(() => {
+                hint.classList.remove('flash');
+                hint.innerHTML = FINAL_STANDINGS_HINT;
+                standingsFlashT = null;
+            }, 3500);
         }
 
         // --- Peek pořadí během zadávání (klávesy s / +): pořadí vystoupí zpoza formuláře
