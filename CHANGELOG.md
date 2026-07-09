@@ -3,6 +3,23 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.17.1] – 2026-07-09
+
+### Přidáno
+- **Souhrnná statistika ve velkém zobrazení na celou obrazovku** (velké písmo, ocenění
+  ve 4 sloupcích) – jako ostatní statistiky.
+- **Filtr her podle názvu** v souhrnné statistice (napiš „Dovolená" a dej „Jen
+  vyfiltrované" – ostatní se odškrtnou). Výběr her je nově ve **sbalovacím boxu**
+  (výchozí sbalený = maximální plocha pro výsledky).
+- **Řazení žebříčku klikem na sloupec** (jméno, počet her, výhry, průměrné pořadí,
+  úspěšnost, body; druhý klik obrátí směr).
+- U každého **souhrnného ocenění je zdůvodnění**, proč ho hráč dostal; u sloupců
+  žebříčku jsou vysvětlující tooltipy.
+
+### Změněno
+- Souhrnná statistika: zdůrazněno, že metriky jsou počítané jen z her, které hráč
+  skutečně odehrál (ne každý hraje všechny) – viz sloupec „Her".
+
 ## [1.17.0] – 2026-07-09
 
 ### Přidáno
