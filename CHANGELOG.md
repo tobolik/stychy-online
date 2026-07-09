@@ -3,6 +3,26 @@
 Všechny podstatné změny projektu Štychy Online. Formát vychází z [Keep a Changelog](https://keepachangelog.com/cs/),
 verzování dle [SemVer](https://semver.org/lang/cs/). Verze odpovídá údaji ve footeru aplikace.
 
+## [1.17.0] – 2026-07-09
+
+### Přidáno
+- **Souhrnná statistika přes více her.** Nové tlačítko „Souhrnná statistika" na seznamu
+  her otevře přehled přes zaškrtnuté hry (výběr her, „vybrat/zrušit vše"): **žebříček
+  hráčů** (odehráno her, výhry + %, průměrné pořadí, úspěšnost hlášení, body + průměr)
+  a **souhrnná ocenění** napříč hrami (Věčný šampion, Věčná vrána, Nejpřesnější hlásič,
+  Kamikaze, Stálice…). Hráči se párují přesně podle jména. Čistě read-only (nový endpoint
+  `games.php action=overall`), žádný zápis do dat.
+- **Ozubené kolečko ⚙️ v detailu hry** sdružuje nastavení: Přejmenovat hru, Upravit hráče
+  a pořadí (jen před prvním kolem), Kopírovat hru, Smazat hru. Viditelné zůstávají hlas,
+  Statistiky a Zpět. (Tužka u názvu hry zrušena – přejmenování je v ⚙️.)
+- **Klávesové pokračování turnaje.** Na Konečném pořadí (velké zobrazení): **K** = nový
+  zápas se stejnými hráči (předvyplněný dialog, fokus na Vytvořit – lze i přeskládat
+  rozdávajícího), **S** = statistiky, **Enter** připomene volby, **Esc** zavře.
+
+### Změněno
+- **Ovládání klávesou Esc** je konzistentní: zavře libovolný otevřený modal, a v detailu
+  hry (když není otevřený žádný modal) se vrátí na seznam her.
+
 ## [1.16.0] – 2026-07-08
 
 ### Přidáno
