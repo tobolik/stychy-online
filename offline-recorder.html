@@ -171,6 +171,44 @@
             color: var(--bg-main);
             border-color: var(--accent);
         }
+        /* Dropdown menu za ozubeným kolečkem v detailu hry */
+        .game-menu-wrap { position: relative; }
+        .game-menu {
+            display: none;
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            min-width: 220px;
+            background: var(--surface);
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+            padding: 6px;
+            z-index: 1200;
+        }
+        .game-menu.open { display: block; }
+        .game-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            cursor: pointer;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            text-align: left;
+            transition: background 0.15s, color 0.15s;
+        }
+        .game-menu-item i { width: 18px; text-align: center; color: var(--text-muted); }
+        .game-menu-item:hover { background: var(--surface-hover); color: var(--accent-ink); }
+        .game-menu-item:hover i { color: var(--accent-ink); }
+        .game-menu-item.danger { color: var(--danger); }
+        .game-menu-item.danger i { color: var(--danger); }
+        .game-menu-item.danger:hover { background: rgba(255,94,94,0.12); color: var(--danger); }
+        .game-menu-sep { height: 1px; background: var(--border-light); margin: 6px 4px; }
         .app-footer {
             margin-top: 40px;
             padding: 20px;
@@ -678,6 +716,7 @@
             font-family: inherit;
             color: var(--text-main);
         }
+        .standings-hint.flash { color: var(--accent-ink); font-weight: 700; transition: color 0.2s; }
 
         /* Statistics Styles */
         .stats-section {
@@ -1764,10 +1803,15 @@
 
         <!-- Screen: Games List -->
         <div id="screen-games-list" class="screen active">
-            <h1 class="section-title">
-                <i class="fa-solid fa-list"></i>
-                Moje hry
-            </h1>
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;">
+                <h1 class="section-title" style="margin-bottom: 0;">
+                    <i class="fa-solid fa-list"></i>
+                    Moje hry
+                </h1>
+                <button class="btn btn-secondary" onclick="openOverallStatsModal()" title="Souhrn přes více her (žebříček + ocenění)">
+                    <i class="fa-solid fa-ranking-star"></i> Souhrnná statistika
+                </button>
+            </div>
 
             <div class="games-grid" id="games-list">
                 <!-- Dynamicky generováno -->
@@ -1779,9 +1823,6 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
                 <h1 class="section-title" style="margin-bottom: 0; display: flex; align-items: center; gap: 10px;">
                     <span id="game-detail-name">Hra</span>
-                    <button class="btn-icon" onclick="editGameName()" title="Přejmenovat hru">
-                        <i class="fa-solid fa-pen"></i>
-                    </button>
                 </h1>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
                     <button id="voice-input-btn" class="btn-icon-lg" onclick="toggleGlobalVoiceInput()" title="Hlasové zadávání vypnuto">
@@ -1790,21 +1831,32 @@
                     <button id="voice-toggle-btn" class="btn-icon-lg" onclick="toggleVoiceAnnouncements()" title="Zapnout hlasové povely">
                         <i class="fa-solid fa-volume-xmark"></i>
                     </button>
-                    <button id="edit-game-btn" class="btn btn-secondary" onclick="openEditGameModal(currentGame.game.id)" title="Upravit hráče a pořadí (jen před prvním kolem)" style="display: none;">
-                        <i class="fa-solid fa-user-pen"></i> Upravit hru
-                    </button>
                     <button class="btn btn-secondary" onclick="openStatsModal()" title="Statistiky hry">
                         <i class="fa-solid fa-chart-bar"></i> Statistiky
-                    </button>
-                    <button class="btn btn-primary" onclick="openCopyGameModal()">
-                        <i class="fa-solid fa-copy"></i> Kopírovat
-                    </button>
-                    <button class="btn btn-danger" onclick="deleteGame()">
-                        <i class="fa-solid fa-trash"></i> Smazat
                     </button>
                     <button class="btn btn-secondary" onclick="showScreen('screen-games-list'); loadGames();">
                         <i class="fa-solid fa-arrow-left"></i> Zpět
                     </button>
+                    <div class="game-menu-wrap">
+                        <button id="game-menu-btn" class="btn-icon-lg" onclick="toggleGameMenu(event)" title="Nastavení hry" aria-haspopup="true" aria-expanded="false">
+                            <i class="fa-solid fa-gear"></i>
+                        </button>
+                        <div class="game-menu" id="game-menu" role="menu">
+                            <button class="game-menu-item" role="menuitem" onclick="gameMenuAction(editGameName)">
+                                <i class="fa-solid fa-pen"></i> Přejmenovat hru
+                            </button>
+                            <button class="game-menu-item" role="menuitem" id="game-menu-edit-players" onclick="gameMenuAction(function(){ openEditGameModal(currentGame.game.id); })">
+                                <i class="fa-solid fa-user-pen"></i> Upravit hráče a pořadí
+                            </button>
+                            <button class="game-menu-item" role="menuitem" onclick="gameMenuAction(openCopyGameModal)">
+                                <i class="fa-solid fa-copy"></i> Kopírovat hru
+                            </button>
+                            <div class="game-menu-sep"></div>
+                            <button class="game-menu-item danger" role="menuitem" onclick="gameMenuAction(deleteGame)">
+                                <i class="fa-solid fa-trash"></i> Smazat hru
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1837,7 +1889,7 @@
         
         <!-- Footer -->
         <div class="app-footer">
-            <span>Štychy Záznamník v1.16.0</span>
+            <span>Štychy Záznamník v1.17.0</span>
             <span>•</span>
             <span id="build-date">2026-07-08</span>
         </div>
@@ -1906,6 +1958,30 @@
             </div>
 
             <div id="stats-content" style="max-height: 70vh; overflow-y: auto;">
+                <!-- Dynamicky generováno -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Souhrnná statistika přes více her -->
+    <div class="modal" id="modal-overall-stats">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2 class="modal-title"><i class="fa-solid fa-ranking-star"></i> Souhrnná statistika</h2>
+                <button class="close-btn" onclick="closeModal('modal-overall-stats')">&times;</button>
+            </div>
+
+            <div id="overall-picker" style="margin-bottom: 16px; padding: 12px 14px; background: var(--input-bg); border-radius: 12px;">
+                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 10px;">
+                    <strong style="color: var(--accent-ink);"><i class="fa-solid fa-check-double"></i> Zahrnuté hry</strong>
+                    <button class="btn btn-secondary btn-sm" onclick="toggleAllOverallGames(true)">Vybrat vše</button>
+                    <button class="btn btn-secondary btn-sm" onclick="toggleAllOverallGames(false)">Zrušit vše</button>
+                    <span id="overall-picker-count" style="color: var(--text-muted); margin-left: auto;"></span>
+                </div>
+                <div id="overall-game-list" style="max-height: 22vh; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;"></div>
+            </div>
+
+            <div id="overall-content" style="max-height: 62vh; overflow-y: auto;">
                 <!-- Dynamicky generováno -->
             </div>
         </div>
@@ -3615,10 +3691,10 @@
             // Actions
             renderGameActions();
 
-            // "Upravit hru" (pořadí/jména hráčů) jen PŘED prvním kolem – 0 kol a hra není dokončená.
-            const editBtn = document.getElementById('edit-game-btn');
-            if (editBtn) {
-                editBtn.style.display = (currentGame.game.status !== 'finished' && currentGame.rounds.length === 0) ? '' : 'none';
+            // "Upravit hráče a pořadí" (v ⚙️ menu) jen PŘED prvním kolem – 0 kol a hra není dokončená.
+            const editItem = document.getElementById('game-menu-edit-players');
+            if (editItem) {
+                editItem.style.display = (currentGame.game.status !== 'finished' && currentGame.rounds.length === 0) ? '' : 'none';
             }
 
             // Current ranking (during active game)
@@ -3873,6 +3949,9 @@
 
         // --- Fullscreen pořadí (po zapsání kola / po ukončení hry) ---
         let standingsOnEnter = null;
+        let standingsMode = null;           // 'running' | 'final'
+        let standingsFlashT = null;
+        const FINAL_STANDINGS_HINT = '<kbd>K</kbd> nový zápas se stejnými hráči &nbsp;·&nbsp; <kbd>S</kbd> statistiky';
         function fillStandingsList() {
             document.getElementById('standings-list').innerHTML = getRankedPlayers().map(({ player, rank, trophyHtml, isTop3 }) => `
                 <div class="fs-rank-row ${isTop3 ? 'top-3' : ''}">
@@ -3891,11 +3970,15 @@
             fillStandingsList();
 
             if (mode === 'final') {
+                // Turnaj: hlavní akce po konci hry je pokračovat kopií (K). Enter jen připomene volby
+                // (ne vždy se hraje dál). S = statistiky. Esc = zavřít.
+                standingsMode = 'final';
                 document.getElementById('standings-title').textContent = 'Konečné pořadí';
                 document.getElementById('standings-sub').textContent = `Odehráno ${finishedRounds} kol`;
-                document.getElementById('standings-hint').innerHTML = '<kbd>Enter</kbd> statistiky';
-                standingsOnEnter = () => { hideStandingsFullscreen(); openStatsModal(); };
+                document.getElementById('standings-hint').innerHTML = FINAL_STANDINGS_HINT;
+                standingsOnEnter = null;
             } else {
+                standingsMode = 'running';
                 const hasMore = finishedRounds < totalRounds;
                 document.getElementById('standings-title').textContent = 'Průběžné pořadí';
                 document.getElementById('standings-sub').textContent = `Po ${finishedRounds}. kole z ${totalRounds}`;
@@ -3906,7 +3989,10 @@
             overlay.classList.add('active');
             overlay.setAttribute('tabindex', '-1');
             requestAnimationFrame(() => { fitStandings(); overlay.focus({ preventScroll: true }); });
-            overlay.onclick = () => { if (standingsOnEnter) { const cb = standingsOnEnter; standingsOnEnter = null; cb(); } };
+            overlay.onclick = () => {
+                if (standingsMode === 'final') { flashFinalPrompt(); }
+                else if (standingsOnEnter) { const cb = standingsOnEnter; standingsOnEnter = null; cb(); }
+            };
             document.addEventListener('keydown', standingsKeyHandler, true);
             window.addEventListener('resize', fitStandings);
         }
@@ -3937,21 +4023,65 @@
             if (overlay) { overlay.classList.remove('active'); overlay.onclick = null; }
             document.removeEventListener('keydown', standingsKeyHandler, true);
             window.removeEventListener('resize', fitStandings);
+            if (standingsFlashT) { clearTimeout(standingsFlashT); standingsFlashT = null; }
+            standingsMode = null;
         }
         function standingsKeyHandler(e) {
             const overlay = document.getElementById('standings-overlay');
             if (!overlay || !overlay.classList.contains('active')) return;
-            if (e.key === 'Enter') {
+            const k = e.key;
+            if (k === 'Escape') {
+                e.preventDefault();
+                e.stopPropagation();   // ať Escape zavře jen fullscreen pořadí, ne aby navíc odešel z detailu hry
+                standingsOnEnter = null;
+                hideStandingsFullscreen();
+                return;
+            }
+            if (standingsMode === 'final') {
+                // K = nový zápas se stejnými hráči (kopie), S = statistiky, Enter = jen připomenutí voleb
+                if (k === 'k' || k === 'K') {
+                    e.preventDefault(); e.stopPropagation();
+                    hideStandingsFullscreen();
+                    openCopyContinue();
+                } else if (k === 's' || k === 'S') {
+                    e.preventDefault(); e.stopPropagation();
+                    hideStandingsFullscreen();
+                    openStatsModal();
+                } else if (k === 'Enter') {
+                    e.preventDefault(); e.stopPropagation();
+                    flashFinalPrompt();
+                }
+                return;
+            }
+            // running mode: Enter = další kolo / zavřít
+            if (k === 'Enter') {
                 e.preventDefault();
                 e.stopPropagation();
                 const cb = standingsOnEnter;
                 standingsOnEnter = null;
                 if (cb) cb();
-            } else if (e.key === 'Escape') {
-                e.preventDefault();
-                standingsOnEnter = null;
-                hideStandingsFullscreen();
             }
+        }
+        // Nový zápas se stejnými hráči: předvyplněný dialog kopie s fokusem na Vytvořit (Enter vytvoří).
+        function openCopyContinue() {
+            openCopyGameModal();
+            requestAnimationFrame(() => {
+                const b = document.getElementById('new-game-submit');
+                if (b) b.focus({ preventScroll: true });
+            });
+        }
+        // Enter na Konečném pořadí: nic natvrdo (ne vždy se hraje dál) – jen připomene volby.
+        function flashFinalPrompt() {
+            const hint = document.getElementById('standings-hint');
+            if (!hint) return;
+            if (standingsFlashT) clearTimeout(standingsFlashT);
+            hint.classList.add('flash');
+            hint.innerHTML = 'Ne vždy se hraje dál – zvol: <kbd>K</kbd> nový zápas &nbsp;·&nbsp; <kbd>S</kbd> statistiky &nbsp;·&nbsp; <kbd>Esc</kbd> zavřít';
+            standingsFlashT = setTimeout(() => {
+                hint.classList.remove('flash');
+                hint.innerHTML = FINAL_STANDINGS_HINT;
+                standingsFlashT = null;
+            }, 3500);
         }
 
         // --- Peek pořadí během zadávání (klávesy s / +): pořadí vystoupí zpoza formuláře
@@ -5081,6 +5211,40 @@
             }
         }
 
+        // ===== ⚙️ menu v detailu hry =====
+        function isGameMenuOpen() {
+            const m = document.getElementById('game-menu');
+            return !!m && m.classList.contains('open');
+        }
+        function openGameMenu() {
+            const m = document.getElementById('game-menu');
+            const btn = document.getElementById('game-menu-btn');
+            if (!m) return;
+            m.classList.add('open');
+            if (btn) { btn.classList.add('active'); btn.setAttribute('aria-expanded', 'true'); }
+        }
+        function closeGameMenu() {
+            const m = document.getElementById('game-menu');
+            const btn = document.getElementById('game-menu-btn');
+            if (!m) return;
+            m.classList.remove('open');
+            if (btn) { btn.classList.remove('active'); btn.setAttribute('aria-expanded', 'false'); }
+        }
+        function toggleGameMenu(e) {
+            if (e) e.stopPropagation();
+            if (isGameMenuOpen()) { closeGameMenu(); } else { openGameMenu(); }
+        }
+        // Provede akci položky menu a menu zavře.
+        function gameMenuAction(fn) {
+            closeGameMenu();
+            if (typeof fn === 'function') fn();
+        }
+        // Klik mimo menu ho zavře.
+        document.addEventListener('click', (e) => {
+            if (!isGameMenuOpen()) return;
+            if (!e.target.closest('.game-menu-wrap')) closeGameMenu();
+        });
+
         // Smazání kola – jen poslední a prázdné (server to vynucuje). Soft-delete.
         async function deleteRound(roundId) {
             const round = currentGame.rounds.find(r => r.id == roundId);
@@ -5304,6 +5468,150 @@
                 }
                 return { position: p.position, name: p.name, emoji: a.emoji, label: a.label, kind: a.kind, value: a.value ? a.value(p) : '', desc: a.desc || '', sharedWith };
             });
+        }
+
+        // ===== Souhrnná statistika přes více her =====
+        function openOverallStatsModal() {
+            const list = document.getElementById('overall-game-list');
+            if (!games || games.length === 0) {
+                list.innerHTML = '<div style="color: var(--text-muted); padding: 8px;">Zatím nemáš žádné hry.</div>';
+                document.getElementById('overall-content').innerHTML = '';
+                document.getElementById('overall-picker-count').textContent = '';
+                openModal('modal-overall-stats');
+                return;
+            }
+            list.innerHTML = games.map(g => {
+                const date = new Date(g.created_at).toLocaleDateString('cs-CZ');
+                const done = g.status === 'finished' ? ' ✓' : '';
+                return `<label style="display:flex; align-items:center; gap:10px; padding:6px 8px; border-radius:8px; cursor:pointer;">
+                    <input type="checkbox" class="overall-game-cb" value="${g.id}" checked onchange="refreshOverallStats()" style="width:18px; height:18px; flex-shrink:0;">
+                    <span style="flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(g.name)}${done}</span>
+                    <span style="color: var(--text-muted); font-size:0.85rem; flex-shrink:0;">${date}</span>
+                </label>`;
+            }).join('');
+            openModal('modal-overall-stats');
+            refreshOverallStats();
+        }
+
+        function toggleAllOverallGames(on) {
+            document.querySelectorAll('.overall-game-cb').forEach(cb => cb.checked = on);
+            refreshOverallStats();
+        }
+
+        function getSelectedOverallGameIds() {
+            return [...document.querySelectorAll('.overall-game-cb:checked')].map(cb => parseInt(cb.value));
+        }
+
+        async function refreshOverallStats() {
+            const ids = getSelectedOverallGameIds();
+            const total = document.querySelectorAll('.overall-game-cb').length;
+            document.getElementById('overall-picker-count').textContent = `${ids.length} / ${total} her`;
+            const content = document.getElementById('overall-content');
+            if (ids.length === 0) {
+                content.innerHTML = '<div style="text-align:center; color: var(--text-muted); padding: 30px;">Vyber aspoň jednu hru.</div>';
+                return;
+            }
+            content.innerHTML = '<div style="text-align:center; color: var(--text-muted); padding: 30px;">Počítám…</div>';
+            const res = await api('games.php', { action: 'overall', game_ids: ids });
+            if (!res.success) {
+                content.innerHTML = '<div style="text-align:center; color: var(--danger); padding: 30px;">Nepodařilo se načíst statistiku.</div>';
+                return;
+            }
+            renderOverallStats(res.players || []);
+        }
+
+        function renderOverallStats(players) {
+            const content = document.getElementById('overall-content');
+            if (players.length === 0) {
+                content.innerHTML = '<div style="text-align:center; color: var(--text-muted); padding: 30px;">Vybrané hry nemají žádná dokončená kola.</div>';
+                return;
+            }
+            // žebříček: dle výher, pak průměrné pořadí, pak úspěšnost, pak body
+            const sorted = [...players].sort((a, b) =>
+                b.wins - a.wins || a.avgRank - b.avgRank || b.successRate - a.successRate || b.pointsTotal - a.pointsTotal
+            );
+            const rows = sorted.map((p, i) => `
+                <tr>
+                    <td style="text-align:center; color: var(--text-muted); font-weight:bold;">${i + 1}.</td>
+                    <td style="font-weight:bold;">${escapeHtml(p.name)}</td>
+                    <td style="text-align:center;">${p.gamesPlayed}</td>
+                    <td style="text-align:center; font-weight:bold; color: var(--accent-ink);">${p.wins} <span style="color: var(--text-muted); font-weight:normal;">(${p.winPct}%)</span></td>
+                    <td style="text-align:center;">${p.avgRank}</td>
+                    <td class="highlight" style="text-align:center;">${p.successRate}%</td>
+                    <td style="text-align:center;">${p.pointsTotal} <span style="color: var(--text-muted);">(Ø${p.avgPoints})</span></td>
+                </tr>`).join('');
+
+            const awards = assignOverallAwards(players);
+            const awardCards = awards.map(a => `
+                <div class="stat-card award-${a.kind}">
+                    <div class="stat-value">${a.emoji}</div>
+                    <div class="stat-player">${escapeHtml(a.name)}</div>
+                    <div class="stat-label">${a.label}</div>
+                    <div class="stat-label" style="opacity:0.75;">${escapeHtml(a.value)}${a.shared ? ' (děleno)' : ''}</div>
+                </div>`).join('');
+
+            content.innerHTML = `
+                <div class="stats-section">
+                    <div class="stats-section-title"><i class="fa-solid fa-trophy"></i> Žebříček (${players.length} hráčů)</div>
+                    <table class="stats-table">
+                        <thead><tr>
+                            <th style="text-align:center;">#</th><th>Hráč</th>
+                            <th style="text-align:center;">Her</th><th style="text-align:center;">Výhry</th>
+                            <th style="text-align:center;">Ø pořadí</th><th style="text-align:center;">Úspěšnost</th>
+                            <th style="text-align:center;">Body</th>
+                        </tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>
+                <div class="stats-section">
+                    <div class="stats-section-title"><i class="fa-solid fa-award"></i> Souhrnná ocenění</div>
+                    <div class="stats-grid">${awardCards}</div>
+                </div>`;
+        }
+
+        // Cross-game ocenění: každý hráč max 1 titul (greedy dle normalizované síly, deterministicky)
+        function overallAwardPool() {
+            return [
+                { id: 'champ', emoji: '👑', label: 'Věčný šampion', kind: 'positive', strength: p => p.wins, value: p => `${p.wins}× vyhrál` },
+                { id: 'crow', emoji: '🐦', label: 'Věčná vrána', kind: 'roast', strength: p => p.lastPlaces, value: p => `${p.lastPlaces}× poslední` },
+                { id: 'sniper', emoji: '🎯', label: 'Nejpřesnější hlásič', kind: 'positive', strength: p => p.successRate, value: p => `${p.successRate}% úspěšnost` },
+                { id: 'brick', emoji: '🧱', label: 'Cihla', kind: 'roast', strength: p => 100 - p.successRate, value: p => `${p.successRate}% úspěšnost` },
+                { id: 'kamikaze', emoji: '💥', label: 'Kamikaze', kind: 'roast', strength: p => p.overbidSum, value: p => `přestřelil o ${p.overbidSum}` },
+                { id: 'regular', emoji: '🎖️', label: 'Stálice', kind: 'positive', strength: p => p.gamesPlayed, value: p => `${p.gamesPlayed} her` },
+                { id: 'collector', emoji: '💰', label: 'Sběratel bodů', kind: 'positive', strength: p => p.pointsTotal, value: p => `${p.pointsTotal} b celkem` },
+                { id: 'harvester', emoji: '🌾', label: 'Sklízeč', kind: 'positive', strength: p => p.totalWon, value: p => `${p.totalWon} štychů` },
+                { id: 'coward', emoji: '🐔', label: 'Strašpytel', kind: 'roast', strength: p => p.zeroBids, value: p => `${p.zeroBids}× hlásil nulu` },
+                { id: 'spoon', emoji: '🥄', label: 'Dřevěná vařečka', kind: 'roast', strength: p => -p.avgPoints, value: p => `Ø ${p.avgPoints} b/hra` }
+            ];
+        }
+
+        function assignOverallAwards(players) {
+            const pool = overallAwardPool();
+            const S = {}, maxRaw = {}, atMax = {};
+            pool.forEach(a => {
+                const raw = players.map(p => ({ name: p.name, v: a.strength(p) }));
+                const vals = raw.map(r => r.v);
+                const min = Math.min(...vals), max = Math.max(...vals);
+                const m = {};
+                raw.forEach(r => { m[r.name] = (max === min) ? 0 : (r.v - min) / (max - min); });
+                S[a.id] = m; maxRaw[a.id] = max;
+                atMax[a.id] = raw.filter(r => r.v === max).map(r => r.name);
+            });
+            const cand = [];
+            pool.forEach(a => players.forEach(p => cand.push({ s: S[a.id][p.name], aid: a.id, award: a, name: p.name })));
+            cand.sort((x, y) => y.s - x.s || (x.aid < y.aid ? -1 : x.aid > y.aid ? 1 : 0) || (x.name < y.name ? -1 : 1));
+            const usedA = new Set(), usedP = new Set(), byName = {};
+            for (const c of cand) {
+                if (usedP.size === players.length) break;
+                if (usedA.has(c.aid) || usedP.has(c.name)) continue;
+                byName[c.name] = c.award; usedA.add(c.aid); usedP.add(c.name);
+            }
+            const generic = { emoji: '🃏', label: 'Solidní průměr', kind: 'positive', strength: null, value: () => '' };
+            return players.map(p => {
+                const a = byName[p.name] || generic;
+                const shared = a.strength && atMax[a.id] && a.strength(p) === maxRaw[a.id] && atMax[a.id].length >= 2;
+                return { name: p.name, emoji: a.emoji, label: a.label, kind: a.kind, value: a.value ? a.value(p) : '', shared };
+            }).sort((x, y) => (x.kind === y.kind ? 0 : x.kind === 'positive' ? -1 : 1));
         }
 
         // Statistics
@@ -5737,12 +6045,20 @@
                 speechIsPaused = false;
             }
 
-            // Escape zavře libovolný otevřený modál (přes closeModal kvůi úklidu listenerů)
+            // Escape: priorita (a) fullscreen pořadí/peek řeší vlastní capture handlery výše;
+            // (b) otevřený modál nebo rozbalené ⚙️ menu zavři; (c) jinak v detailu hry zpět na seznam.
             if (e.key === 'Escape') {
                 const openModals = document.querySelectorAll('.modal.active');
                 if (openModals.length > 0) {
                     e.preventDefault();
                     openModals.forEach(m => closeModal(m.id));
+                } else if (typeof isGameMenuOpen === 'function' && isGameMenuOpen()) {
+                    e.preventDefault();
+                    closeGameMenu();
+                } else if (document.getElementById('screen-game-detail').classList.contains('active')) {
+                    e.preventDefault();
+                    showScreen('screen-games-list');
+                    loadGames();
                 }
             }
             

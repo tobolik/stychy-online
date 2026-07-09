@@ -179,6 +179,143 @@ switch ($action) {
         break;
         
     /**
+     * Souhrnná statistika přes více her (READ-ONLY, žádný zápis do DB).
+     * Vstup: game_ids[]. Seskupí hráče přes vybrané hry podle trim(jméno)
+     * a vrátí agregované metriky pro žebříček + souhrnná ocenění.
+     */
+    case 'overall':
+        $gameIds = $input['game_ids'] ?? [];
+        if (!is_array($gameIds)) { $gameIds = []; }
+        $gameIds = array_values(array_unique(array_filter(
+            array_map('intval', $gameIds),
+            function ($v) { return $v > 0; }
+        )));
+
+        if (empty($gameIds)) {
+            jsonResponse(['success' => true, 'players' => [], 'games' => []]);
+        }
+
+        $vf = SOFT_DELETE_SUBTREE ? ' AND valid_to IS NULL' : '';
+
+        // Jen vlastní, nesmazané hry z výběru (ownership + soft-delete)
+        $ph = implode(',', array_fill(0, count($gameIds), '?'));
+        $stmt = $db->prepare("SELECT id, name FROM games WHERE id IN ($ph) AND user_id = ? AND valid_to IS NULL ORDER BY created_at DESC");
+        $stmt->execute(array_merge($gameIds, [$userId]));
+        $games = $stmt->fetchAll();
+        if (empty($games)) {
+            jsonResponse(['success' => true, 'players' => [], 'games' => []]);
+        }
+        $validIds = array_map(function ($g) { return (int)$g['id']; }, $games);
+        $ph2 = implode(',', array_fill(0, count($validIds), '?'));
+
+        // Hráči vybraných her
+        $stmt = $db->prepare("SELECT game_id, position, name FROM game_players WHERE game_id IN ($ph2)" . $vf);
+        $stmt->execute($validIds);
+        $playersRows = $stmt->fetchAll();
+
+        // Počet dokončených kol na hru (hra bez dokončeného kola se do žebříčku nepočítá)
+        $stmt = $db->prepare("SELECT game_id, COUNT(*) AS cnt FROM rounds WHERE game_id IN ($ph2) AND status = 'finished'" . $vf . " GROUP BY game_id");
+        $stmt->execute($validIds);
+        $finishedByGame = [];
+        foreach ($stmt->fetchAll() as $r) { $finishedByGame[(int)$r['game_id']] = (int)$r['cnt']; }
+
+        // Výsledky dokončených kol
+        $rrVf = SOFT_DELETE_SUBTREE ? ' AND rr.valid_to IS NULL' : '';
+        $stmt = $db->prepare("
+            SELECT r.game_id, gp.position, rr.bid, rr.tricks_won, rr.score
+            FROM round_results rr
+            JOIN game_players gp ON gp.id = rr.player_id
+            JOIN rounds r ON r.id = rr.round_id
+            WHERE r.game_id IN ($ph2) AND r.status = 'finished'" . $rrVf);
+        $stmt->execute($validIds);
+        $resultRows = $stmt->fetchAll();
+
+        // Per (game_id:position) hrubá data
+        $pg = [];
+        $nameByKey = [];
+        foreach ($playersRows as $p) {
+            $key = $p['game_id'] . ':' . $p['position'];
+            $nameByKey[$key] = trim($p['name']);
+            $pg[$key] = ['game_id' => (int)$p['game_id'], 'points' => 0, 'made' => 0, 'rounds' => 0,
+                         'totalBid' => 0, 'totalWon' => 0, 'zeroBids' => 0, 'overbid' => 0,
+                         'best' => null, 'worst' => null];
+        }
+        foreach ($resultRows as $rr) {
+            $key = $rr['game_id'] . ':' . $rr['position'];
+            if (!isset($pg[$key])) { continue; }
+            $bid = $rr['bid'] === null ? null : (int)$rr['bid'];
+            $won = $rr['tricks_won'] === null ? null : (int)$rr['tricks_won'];
+            $score = $rr['score'] === null ? 0 : (int)$rr['score'];
+            $pg[$key]['rounds']++;
+            $pg[$key]['points'] += $score;
+            if ($bid !== null && $won !== null && $bid === $won) { $pg[$key]['made']++; }
+            if ($bid !== null) { $pg[$key]['totalBid'] += $bid; if ($bid === 0) { $pg[$key]['zeroBids']++; } }
+            if ($won !== null) { $pg[$key]['totalWon'] += $won; }
+            if ($bid !== null && $won !== null && $bid > $won) { $pg[$key]['overbid'] += ($bid - $won); }
+            if ($pg[$key]['best'] === null || $score > $pg[$key]['best']) { $pg[$key]['best'] = $score; }
+            if ($pg[$key]['worst'] === null || $score < $pg[$key]['worst']) { $pg[$key]['worst'] = $score; }
+        }
+
+        // Pořadí v každé hře (dense rank dle bodů; poslední = minimum bodů)
+        $byGame = [];
+        foreach ($pg as $key => $s) { $byGame[$s['game_id']][] = $key; }
+        $rankInfo = [];
+        foreach ($byGame as $gid => $keys) {
+            if (($finishedByGame[$gid] ?? 0) < 1) { continue; }
+            usort($keys, function ($a, $b) use ($pg) { return $pg[$b]['points'] <=> $pg[$a]['points']; });
+            $minPoints = null;
+            foreach ($keys as $k) { $minPoints = $minPoints === null ? $pg[$k]['points'] : min($minPoints, $pg[$k]['points']); }
+            $rank = 0; $prev = null;
+            foreach ($keys as $k) {
+                $pts = $pg[$k]['points'];
+                if ($prev === null || $pts !== $prev) { $rank++; }
+                $prev = $pts;
+                $rankInfo[$k] = ['rank' => $rank, 'isLast' => ($pts === $minPoints)];
+            }
+        }
+
+        // Agregace per jméno (přesně dle trim(jméno))
+        $agg = [];
+        foreach ($pg as $key => $s) {
+            $gid = $s['game_id'];
+            if (($finishedByGame[$gid] ?? 0) < 1 || !isset($rankInfo[$key])) { continue; }
+            $name = $nameByKey[$key];
+            if (!isset($agg[$name])) {
+                $agg[$name] = ['name' => $name, 'gamesPlayed' => 0, 'wins' => 0, 'lastPlaces' => 0,
+                               'rankSum' => 0, 'pointsTotal' => 0, 'roundsPlayed' => 0, 'roundsMade' => 0,
+                               'totalBid' => 0, 'totalWon' => 0, 'zeroBids' => 0, 'overbidSum' => 0,
+                               'bestRound' => null, 'worstRound' => null];
+            }
+            $agg[$name]['gamesPlayed']++;
+            $agg[$name]['wins'] += ($rankInfo[$key]['rank'] === 1 ? 1 : 0);
+            $agg[$name]['lastPlaces'] += ($rankInfo[$key]['isLast'] ? 1 : 0);
+            $agg[$name]['rankSum'] += $rankInfo[$key]['rank'];
+            $agg[$name]['pointsTotal'] += $s['points'];
+            $agg[$name]['roundsPlayed'] += $s['rounds'];
+            $agg[$name]['roundsMade'] += $s['made'];
+            $agg[$name]['totalBid'] += $s['totalBid'];
+            $agg[$name]['totalWon'] += $s['totalWon'];
+            $agg[$name]['zeroBids'] += $s['zeroBids'];
+            $agg[$name]['overbidSum'] += $s['overbid'];
+            if ($s['best'] !== null && ($agg[$name]['bestRound'] === null || $s['best'] > $agg[$name]['bestRound'])) { $agg[$name]['bestRound'] = $s['best']; }
+            if ($s['worst'] !== null && ($agg[$name]['worstRound'] === null || $s['worst'] < $agg[$name]['worstRound'])) { $agg[$name]['worstRound'] = $s['worst']; }
+        }
+
+        // Odvozené metriky
+        $out = [];
+        foreach ($agg as $a) {
+            $gpCount = $a['gamesPlayed'];
+            $a['winPct'] = $gpCount > 0 ? (int)round($a['wins'] / $gpCount * 100) : 0;
+            $a['avgRank'] = $gpCount > 0 ? round($a['rankSum'] / $gpCount, 2) : 0;
+            $a['successRate'] = $a['roundsPlayed'] > 0 ? (int)round($a['roundsMade'] / $a['roundsPlayed'] * 100) : 0;
+            $a['avgPoints'] = $gpCount > 0 ? round($a['pointsTotal'] / $gpCount, 1) : 0;
+            $out[] = $a;
+        }
+
+        jsonResponse(['success' => true, 'players' => array_values($out), 'games' => $games]);
+        break;
+
+    /**
      * Ukončení hry
      */
     case 'finish':
